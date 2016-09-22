@@ -69,12 +69,18 @@ public class GoogleHost extends Host implements Comparable<Host> {
 
 	@Override
 	public boolean isSuitableForVm(Vm vm) {
-		if (getVmScheduler().getAvailableMips() >= vm.getMips()) {
+
+		if (vm == null) {
+			return false;
+		}
+
+		else if (getVmScheduler().getAvailableMips() >= vm.getMips()) {
 			return true;
+
 		} else {
 			GoogleVm gVm = (GoogleVm) vm;
-			double mipsFromLessPriorityVms = getMipsInUseByLessPriorityVms(gVm.getPriority());
-			return ((getVmScheduler().getAvailableMips() + mipsFromLessPriorityVms ) >= vm.getMips());
+			double availableMips = getAvailableMipsByPriority(gVm.getPriority()) ;
+			return (availableMips >= vm.getMips());
 		}		
 	}
 	
@@ -109,14 +115,6 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		getPriorityToVms().get(gVm.getPriority()).remove(vm);
 		double priorityCurrentUse = getPriorityToInUseMips().get(gVm.getPriority()); 
 		getPriorityToInUseMips().put(gVm.getPriority(), priorityCurrentUse - gVm.getMips());
-	}
-
-	protected double getMipsInUseByLessPriorityVms(int priority) {
-		double currentUse = 0;
-		for (int i = priority + 1; i < getNumberOfPriorities(); i++) {
-			currentUse += getPriorityToInUseMips().get(i);
-		}
-		return currentUse;
 	}
 
 	public Map<Integer, Double> getPriorityToInUseMips() {
