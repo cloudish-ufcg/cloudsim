@@ -9,6 +9,8 @@ package org.cloudbus.cloudsim.googletrace;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -20,6 +22,7 @@ import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
+import org.cloudbus.cloudsim.googletrace.datastore.UtilizationDataStore;
 import org.cloudbus.cloudsim.googletrace.policies.vmallocation.PreemptableVmAllocationPolicy;
 
 /**
@@ -30,20 +33,86 @@ import org.cloudbus.cloudsim.googletrace.policies.vmallocation.PreemptableVmAllo
  */
 public class GoogleDatacenter extends Datacenter {
 
+	private static final int DATACENTER_BASE = 600;
+	
+	public static final int STORE_HOST_UTILIZATION_EVENT = DATACENTER_BASE + 1;
+    public static final int DEFAULT_UTILIZATION_STORING_INTERVAL_SIZE = 5;
+
 	PreemptableVmAllocationPolicy vmAllocationPolicy;
 	
 	SimulationTimeUtil simulationTimeUtil = new SimulationTimeUtil();
-	
+
 	private SortedSet<GoogleVm> vmsRunning = new TreeSet<GoogleVm>();
-	private SortedSet<GoogleVm> vmsForScheduling = new TreeSet<GoogleVm>();	
+	private SortedSet<GoogleVm> vmsForScheduling = new TreeSet<GoogleVm>();
+	private UtilizationDataStore utilizationDataStore;
+	private double storingIntervalSize;
 	
 	public GoogleDatacenter(
 			String name,
 			DatacenterCharacteristics characteristics,
 			PreemptableVmAllocationPolicy vmAllocationPolicy,
 			List<Storage> storageList,
-			double schedulingInterval) throws Exception {
+			double schedulingInterval, Properties properties) throws Exception {
 		super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
+		
+		utilizationDataStore = new UtilizationDataStore(properties);
+		
+        int storingIntervalSize = properties
+                .getProperty("utilization_storing_interval_size") == null ? DEFAULT_UTILIZATION_STORING_INTERVAL_SIZE
+                : Integer.parseInt(properties.getProperty("utilization_storing_interval_size"));
+        
+        setStoringIntervalSize(storingIntervalSize);
+	}
+	
+	@Override
+	protected void processOtherEvent(SimEvent ev) {
+		switch (ev.getTag()) {
+			case STORE_HOST_UTILIZATION_EVENT:
+				storeHostUtilization();
+				break;
+	
+			// other unknown tags are processed by this method
+			default:
+				super.processOtherEvent(ev);
+				break;
+		}
+	}
+	
+	
+	private void storeHostUtilization() {
+		Log.printConcatLine(simulationTimeUtil.clock(), ": Storing host utilization  into database.");
+		
+		List<HostUtilizationEntry> utilizationEntries = new ArrayList<HostUtilizationEntry>();
+		
+		for (Host host : getHostList()) {
+			int hostId = host.getId();
+			GoogleHost gHost = (GoogleHost) host;
+			Map<Double, Double> utilizationMap = gHost.getUtilizationMap();
+			
+			for (Double time : utilizationMap.keySet()) {				
+				utilizationEntries.add(new HostUtilizationEntry(hostId, time, utilizationMap.get(time)));
+			}
+			
+			gHost.resetUtilizationMap();
+		}
+		
+		Log.printConcatLine(simulationTimeUtil.clock(), ":", utilizationEntries.size()," will be stored into database now.");
+		
+		utilizationDataStore.addUtilizationEntries(utilizationEntries);
+
+		// creating next event if the are more vms to be concluded
+		if (!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) {
+			Log.printConcatLine(
+					simulationTimeUtil.clock(),
+					": Scheduling next store host utilization event in be in ",
+					SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()),
+					" microseconds.");
+			send(getId(), SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()), STORE_HOST_UTILIZATION_EVENT);
+		}
+	}
+	
+	public List<HostUtilizationEntry> getHostUtilizationEntries() {
+		return utilizationDataStore.getAllUtilizationEntries();
 	}
 
 	/**
@@ -77,6 +146,9 @@ public class GoogleDatacenter extends Datacenter {
 		if (result) {
 			getVmsRunning().add(vm);
 			vm.setStartExec(simulationTimeUtil.clock());
+			
+			//updating host utilization
+			host.updateUtilization(simulationTimeUtil.clock());
 			
 			if (vm.isBeingInstantiated()) {
 				vm.setBeingInstantiated(false);
@@ -146,7 +218,7 @@ public class GoogleDatacenter extends Datacenter {
 							+ " right now.");
 			
 			GoogleVm vmToPreempt = (GoogleVm) host.nextVmForPreempting();
-			if (vmToPreempt != null) {
+			if (vmToPreempt != null && vmToPreempt.getPriority() > vm.getPriority()) {
 				Log.printConcatLine(simulationTimeUtil.clock(),
 						": Trying to preempt VM #" + vmToPreempt.getId()
 								+ " (priority " + vmToPreempt.getPriority()
@@ -188,12 +260,15 @@ public class GoogleDatacenter extends Datacenter {
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 						vm.getId(), " will be terminated.");
 				
-				Host host = vm.getHost();
+				GoogleHost host = (GoogleHost) vm.getHost();
 				getVmAllocationPolicy().deallocateHostForVm(vm);
-				
+			
 				if (ack) {
 					sendNow(vm.getUserId(), CloudSimTags.VM_DESTROY_ACK, vm);
 				}
+
+				//updating host utilization
+				host.updateUtilization(simulationTimeUtil.clock());
 							
 				if (!getVmsForScheduling().isEmpty()) {
 					tryingToAllocateVms(host);
@@ -251,5 +326,14 @@ public class GoogleDatacenter extends Datacenter {
 	protected void setSimulationTimeUtil(SimulationTimeUtil simulationTimeUtil) {
 		this.simulationTimeUtil = simulationTimeUtil;
 	}
-		
+
+	protected double getStoringIntervalSize() {
+		return storingIntervalSize;
+	}
+
+	protected void setStoringIntervalSize(double storingIntervalSize) {
+		this.storingIntervalSize = storingIntervalSize;
+	}
+	
+	
 }

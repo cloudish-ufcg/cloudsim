@@ -130,8 +130,8 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
         
         // creating next event if the are more events to be treated
         if (inputTraceDataStore.hasMoreEvents(getIntervalIndex(),
-                getIntervalSizeInMicro(getStoringIntervalSize()))) {
-            send(getId(), getIntervalSizeInMicro(getStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
+                SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()))) {
+            send(getId(), SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
         }
     }
 
@@ -180,17 +180,20 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
         if (getDatacenterCharacteristicsList().size() == getDatacenterIdsList().size()) {
             loadNextGoogleTasks();
 
-            // creating the first store event
-            send(getId(), getIntervalSizeInMicro(getStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
+            // creating the first task store event
+            send(getId(), SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
+            
+            // creating the first utilization store event
+            // TODO we need to consider the storing interval related to utilization 
+            send(getDatacenterId(), SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()), GoogleDatacenter.STORE_HOST_UTILIZATION_EVENT);
         }
-
     }
 
     private void loadNextGoogleTasks() {
         Log.printLine("Loading next google tasks. Interval index " + getIntervalIndex());
 
         List<GoogleTask> nextGoogleTasks = inputTraceDataStore
-                .getGoogleTaskInterval(getIntervalIndex(), getIntervalSizeInMicro(getLoadingIntervalSize()));
+                .getGoogleTaskInterval(getIntervalIndex(), SimulationTimeUtil.getTimeInMicro(getLoadingIntervalSize()));
 
         // if nextGoogleTasks == null there are not more tasks
         if (nextGoogleTasks != null) {
@@ -198,12 +201,8 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
             submitTasks();
             setIntervalIndex(++intervalIndex);
 
-            send(getId(), getIntervalSizeInMicro(getLoadingIntervalSize()), LOAD_NEXT_TASKS_EVENT);
+            send(getId(), SimulationTimeUtil.getTimeInMicro(getLoadingIntervalSize()), LOAD_NEXT_TASKS_EVENT);
         }
-    }
-
-    private double getIntervalSizeInMicro(double intervalSize) {
-        return intervalSize * 60 * 1000000;
     }
 
     /**

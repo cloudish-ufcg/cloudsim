@@ -18,6 +18,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	private Map<Integer, Double> priorityToInUseMips;
 	private Map<Integer, SortedSet<Vm>> priorityToVms;
 	private int numberOfPriorities;
+	private Map<Double, Double> utilizationMap;
 	
 	public GoogleHost(int id, List<? extends Pe> peList, VmScheduler vmScheduler, int numberOfPriorities) {
 		super(id, new RamProvisionerSimple(Integer.MAX_VALUE),
@@ -30,6 +31,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		
 		setPriorityToVms(new HashMap<Integer, SortedSet<Vm>>());
 		setPriorityToInUseMips(new HashMap<Integer, Double>());
+		setUtilizationMap(new HashMap<Double, Double>());
 		setNumberOfPriorities(numberOfPriorities);
 		
 		// initializing maps
@@ -142,6 +144,14 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		this.numberOfPriorities = numberOfPriorities;
 	}
 	
+	public Map<Double, Double> getUtilizationMap() {
+		return utilizationMap;
+	}
+	
+	protected void setUtilizationMap(Map<Double, Double> utilizationMap) {
+		this.utilizationMap = utilizationMap;
+	}
+	
 	/*
 	 * TODO we need to refactor this code. we should not use cast here We also
 	 * need to check where getTotalMips from Host class is being used because
@@ -156,5 +166,16 @@ public class GoogleHost extends Host implements Comparable<Host> {
 
 		return ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips()
 				- inUseByNonPreemptiveVms;
+	}
+	
+	public void updateUtilization(double time) {
+		double totalMips = ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips();
+		double utilization = (totalMips - getAvailableMips()) / totalMips;
+		getUtilizationMap().put(time, utilization);
+		System.out.println("HostId " + getId() + " updating utilization time " + time + " to " + utilization);
+	}
+	
+	public void resetUtilizationMap() {
+		getUtilizationMap().clear();	
 	}
 }

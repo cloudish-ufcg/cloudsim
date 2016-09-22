@@ -35,6 +35,7 @@ import org.cloudbus.cloudsim.googletrace.GoogleHost;
 import org.cloudbus.cloudsim.googletrace.GoogleTask;
 import org.cloudbus.cloudsim.googletrace.GoogleTaskState;
 import org.cloudbus.cloudsim.googletrace.GoogleTraceDatacenterBroker;
+import org.cloudbus.cloudsim.googletrace.HostUtilizationEntry;
 import org.cloudbus.cloudsim.googletrace.VmSchedulerMipsBased;
 import org.cloudbus.cloudsim.googletrace.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
 import org.cloudbus.cloudsim.googletrace.policies.vmallocation.PreemptableVmAllocationPolicy;
@@ -56,17 +57,20 @@ public class CloudSimExampleGoogleTrace {
 	 * Creates main() to run this example
 	 */
 	public static void main(String[] args) {
-		Log.disable();
-		Log.printLine("Starting CloudSimExample Google Trace ...");
 		System.out.println("Starting CloudSimExample Google Trace ...");
 
 		long now = System.currentTimeMillis();
 		
 		try {
-
 			Properties properties = new Properties();
 			FileInputStream input = new FileInputStream(args[0]);
 			properties.load(input);
+			
+			if (properties.getProperty("logging") != null && properties.getProperty("logging").equals("no")) {
+				Log.disable();
+			}
+			Log.printLine("Starting CloudSimExample Google Trace ...");
+			
 			
 			// First step: Initialize the CloudSim package. It should be called
 			// before creating any entities.
@@ -97,8 +101,12 @@ public class CloudSimExampleGoogleTrace {
 			List<GoogleTaskState> newList = broker.getStoredTasks();
 
 			CloudSim.stopSimulation();
+			
+			List<HostUtilizationEntry> utilizationEntries = datacenter0.getHostUtilizationEntries();
 
 			printGoogleTaskStates(newList);
+			
+			System.out.println("Utilization Entries: " + utilizationEntries.size());
 
 			Log.printLine("Execution Time "
 					+ (((System.currentTimeMillis() - now) / 1000) / 60)
@@ -249,7 +257,7 @@ public class CloudSimExampleGoogleTrace {
 			datacenter = new GoogleDatacenter(name, characteristics,
 					new PreemptableVmAllocationPolicy(hostList,
 							new WorstFitMipsBasedHostSelectionPolicy()),
-					storageList, 0);
+					storageList, 0, properties);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
