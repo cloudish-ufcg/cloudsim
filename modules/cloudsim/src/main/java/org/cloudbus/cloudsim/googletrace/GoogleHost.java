@@ -172,7 +172,6 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		double totalMips = ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips();
 		double utilization = (totalMips - getAvailableMips()) / totalMips;
 		getUtilizationMap().put(time, utilization);
-		System.out.println("HostId " + getId() + " updating utilization time " + time + " to " + utilization);
 	}
 	
 	public void resetUtilizationMap() {
