@@ -59,14 +59,14 @@ public class GoogleHost extends Host implements Comparable<Host> {
     }
     
 	public Vm nextVmForPreempting() {
-		for (int i = getPriorityToVms().size() - 1; i >= 0; i--) {
+		for (int i = getNumberOfPriorities() - 1; i >= 0; i--) {
 			if (!getPriorityToVms().get(i).isEmpty()) {
 				return getPriorityToVms().get(i).last();
 			}
 		}
 		return null;
 	}
-	
+
 	@Override
 	public boolean isSuitableForVm(Vm vm) {
 		if (getVmScheduler().getAvailableMips() >= vm.getMips()) {
@@ -84,6 +84,8 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		 * TODO The Host class add the VM into a List. We don't need that list.
 		 * We may optimize the code.
 		 */
+		if (vm == null) return false;
+
 		boolean result = super.vmCreate(vm);
 		
 		if (result) {
@@ -111,7 +113,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 
 	protected double getMipsInUseByLessPriorityVms(int priority) {
 		double currentUse = 0;
-		for (int i = priority + 1; i < getPriorityToInUseMips().size(); i++) {
+		for (int i = priority + 1; i < getNumberOfPriorities(); i++) {
 			currentUse += getPriorityToInUseMips().get(i);
 		}
 		return currentUse;

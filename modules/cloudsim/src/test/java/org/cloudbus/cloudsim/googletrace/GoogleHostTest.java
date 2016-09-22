@@ -12,11 +12,47 @@ import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class GoogleHostTest {
 
 	private static final double ACCEPTABLE_DIFFERENCE = 0.00000001;
+	private static GoogleHost host;
+	private static final int HOST_ID = 0;
+	private static final int NUMBER_OF_PRIORITIES = 3;
+	private static final double HOST_CAPACITY = 100.5;
+	private static GoogleVm vm0_1, vm0_2, vm1_1, vm1_2, vm2_1, vm2_2;
+
+	@Before
+	public void setUp(){
+		List<Pe> peList1 = new ArrayList<Pe>();
+		peList1.add(new Pe(0, new PeProvisionerSimple(HOST_CAPACITY)));
+		host = new GoogleHost(HOST_ID, peList1,
+				new VmSchedulerMipsBased(peList1), NUMBER_OF_PRIORITIES);
+
+		int numberOfVMs = 0;
+
+		vm0_1 = new GoogleVm(numberOfVMs++, 1, 23.7, 1.0, 0, 0, 0);
+		vm0_2 = new GoogleVm(numberOfVMs++, 1, 26.3, 1.0, 0.2, 0, 0);
+
+		vm1_1 = new GoogleVm(numberOfVMs++, 1, 24.3, 1.0, 0, 1, 0);
+		vm1_2 = new GoogleVm(numberOfVMs++, 1, 0.7, 1.0, 0.1, 1, 0);
+
+
+		vm2_1 = new GoogleVm(numberOfVMs++, 1,24.99, 1.0, 0, 2, 0);
+		vm2_2 = new GoogleVm(numberOfVMs++, 1, 0.01, 1.0, 0.1, 2, 0);
+
+		Assert.assertTrue(host.vmCreate(vm0_1));
+		Assert.assertTrue(host.vmCreate(vm0_2));
+		Assert.assertTrue(host.vmCreate(vm1_1));
+		Assert.assertTrue(host.vmCreate(vm1_2));
+		Assert.assertTrue(host.vmCreate(vm2_1));
+		Assert.assertTrue(host.vmCreate(vm2_2));
+
+
+	}
+
 
 	@Test
 	public void testInitializing() {
@@ -537,8 +573,88 @@ public class GoogleHostTest {
 		Assert.assertFalse(host1.vmCreate(vm8));
 
 
+	}
 
+	// TODO improve nextVMForPreempting(), isSuitableFor() and getAvailableMipsForPriority()
+	@Test
+	public void testNextVmForPreempting2(){
+		Assert.assertEquals(0.5, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm2_2, host.nextVmForPreempting());
+
+		GoogleVm vmTest = new GoogleVm(7, 1, 0.3, 1.0, 0.2, 0, 0);
+		Assert.assertTrue(host.vmCreate(vmTest));
+		Assert.assertEquals(0.2, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm2_2, host.nextVmForPreempting());
+
+		host.vmDestroy(vmTest);
+
+		GoogleVm vm2_3 = new GoogleVm(7, 1, 0.1, 1.0, 0.2, 2, 0);
+		Assert.assertTrue(host.vmCreate(vm2_3));
+		Assert.assertEquals(0.4, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm2_3, host.nextVmForPreempting());
+
+		host.vmDestroy(vm2_2);
+		Assert.assertEquals(0.41, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm2_3, host.nextVmForPreempting());
+
+		host.vmDestroy(vm2_3);
+		host.vmDestroy(vm2_1);
+		Assert.assertEquals(25.5, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm1_2, host.nextVmForPreempting());
+
+		GoogleVm bigVM = new GoogleVm(7, 1, 25.6, 1.0, 0.1001, 1, 0);
+		Assert.assertFalse(host.vmCreate(bigVM));
+		Assert.assertEquals(25.5, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm1_2, host.nextVmForPreempting());
+
+		GoogleVm vm1_3 = new GoogleVm(7, 1, 25.5, 1.0, 0.1001, 1, 0);
+		Assert.assertTrue(host.vmCreate(vm1_3));
+		Assert.assertEquals(0, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm1_3, host.nextVmForPreempting());
+
+		host.vmDestroy(vm1_1);
+		Assert.assertEquals(24.3, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm1_3, host.nextVmForPreempting());
+
+		host.vmDestroy(vm1_2);
+		host.vmDestroy(vm1_3);
+		Assert.assertEquals(50.5, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm0_2, host.nextVmForPreempting());
+
+		GoogleVm vm0_3 = new GoogleVm(7, 1, 25.5, 1.0, 0.2, 0, 0);
+		Assert.assertTrue(host.vmCreate(vm0_3));
+		Assert.assertEquals(25, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm0_3, host.nextVmForPreempting());
+
+
+		GoogleVm vm0_4 = new GoogleVm(8, 1, 24.9, 1.0, 0.1, 0, 0);
+		Assert.assertTrue(host.vmCreate(vm0_4));
+		Assert.assertEquals(0.1, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm0_3, host.nextVmForPreempting());
+
+		Assert.assertFalse(host.vmCreate(null));
+		Assert.assertEquals(0.1, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm0_3, host.nextVmForPreempting());
+
+		host.vmDestroy(vm0_3);
+		Assert.assertEquals(25.6, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm0_2, host.nextVmForPreempting());
+
+		host.vmDestroy(vm0_2);
+		Assert.assertEquals(51.9, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm0_4, host.nextVmForPreempting());
+
+		host.vmDestroy(vm0_4);
+		Assert.assertEquals(76.8, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm0_1, host.nextVmForPreempting());
+
+		host.vmDestroy(vm0_1);
+		Assert.assertEquals(100.5, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertNull(host.nextVmForPreempting());
 
 
 	}
+
+
+
 }

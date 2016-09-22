@@ -20,14 +20,21 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.omg.CORBA.ACTIVITY_COMPLETED;
+import sun.reflect.generics.tree.Tree;
 
 public class PreemptableVmAllocationTest {
 
-	SortedSet<GoogleHost> sortedHosts;
-	HostSelectionPolicy hostSelector;
-	GoogleHost host1, host2;
-	PreemptableVmAllocationPolicy preemptablePolicy;
-	
+	private SortedSet<GoogleHost> sortedHosts;
+	private HostSelectionPolicy hostSelector;
+	private GoogleHost host1, host2, host3;
+	private PreemptableVmAllocationPolicy preemptablePolicy;
+	private static final int PRIORITY_0 = 0;
+	private static final int PRIORITY_1 = 1;
+	private static final int PRIORITY_2 = 2;
+	private static final int NUMBER_OF_PRIORITIES = 3;
+	private static final double ACCEPTABLE_DIFERENCE = 0.000001;
+
 	@Before
 	public void setUp() {
 		List<Pe> peList1 = new ArrayList<Pe>();
@@ -584,7 +591,124 @@ public class PreemptableVmAllocationTest {
 	}
 
 	@Test
-	public void testPriorityToSortedHostSkinsMap(){
+	public void testPriorityToSortedHostsMap(){
+		// creating 3 hosts with 3 priorities
+		List<GoogleHost> listaHosts = new ArrayList<GoogleHost>();
+		List<Pe> peList1 = new ArrayList<Pe>();
+		peList1.add(new Pe(0, new PeProvisionerSimple(100.5)));
+		host1 = new GoogleHost(1, peList1,
+				new VmSchedulerMipsBased(peList1), NUMBER_OF_PRIORITIES);
+
+		host2 = new GoogleHost(2, peList1,
+				new VmSchedulerMipsBased(peList1), NUMBER_OF_PRIORITIES);
+
+		host3 = new GoogleHost(3, peList1,
+				new VmSchedulerMipsBased(peList1), NUMBER_OF_PRIORITIES);
+		listaHosts.add(host1);
+		listaHosts.add(host2);
+		listaHosts.add(host3);
+
+		// creating policy with these hosts
+		preemptablePolicy = new PreemptableVmAllocationPolicy(listaHosts, hostSelector);
+
+		// asserting that the HashMap has 3 elements mapping priority to a sortedList
+		Assert.assertTrue(preemptablePolicy.getPriorityToSortedHost().size() == NUMBER_OF_PRIORITIES);
+
+
+		// asserting that each priority has a sortedHostList with length = 3
+		// asserting that the hostList has the same elements as the sortedHostList in each priority
+		for (int i = 0; i < host1.getNumberOfPriorities(); i++){
+			Assert.assertTrue(preemptablePolicy.getPriorityToSortedHost().get(i).size() == 3);
+			Assert.assertArrayEquals(preemptablePolicy.getHostList().toArray(), preemptablePolicy.getPriorityToSortedHost().get(i).toArray());
+		}
+
+		// allocating VM with priority 1
+		GoogleVm vmPriority1 = new GoogleVm(1, 1, 50.2, 1.0, 0, 1, 0);
+		Mockito.when(hostSelector.select(preemptablePolicy.getPriorityToSortedHost().get(vmPriority1.getPriority()), vmPriority1)).thenReturn(host1);
+		preemptablePolicy.allocateHostForVm(vmPriority1);
+
+		// testing if the sortedHost for priority0 is the same
+		List<GoogleHost> expectedListPriority0 = new ArrayList<>();
+		expectedListPriority0.add(host1);
+		expectedListPriority0.add(host2);
+		expectedListPriority0.add(host3);
+		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_0).toArray(), expectedListPriority0.toArray());
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
+
+		// testing if the sortedHost for priority1 has changed
+		List<GoogleHost> expectedListPriority1 = new ArrayList<>();
+		expectedListPriority1.add(host2);
+		expectedListPriority1.add(host3);
+		expectedListPriority1.add(host1);
+		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_1).toArray(), expectedListPriority1.toArray());
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_1), 50.3, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_1), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_1), 100.5, ACCEPTABLE_DIFERENCE);
+
+		// testing if the sortedHost for priority2 has changed
+		List<GoogleHost> expectedListPriority2 = new ArrayList<>();
+		expectedListPriority2.add(host2);
+		expectedListPriority2.add(host3);
+		expectedListPriority2.add(host1);
+		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_2).toArray(), expectedListPriority2.toArray());
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_2), 50.3, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_2), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_2), 100.5, ACCEPTABLE_DIFERENCE);
+
+		// allocating VM with priority 2
+		GoogleVm vmPriority2 = new GoogleVm(1, 1, 50.3, 1.0, 0, 2, 0);
+		Mockito.when(hostSelector.select(preemptablePolicy.getPriorityToSortedHost().get(vmPriority2.getPriority()), vmPriority2)).thenReturn(host2);
+		preemptablePolicy.allocateHostForVm(vmPriority2);
+
+		// testing if the sortedHost for priority0 is the same
+		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_0).toArray(), expectedListPriority0.toArray());
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
+
+
+		// testing if the sortedHost for priority1 is the same
+		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_1).toArray(), expectedListPriority1.toArray());
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_1), 50.3, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_1), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_1), 100.5, ACCEPTABLE_DIFERENCE);
+
+
+		// testing if the sortedHost for priority2 has changed
+		expectedListPriority2.clear();
+		expectedListPriority2.add(host3);
+		expectedListPriority2.add(host1);
+		expectedListPriority2.add(host2);
+		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_2).toArray(), expectedListPriority2.toArray());
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_2), 50.3, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_2), 50.2, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_2), 100.5, ACCEPTABLE_DIFERENCE);
+
+
+		// allocating VM with priority 1 again
+		GoogleVm vmPriority1_2 = new GoogleVm(1, 1, 4.2, 1.0, 0, 1, 0);
+		Mockito.when(hostSelector.select(preemptablePolicy.getPriorityToSortedHost().get(vmPriority1_2.getPriority()), vmPriority1_2)).thenReturn(host3);
+		preemptablePolicy.allocateHostForVm(vmPriority1_2);
+
+		// testing if the sortedHost for priority0 is the same
+		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_0).toArray(), expectedListPriority0.toArray());
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
+
+		// testing if the sortedHost for priority1 is the same, changing only the available mips for this priority at host3
+		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_1).toArray(), expectedListPriority1.toArray());
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_1), 50.3, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_1), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_1), 96.3, ACCEPTABLE_DIFERENCE);
+
+		// testing if the sortedHost for priority2 is the same, changing only the available mips for this priority at host3
+		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_2).toArray(), expectedListPriority2.toArray());
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_2), 50.3, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_2), 50.2, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_2), 96.3, ACCEPTABLE_DIFERENCE);
 
 	}
 }

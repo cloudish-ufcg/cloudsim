@@ -149,10 +149,7 @@ public class PreemptableVmAllocationPolicy extends VmAllocationPolicy implements
 
 	@Override
 	public List<Host> getHostList() {
-		List<Host> hostList = new ArrayList<Host>();
-		for (GoogleHost host : getPriorityToSortedHost().get(0)) {
-			hostList.add(host);
-		}
+		List<Host> hostList = new ArrayList<Host>(getPriorityToSortedHost().get(0));
 		return hostList;
 	}
 	
