@@ -21,6 +21,8 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	private int numberOfPriorities;
 	private static final int DECIMAL_ACCURACY = 15;
 
+	private Map<Double, Double> utilizationMap;
+
 	public GoogleHost(int id, List<? extends Pe> peList, VmScheduler vmScheduler, int numberOfPriorities) {
 		super(id, new RamProvisionerSimple(Integer.MAX_VALUE),
 				new BwProvisionerSimple(Integer.MAX_VALUE), Integer.MAX_VALUE,
@@ -32,6 +34,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		
 		setPriorityToVms(new HashMap<Integer, SortedSet<Vm>>());
 		setPriorityToInUseMips(new HashMap<Integer, Double>());
+		setUtilizationMap(new HashMap<Double, Double>());
 		setNumberOfPriorities(numberOfPriorities);
 		
 		// initializing maps
@@ -144,6 +147,14 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		this.numberOfPriorities = numberOfPriorities;
 	}
 	
+	public Map<Double, Double> getUtilizationMap() {
+		return utilizationMap;
+	}
+
+	protected void setUtilizationMap(Map<Double, Double> utilizationMap) {
+		this.utilizationMap = utilizationMap;
+	}
+
 	/*
 	 * TODO we need to refactor this code. we should not use cast here We also
 	 * need to check where getTotalMips from Host class is being used because
@@ -158,5 +169,15 @@ public class GoogleHost extends Host implements Comparable<Host> {
 
 		return ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips()
 				- DecimalUtil.format(inUseByNonPreemptiveVms, DECIMAL_ACCURACY);
+	}
+
+	public void updateUtilization(double time) {
+		double totalMips = ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips();
+		double utilization = (totalMips - getAvailableMips()) / totalMips;
+		getUtilizationMap().put(time, utilization);
+	}
+
+	public void resetUtilizationMap() {
+		getUtilizationMap().clear();
 	}
 }

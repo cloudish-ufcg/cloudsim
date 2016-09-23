@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.SortedSet;
 
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
@@ -69,7 +70,7 @@ public class GoogleDatacenterTest {
 		
 		datacenter = new GoogleDatacenter("datacenter",
 				characteristics, preemptableVmAllocationPolicy,
-				new LinkedList<Storage>(), 0);
+				new LinkedList<Storage>(), 0, new Properties());
 		
 		datacenter.setSimulationTimeUtil(timeUtil);
 
