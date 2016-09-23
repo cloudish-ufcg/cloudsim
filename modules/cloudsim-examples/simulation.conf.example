@@ -1,0 +1,29 @@
+# whould like to log (yes or no) ?
+logging=no
+
+# trace file info
+input_trace_database_url=jdbc:sqlite:/path/to/trace.sqlite3
+
+#simulation info
+
+#minimum time you are interested to submit vms (in microseconds)
+#minimum_interested_time=
+
+#maximum time you are interested to submit vms (in microseconds)
+#maximum_interested_time=
+
+number_of_hosts=12500
+total_cpu_capacity=6603.25
+
+#interval size (in minutes) to submit vms
+loading_interval_size=5
+
+#interval size (in minutes) for dumping already finished vms
+storing_interval_size=5
+output_tasks_database_url=jdbc:sqlite:/path/to/tasks.sqlite3
+
+#resource utilization info
+utilization_database_url=jdbc:sqlite:/path/to/utilization.sqlite3
+
+# interval size (in minutes) for dumping
+#utilization_storing_interval_size=1440
