@@ -4,7 +4,9 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmScheduler;
+import org.cloudbus.cloudsim.googletrace.util.DecimalUtil;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -14,6 +16,7 @@ public class VmSchedulerMipsBased extends VmScheduler{
 
 
     double totalMips;
+    private static final int DECIMAL_ACCURACY = 15;
 
     /**
      * Creates a new VmScheduler.
@@ -50,7 +53,8 @@ public class VmSchedulerMipsBased extends VmScheduler{
         if (totalRequestedMips <= getAvailableMips()) {
 
             getMipsMap().put(vm.getUid(), mipsShare);
-            setAvailableMips(getAvailableMips() - totalRequestedMips);
+            double newAvailableMips = getAvailableMips() - totalRequestedMips;
+            setAvailableMips(newAvailableMips);
 
             return true;
         }
@@ -61,6 +65,7 @@ public class VmSchedulerMipsBased extends VmScheduler{
         }
 
     }
+
     
     @Override
 	public double getPeCapacity() {
@@ -94,7 +99,12 @@ public class VmSchedulerMipsBased extends VmScheduler{
 
     public double getTotalMips() { return totalMips; }
 
-    public void setTotalMips(double totalMips) { this.totalMips = totalMips; }
+    public void setTotalMips(double totalMips) { this.totalMips = DecimalUtil.format(totalMips, DECIMAL_ACCURACY); }
+
+    @Override
+    protected void setAvailableMips(double availableMips) {
+        super.setAvailableMips(DecimalUtil.format(availableMips, DECIMAL_ACCURACY));
+    }
 
     @Override
     public double getMaxAvailableMips() {

@@ -10,6 +10,7 @@ import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmScheduler;
+import org.cloudbus.cloudsim.googletrace.util.DecimalUtil;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 
@@ -18,7 +19,8 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	private Map<Integer, Double> priorityToInUseMips;
 	private Map<Integer, SortedSet<Vm>> priorityToVms;
 	private int numberOfPriorities;
-	
+	private static final int DECIMAL_ACCURACY = 15;
+
 	public GoogleHost(int id, List<? extends Pe> peList, VmScheduler vmScheduler, int numberOfPriorities) {
 		super(id, new RamProvisionerSimple(Integer.MAX_VALUE),
 				new BwProvisionerSimple(Integer.MAX_VALUE), Integer.MAX_VALUE,
@@ -155,6 +157,6 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		}
 
 		return ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips()
-				- inUseByNonPreemptiveVms;
+				- DecimalUtil.format(inUseByNonPreemptiveVms, DECIMAL_ACCURACY);
 	}
 }

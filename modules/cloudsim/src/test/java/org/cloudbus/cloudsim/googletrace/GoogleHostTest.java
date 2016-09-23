@@ -544,7 +544,7 @@ public class GoogleHostTest {
 		host.vmDestroy(vm1_2);
 		Assert.assertEquals(24.9, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
 
-		vm2_3 = new GoogleVm(VM_ID, USER_ID, 24.89999, 0, 0, 2, 0);
+		vm2_3 = new GoogleVm(VM_ID, USER_ID, 24.9, 0, 0, 2, 0);
 		Assert.assertTrue(host.isSuitableForVm(vm2_3));
 
 		vm2_4 = new GoogleVm(VM_ID, USER_ID, 25.000001, 0, 0, 2, 0);

@@ -303,8 +303,10 @@ public class VmSchedulerMipsBasedTest {
     @Test
     public void testGetPeCapacity(){
 
-       Assert.assertEquals(1000, vmScheduler.getPeCapacity(), ACCEPTABLE_DIFFERENCE);
-       Assert.assertEquals(1000, googleVMScheduler.getPeCapacity(), ACCEPTABLE_DIFFERENCE);
+        double peCapacity = 1000.0;
+
+       Assert.assertEquals(peCapacity, vmScheduler.getPeCapacity(), ACCEPTABLE_DIFFERENCE);
+       Assert.assertEquals(peCapacity, googleVMScheduler.getPeCapacity(), ACCEPTABLE_DIFFERENCE);
 
     }
 }
