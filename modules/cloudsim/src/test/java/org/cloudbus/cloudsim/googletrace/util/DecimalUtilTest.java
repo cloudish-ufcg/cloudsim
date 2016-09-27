@@ -33,19 +33,10 @@ public class DecimalUtilTest {
 
         // accuracy 22
         Assert.assertEquals(0.53999999999999999999780, DecimalUtil.format(NUMBER, DECIMAL_ACCURACY), ACCEPTABLE_DIFERENCE);
-
-        System.out.println(DecimalUtil.format(NUMBER, DECIMAL_ACCURACY));
         Assert.assertEquals(0.54, 0.53999999999999999999780, ACCEPTABLE_DIFERENCE);
-        System.out.println(0.54 -  0.53999999999999994444780);
 
         // accuracy 23
         Assert.assertEquals(0.53999999999999999999781, DecimalUtil.format(NUMBER, DECIMAL_ACCURACY + 8), ACCEPTABLE_DIFERENCE);
-    }
-
-    @Test
-    public void testFormat2(){
-        double NUMBER = 0.53999999999999999997810;
-
     }
 
 }

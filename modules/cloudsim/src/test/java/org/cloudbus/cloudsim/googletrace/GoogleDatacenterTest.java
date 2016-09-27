@@ -14,6 +14,7 @@ import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEvent;
+import org.cloudbus.cloudsim.googletrace.datastore.UtilizationDataStore;
 import org.cloudbus.cloudsim.googletrace.policies.hostselection.HostSelectionPolicy;
 import org.cloudbus.cloudsim.googletrace.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
@@ -67,10 +68,13 @@ public class GoogleDatacenterTest {
 		}
 		
 		preemptableVmAllocationPolicy = new PreemptableVmAllocationPolicy(googleHostList, hostSelector);
-		
+
+		Properties properties = Mockito.mock(Properties.class);
+		Mockito.when(properties.getProperty(UtilizationDataStore.DATABASE_URL_PROP)).thenReturn("jdbc:sqlite:inputUtilizationTest.sqlite3");
+
 		datacenter = new GoogleDatacenter("datacenter",
 				characteristics, preemptableVmAllocationPolicy,
-				new LinkedList<Storage>(), 0, new Properties());
+				new LinkedList<Storage>(), 0, properties);
 		
 		datacenter.setSimulationTimeUtil(timeUtil);
 
