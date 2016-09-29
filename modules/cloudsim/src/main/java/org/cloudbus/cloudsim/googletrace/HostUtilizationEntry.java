@@ -35,4 +35,29 @@ public class HostUtilizationEntry {
 	protected void setUtilization(double utilization) {
 		this.utilization = utilization;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof HostUtilizationEntry)) return false;
+
+		HostUtilizationEntry that = (HostUtilizationEntry) o;
+
+		if (getHostId() != that.getHostId()) return false;
+		if (Double.compare(that.getTime(), getTime()) != 0) return false;
+		return Double.compare(that.getUtilization(), getUtilization()) == 0;
+
+	}
+
+	@Override
+	public int hashCode() {
+		int result;
+		long temp;
+		result = getHostId();
+		temp = Double.doubleToLongBits(getTime());
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(getUtilization());
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		return result;
+	}
 }
