@@ -21,7 +21,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	private Map<Integer, Double> priorityToInUseMips;
 	private Map<Integer, SortedSet<Vm>> priorityToVms;
 	private int numberOfPriorities;
-	public static final int DECIMAL_ACCURACY = 15;
+	public static final int DECIMAL_ACCURACY = 9;
 
 	private Map<Double, Double> utilizationMap;
 
@@ -194,8 +194,8 @@ public class GoogleHost extends Host implements Comparable<Host> {
 			inUseByNonPreemptiveVms += getPriorityToInUseMips().get(i);
 		}
 
-		return ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips()
-				- DecimalUtil.format(inUseByNonPreemptiveVms, DECIMAL_ACCURACY);
+		return DecimalUtil.format(((VmSchedulerMipsBased) getVmScheduler()).getTotalMips()
+				- inUseByNonPreemptiveVms, DECIMAL_ACCURACY);
 	}
 
 	@Override

@@ -15,7 +15,7 @@ public class VmSchedulerMipsBased extends VmScheduler{
 
 
     double totalMips;
-    private static final int DECIMAL_ACCURACY = 15;
+    private static final int DECIMAL_ACCURACY = 9;
 
     /**
      * Creates a new VmScheduler.
