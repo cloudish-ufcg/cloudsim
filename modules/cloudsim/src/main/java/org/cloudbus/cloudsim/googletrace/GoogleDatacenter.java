@@ -9,7 +9,6 @@ package org.cloudbus.cloudsim.googletrace;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -47,7 +46,7 @@ public class GoogleDatacenter extends Datacenter {
 	private SortedSet<GoogleVm> vmsRunning = new TreeSet<GoogleVm>();
 	private SortedSet<GoogleVm> vmsForScheduling = new TreeSet<GoogleVm>();
 	private UtilizationDataStore hostUsageDataStore;
-	
+		
 	private double storingIntervalSize;
 	
 	//TODO make it configurable
@@ -94,14 +93,14 @@ public class GoogleDatacenter extends Datacenter {
 
 		for (Host host : getHostList()) {
 			GoogleHost gHost = (GoogleHost) host;
-			System.out.println("time=" + simulationTimeUtil.clock() + "hostId:" + gHost.getId() + ", totalMips=" + gHost.getTotalMips() + ", totalUsage=" + gHost.getTotalUsage());
+			System.out.println("time=" + simulationTimeUtil.clock() + "hostId:" + gHost.getId() + ", totalUsage=" + gHost.getTotalUsage()+ ", availableMips=" + gHost.getAvailableMips());
+			System.out.println("#VMs Running: " + getVmsRunning().size());
+			System.out.println("#VMs For Scheduling: " + getVmsForScheduling().size());
 			System.out.println("Priority0: usage=" + gHost.getUsageByPriority(0)+ ", available=" + gHost.getAvailableMipsByPriority(0) + ", running=" + gHost.getPriorityToVms().get(0).size());
 			System.out.println("Priority1: usage=" + gHost.getUsageByPriority(1)+ ", available=" + gHost.getAvailableMipsByPriority(1) + ", running=" + gHost.getPriorityToVms().get(1).size());
 			System.out.println("Priority2: usage=" + gHost.getUsageByPriority(2)+ ", available=" + gHost.getAvailableMipsByPriority(2) + ", running=" + gHost.getPriorityToVms().get(2).size());
 		}
 		
-		System.out.println("#VMs Running: " + getVmsRunning().size());
-		System.out.println("#VMs For Scheduling: " + getVmsForScheduling().size());
 		for (int i = 0; i < 3; i++) {
 			int numberOfVms = 0;
 			for (GoogleVm vm : getVmsForScheduling()) {
@@ -127,24 +126,20 @@ public class GoogleDatacenter extends Datacenter {
 
 	private void storeHostUtilization() {
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Storing host utilization  into database.");
-		
-		List<HostUtilizationEntry> utilizationEntries = new ArrayList<HostUtilizationEntry>();
+
+		List<UsageEntry> usageEntries = new ArrayList<UsageEntry>();
 		
 		for (Host host : getHostList()) {
-			int hostId = host.getId();
 			GoogleHost gHost = (GoogleHost) host;
-			Map<Double, Double> utilizationMap = gHost.getUtilizationMap();
-			
-			for (Double time : utilizationMap.keySet()) {				
-				utilizationEntries.add(new HostUtilizationEntry(hostId, time, utilizationMap.get(time)));
-			}
-			
+
+			usageEntries.addAll(gHost.getUsageEntries());
+						
 			gHost.resetUtilizationMap();
 		}
 		
-		Log.printConcatLine(simulationTimeUtil.clock(), ":", utilizationEntries.size()," will be stored into database now.");
+		Log.printConcatLine(simulationTimeUtil.clock(), ":", usageEntries.size()," will be stored into database now.");
 		
-		hostUsageDataStore.addUtilizationEntries(utilizationEntries);
+		hostUsageDataStore.addUsageEntries(usageEntries);
 
 		// creating next event if the are more vms to be concluded
 		if (!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) {
@@ -157,8 +152,8 @@ public class GoogleDatacenter extends Datacenter {
 		}
 	}
 	
-	public List<HostUtilizationEntry> getHostUtilizationEntries() {
-		return hostUsageDataStore.getAllUtilizationEntries();
+	public List<UsageEntry> getHostUtilizationEntries() {
+		return hostUsageDataStore.getAllUsageEntries();
 	}
 
 	/**
@@ -345,19 +340,6 @@ public class GoogleDatacenter extends Datacenter {
 		
 		GoogleHost gHost = (GoogleHost) host;
 		
-//		Map<Integer, Double> priorityToAvailableMips = new HashMap<Integer, Double>();		
-//		for (int i = 0; i < gHost.getNumberOfPriorities(); i++) {
-//			priorityToAvailableMips.put(i, gHost.getAvailableMipsByPriority(i));
-//		}
-//		
-//		System.out.println("priorityToAvailableMips=" + priorityToAvailableMips);
-		
-		
-//		double availableMips = host.getAvailableMips();
-//		double mipsForRequestingNow = 0;
-//		List<GoogleVm> vmsToRequestNow = new ArrayList<GoogleVm>();
-		
-		
 		/*
 		 * TODO
 		 * We need to think in retrying to allocate VMs that were preempted while allocating new VMs.
@@ -365,42 +347,13 @@ public class GoogleDatacenter extends Datacenter {
 		
 		// choosing the vms to request now
 		for (GoogleVm currentVm : new ArrayList<GoogleVm>(getVmsForScheduling())) {
-//			System.out.println("vmId="+ currentVm.getId());
-//			System.out.println("vmMips="+ currentVm.getMips());
-//			System.out.println("isSuitableFor? " + host.isSuitableForVm(currentVm));
-//			System.out.println("priorityToAvailableMips=" + gHost.getAvailableMipsByPriority(priority));
-//			System.out.println("currentVm.getMips() <= priorityToAvailableMips.get(currentVm.getPriority())? " + (currentVm.getMips() <= priorityToAvailableMips.get(currentVm.getPriority())));
-			
-//			if (host.isSuitableForVm(currentVm) && currentVm.getMips() <= priorityToAvailableMips.get(currentVm.getPriority())) {
 			if (host.isSuitableForVm(currentVm)) {
-				//TODO remove it
-//				if (mipsForRequestingNow + currentVm.getMips() <= availableMips) {
-//					mipsForRequestingNow += currentVm.getMips();
-//					vmsToRequestNow.add(currentVm);
-//				}
-				
-//				vmsToRequestNow.add(currentVm);
-		
+
 				Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to Allocate VM #", currentVm.getId(), " now on host #", gHost.getId());
 				allocateHostForVm(false, currentVm, gHost);
 				
-				// updating available mips for the same and smaller priorities
-//				for (int i = currentVm.getPriority(); i < gHost.getNumberOfPriorities(); i++) {
-//					double currenAvailable = priorityToAvailableMips.get(i);
-//					priorityToAvailableMips.put(i, DecimalUtil.format(currenAvailable - currentVm.getMips(), GoogleHost.DECIMAL_ACCURACY));		
-//				}
-				
 			}
-//			System.out.println("priorityToAvailableMips=" + priorityToAvailableMips);
 		}
-		
-//		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to Allocate "
-//				+ vmsToRequestNow.size() + " VMs now.");
-//		
-//		// trying to allocate Host
-//		for (GoogleVm requestedVm : vmsToRequestNow) {
-//			allocateHostForVm(false, requestedVm, gHost);				
-//		}
 	}
 
 	public SortedSet<GoogleVm> getVmsRunning() {

@@ -59,46 +59,46 @@ public class UtilizationDataStoreTest {
 		new File(databaseFile).delete();
 	}
 
-	@Test
-	public void testAddEmptyOrNullUtilizationEntries() {
-
-		Assert.assertFalse(UDataStore.addUtilizationEntries(entryList5));
-		Assert.assertTrue(UDataStore.addUtilizationEntries(entryList4));
-	}
-
-	@Test
-	public void testAddUtilizationEntries() {
-
-		Assert.assertTrue(UDataStore.addUtilizationEntries(entryList1));
-		Assert.assertEquals(UDataStore.getAllUtilizationEntries(), entryList1);
-	}
-
-	@Test
-	public void testAddUtilizationEntries2() {
-
-		Assert.assertTrue(UDataStore.addUtilizationEntries(entryList2));
-		Assert.assertEquals(UDataStore.getAllUtilizationEntries(), entryList2);
-	}
-
-	@Test
-	public void testAddUtilizationEntries3() {
-
-		Assert.assertTrue(UDataStore.addUtilizationEntries(entryList3));
-		Assert.assertEquals(UDataStore.getAllUtilizationEntries(), entryList3);
-	}
-
-	@Test
-	public void testAddUtilizationEntries4() {
-
-		Assert.assertTrue(UDataStore.addUtilizationEntries(entryList1));
-		Assert.assertTrue(UDataStore.addUtilizationEntries(entryList2));
-
-		//entryList3 has elements of the same order of the combination fo entryList1 and entryList2
-		Assert.assertEquals(UDataStore.getAllUtilizationEntries(), entryList3);
-	}
-
-	@Test
-	public void testGetEmptyUtilizationEntry() {
-		Assert.assertEquals(UDataStore.getAllUtilizationEntries(), entryList4);
-	}
+//	@Test
+//	public void testAddEmptyOrNullUtilizationEntries() {
+//
+//		Assert.assertFalse(UDataStore.addUtilizationEntries(entryList5));
+//		Assert.assertTrue(UDataStore.addUtilizationEntries(entryList4));
+//	}
+//
+//	@Test
+//	public void testAddUtilizationEntries() {
+//
+//		Assert.assertTrue(UDataStore.addUtilizationEntries(entryList1));
+//		Assert.assertEquals(UDataStore.getAllUtilizationEntries(), entryList1);
+//	}
+//
+//	@Test
+//	public void testAddUtilizationEntries2() {
+//
+//		Assert.assertTrue(UDataStore.addUtilizationEntries(entryList2));
+//		Assert.assertEquals(UDataStore.getAllUtilizationEntries(), entryList2);
+//	}
+//
+//	@Test
+//	public void testAddUtilizationEntries3() {
+//
+//		Assert.assertTrue(UDataStore.addUtilizationEntries(entryList3));
+//		Assert.assertEquals(UDataStore.getAllUtilizationEntries(), entryList3);
+//	}
+//
+//	@Test
+//	public void testAddUtilizationEntries4() {
+//
+//		Assert.assertTrue(UDataStore.addUtilizationEntries(entryList1));
+//		Assert.assertTrue(UDataStore.addUtilizationEntries(entryList2));
+//
+//		//entryList3 has elements of the same order of the combination fo entryList1 and entryList2
+//		Assert.assertEquals(UDataStore.getAllUtilizationEntries(), entryList3);
+//	}
+//
+//	@Test
+//	public void testGetEmptyUtilizationEntry() {
+//		Assert.assertEquals(UDataStore.getAllUtilizationEntries(), entryList4);
+//	}
 }
