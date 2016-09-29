@@ -208,7 +208,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	public void updateUtilization(double time) {
 		double totalMips = ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips();
 		double utilization = (totalMips - getAvailableMips()) / totalMips;
-		System.out.println(time +  ": updating usage to " + getTotalUsage());
+
 		getUsageEntries().add(new UsageEntry(getId(), time, getPriorityToInUseMips(), getPriorityToVms(), getTotalUsage(), getAvailableMips()));
 //		//TODO remove it
 //		double totalUsage = 0;
@@ -219,8 +219,6 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	}
 
 	public void resetUtilizationMap() {
-		System.out.println("reseting usage to " + getUsageEntries().size());
-
 		getUsageEntries().clear();
 	}
 	
