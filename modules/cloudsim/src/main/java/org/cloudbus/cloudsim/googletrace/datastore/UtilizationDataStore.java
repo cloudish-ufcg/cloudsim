@@ -13,8 +13,6 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.googletrace.HostUtilizationEntry;
 import org.cloudbus.cloudsim.googletrace.UsageEntry;
 
-import com.sun.prism.Texture.Usage;
-
 public class UtilizationDataStore extends GoogleDataStore {
 
 	public static final String DATABASE_URL_PROP = "utilization_database_url";
