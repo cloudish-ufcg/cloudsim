@@ -395,12 +395,118 @@ public class GoogleDatacenterTest {
 		datacenter.processVmDestroy(destroyVm, false); // has an error in sum of available mips when allocating a vm
 														// that are for scheduling
 
-
 		// checking
 		Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
 		Assert.assertEquals(3, datacenter.getVmsRunning().size());
 		Assert.assertEquals(vm1, datacenter.getVmsRunning().first());
 		Assert.assertTrue(datacenter.getVmsRunning().contains(vm2));
 		Assert.assertEquals(vm3, datacenter.getVmsRunning().last());
+	}
+
+	@Test
+	public void testVmDestroyWithPreempt(){
+
+		int priority = 1;
+		double runtime = 10;
+		double cpuReq = 0.0000001;
+		double ACCEPTABLE_DIFFERENCE = 0.000000001;
+
+		GoogleVm vm0 = new GoogleVm(0, 1, 2 * cpuReq, 1.0, 0, priority - 1, runtime - 0.5);
+		GoogleVm vm1 = new GoogleVm(1, 1, 2 * cpuReq, 1.0, 0, priority, 0.4);
+		GoogleVm vm2 = new GoogleVm(2, 1, cpuReq, 1.0, 0, priority + 1, 0.1);
+		GoogleVm vm3 = new GoogleVm(3, 1, 9.9999998, 1.0, 0, priority - 1, runtime);
+
+		SimEvent destroyVm = Mockito.mock(SimEvent.class);
+
+		Mockito.when(hostSelector.select(preemptableVmAllocationPolicy.getPriorityToSortedHost().get(priority), vm0)).thenReturn(host);
+		Mockito.when(hostSelector.select(preemptableVmAllocationPolicy.getPriorityToSortedHost().get(priority), vm1)).thenReturn(host);
+		Mockito.when(hostSelector.select(preemptableVmAllocationPolicy.getPriorityToSortedHost().get(priority), vm2)).thenReturn(host);
+		Mockito.when(hostSelector.select(preemptableVmAllocationPolicy.getPriorityToSortedHost().get(priority), vm3)).thenReturn(host);
+
+		//initial tests
+
+		// checking
+		Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
+		Assert.assertTrue(datacenter.getVmsRunning().isEmpty());
+
+		// allocating vm3 to reduce host capacity
+		datacenter.allocateHostForVm(false, vm3);
+
+		// checking
+		Assert.assertEquals(2* cpuReq, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
+		Assert.assertEquals(1, datacenter.getVmsRunning().size());
+		Assert.assertEquals(vm3, datacenter.getVmsRunning().first());
+
+		// allocating vm2 with priority 2
+		datacenter.allocateHostForVm(false, vm2);
+		Assert.assertEquals(1 * cpuReq, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
+		Assert.assertEquals(2, datacenter.getVmsRunning().size());
+		Assert.assertEquals(vm3, datacenter.getVmsRunning().first());
+		Assert.assertEquals(vm2, datacenter.getVmsRunning().last());
+
+		// allocating vm1 with priority 1 to preempt vm2
+		datacenter.allocateHostForVm(false, vm1);
+		Assert.assertEquals(0 * cpuReq, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm2, datacenter.getVmsForScheduling().first());
+		Assert.assertEquals(2, datacenter.getVmsRunning().size());
+		Assert.assertEquals(vm3, datacenter.getVmsRunning().first());
+		Assert.assertEquals(vm1, datacenter.getVmsRunning().last());
+
+		// allocating vm0 with priority 0 to preempt vm1
+		datacenter.allocateHostForVm(false, vm0);
+		Assert.assertEquals(0 * cpuReq, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm1, datacenter.getVmsForScheduling().first());
+		Assert.assertEquals(vm2, datacenter.getVmsForScheduling().last());
+		Assert.assertEquals(2, datacenter.getVmsForScheduling().size());
+		Assert.assertEquals(2, datacenter.getVmsRunning().size());
+		Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
+		Assert.assertEquals(vm3, datacenter.getVmsRunning().last());
+
+		// finishing vm0 to reallocate vm1
+		Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.5);
+		Mockito.when(destroyVm.getData()).thenReturn((Object) vm0);
+		datacenter.processVmDestroy(destroyVm, false);
+
+		Assert.assertEquals(0 * cpuReq, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(vm2, datacenter.getVmsForScheduling().first());
+		Assert.assertEquals(1, datacenter.getVmsForScheduling().size());
+		Assert.assertEquals(2, datacenter.getVmsRunning().size());
+		Assert.assertEquals(vm3, datacenter.getVmsRunning().first());
+		Assert.assertEquals(vm1, datacenter.getVmsRunning().last());
+
+		//finishing vm1 to reallocate vm2
+		Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
+		Mockito.when(destroyVm.getData()).thenReturn((Object) vm1);
+		datacenter.processVmDestroy(destroyVm, false);
+
+		Assert.assertEquals(1 * cpuReq, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		System.out.println(host.getAvailableMips());
+		Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
+		Assert.assertEquals(2, datacenter.getVmsRunning().size());
+		Assert.assertEquals(vm3, datacenter.getVmsRunning().first());
+		Assert.assertEquals(vm2, datacenter.getVmsRunning().last());
+
+		// finishing vm2
+		Mockito.when(timeUtil.clock()).thenReturn(runtime + 0.1);
+		Mockito.when(destroyVm.getData()).thenReturn((Object) vm2);
+		datacenter.processVmDestroy(destroyVm, false);
+
+		// checking
+		Assert.assertEquals(2 * cpuReq, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		System.out.println(host.getAvailableMips());
+		Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
+		Assert.assertEquals(1, datacenter.getVmsRunning().size());
+		Assert.assertEquals(vm3, datacenter.getVmsRunning().first());
+
+		//finishing vm3 to return to initial state
+		Mockito.when(destroyVm.getData()).thenReturn((Object) vm3);
+		datacenter.processVmDestroy(destroyVm, false);
+
+		Assert.assertEquals(10, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		System.out.println(host.getAvailableMips());
+		Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
+		Assert.assertTrue(datacenter.getVmsRunning().isEmpty());
 	}
 }

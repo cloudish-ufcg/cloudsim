@@ -10,10 +10,12 @@ import java.util.TreeSet;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Vm;
+import org.cloudbus.cloudsim.VmScheduler;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import sun.misc.VM;
 
 public class GoogleHostTest {
 
@@ -334,8 +336,137 @@ public class GoogleHostTest {
 		
 		Assert.assertEquals(100 - 2 * cpuReq, host1.getAvailableMips(),ACCEPTABLE_DIFFERENCE);
 	}
-	
+
 	@Test
+	public void testVmCreate2() {
+
+		double ACCETABLE_DIFFERENCE = 0.000000000000001;
+
+		int id = 0;
+		int userId = 1;
+		double cpuReq = 0.00000001;
+		double memReq = 0;
+		double subTime = 0;
+		int priority = 1;
+		double runTime = 0.4;
+
+		List<Pe> peList1 = new ArrayList<Pe>();
+		peList1.add(new Pe(0, new PeProvisionerSimple(5 * cpuReq)));
+		VmScheduler schedulerMipsBased = new VmSchedulerMipsBased(peList1);
+
+		Host googleHost = new GoogleHost(id, peList1, schedulerMipsBased, 3);
+
+		Vm vm1 = new GoogleVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime);
+		Vm vm2 = new GoogleVm(id++, userId, 5 * cpuReq, memReq, subTime, priority - 1 , runTime);
+		Vm vm3 = new GoogleVm(id++, userId, 2 * cpuReq, memReq, subTime, priority, runTime);
+		Vm vm4 = new GoogleVm(id++, userId, 3 * cpuReq, memReq, subTime, priority, runTime);
+		Vm vm5 = new GoogleVm(id++, userId, 4 * cpuReq, memReq, subTime, priority + 1, runTime);
+		Vm vm6 = new GoogleVm(id++, userId, 6 * cpuReq, memReq, subTime, priority + 1, runTime);
+
+		Assert.assertEquals(5 * cpuReq, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+		Assert.assertTrue(googleHost.vmCreate(vm1));
+		Assert.assertEquals(4*cpuReq, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+		Assert.assertFalse(googleHost.vmCreate(vm2));
+		Assert.assertEquals(4*cpuReq, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+		Assert.assertTrue(googleHost.vmCreate(vm3));
+		Assert.assertEquals(2*cpuReq, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+		googleHost.vmDestroy(vm3);
+		Assert.assertEquals(4*cpuReq, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+		Assert.assertTrue(googleHost.vmCreate(vm5));
+		Assert.assertEquals(0*cpuReq, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+		googleHost.vmDestroy(vm1);
+		Assert.assertEquals(1*cpuReq, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+		googleHost.vmDestroy(vm5);
+		Assert.assertEquals(5*cpuReq, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+		Assert.assertFalse(googleHost.vmCreate(vm6));
+		Assert.assertEquals(5*cpuReq, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+		Assert.assertTrue(googleHost.vmCreate(vm4));
+		Assert.assertEquals(2*cpuReq, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+	}
+
+	@Test
+	public void testVmCreate3(){
+
+		double ACCETABLE_DIFFERENCE = 0.000000000000001;
+
+		int id = 0;
+		int userId = 1;
+		double cpuReq = 0.00000001;
+		double memReq = 0;
+		double subTime = 0;
+		int priority = 1;
+		double runTime = 0.4;
+
+		double cpuCapacity = 6603.25;
+
+		List<Pe> peList1 = new ArrayList<Pe>();
+		peList1.add(new Pe(0, new PeProvisionerSimple(cpuCapacity)));
+		VmScheduler vmSchedulerMipsBased = new VmSchedulerMipsBased(peList1);
+
+		Host googleHost = new GoogleHost(id, peList1, vmSchedulerMipsBased, 3);
+
+		Vm vm1 = new GoogleVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime);
+		Vm vm2 = new GoogleVm(id++, userId, 5 * cpuReq, memReq, subTime, priority - 1 , runTime);
+		Vm vm3 = new GoogleVm(id++, userId, 2 * cpuReq, memReq, subTime, priority, runTime);
+		Vm vm4 = new GoogleVm(id++, userId, 3 * cpuReq, memReq, subTime, priority, runTime);
+		Vm vm5 = new GoogleVm(id++, userId, 4 * cpuReq, memReq, subTime, priority + 1, runTime);
+		Vm vm6 = new GoogleVm(id++, userId, 6 * cpuReq, memReq, subTime, priority + 1, runTime);
+
+		Assert.assertEquals(cpuCapacity, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+		Assert.assertTrue(googleHost.vmCreate(vm1));
+		Assert.assertEquals(cpuCapacity - cpuReq, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+		Assert.assertTrue(googleHost.vmCreate(vm2));
+		Assert.assertEquals(cpuCapacity - (6 * cpuReq), googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+		Assert.assertTrue(googleHost.vmCreate(vm3));
+		Assert.assertEquals(cpuCapacity - (8 * cpuReq), googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+		System.out.println(googleHost.getAvailableMips());
+
+		googleHost.vmDestroy(vm2);
+		Assert.assertEquals(cpuCapacity - (3 * cpuReq), googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
+		System.out.println(googleHost.getAvailableMips());
+
+		// detect imprecision of 12 decimal places in available mips
+		Assert.assertTrue(googleHost.vmCreate(vm4));
+		System.out.println(googleHost.getAvailableMips());
+//        Assert.assertEquals(cpuCapacity - (6 * cpuReq), schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+		Assert.assertTrue(googleHost.vmCreate(vm5));
+//        Assert.assertEquals(cpuCapacity - (10 * cpuReq), schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+		System.out.println(googleHost.getAvailableMips());
+
+		googleHost.vmDestroy(vm1);
+//        Assert.assertEquals(cpuCapacity - (9 * cpuReq), schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+		System.out.println(googleHost.getAvailableMips());
+
+		Assert.assertTrue(googleHost.vmCreate(vm6));
+//        Assert.assertEquals(cpuCapacity - (15 * cpuReq), schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+		System.out.println(googleHost.getAvailableMips());
+
+		googleHost.vmDestroy(vm3);
+		System.out.println(googleHost.getAvailableMips());
+		googleHost.vmDestroy(vm4);
+		System.out.println(googleHost.getAvailableMips());
+		googleHost.vmDestroy(vm5);
+		System.out.println(googleHost.getAvailableMips());
+		googleHost.vmDestroy(vm6);
+		System.out.println(googleHost.getAvailableMips());
+
+
+	}
+
+		@Test
 	public void testVmDestroy() {
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100)));

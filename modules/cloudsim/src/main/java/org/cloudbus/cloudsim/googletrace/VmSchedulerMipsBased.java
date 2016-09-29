@@ -6,7 +6,6 @@ import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmScheduler;
 import org.cloudbus.cloudsim.googletrace.util.DecimalUtil;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -60,10 +59,8 @@ public class VmSchedulerMipsBased extends VmScheduler{
         }
 
         else {
-
             return false;
         }
-
     }
 
     

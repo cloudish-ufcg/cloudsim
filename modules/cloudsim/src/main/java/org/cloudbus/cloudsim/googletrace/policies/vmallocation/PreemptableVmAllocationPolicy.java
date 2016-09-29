@@ -68,6 +68,7 @@ public class PreemptableVmAllocationPolicy extends VmAllocationPolicy implements
 		removePriorityHost(host);
 		host.vmDestroy(vm);
 		addPriorityHost(host);
+		vm.setBeingInstantiated(true);
 		return true;
 	}
 
