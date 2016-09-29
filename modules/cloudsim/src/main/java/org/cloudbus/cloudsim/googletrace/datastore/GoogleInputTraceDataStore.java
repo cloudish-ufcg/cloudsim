@@ -10,7 +10,9 @@ import java.util.Properties;
 
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.googletrace.GoogleHost;
 import org.cloudbus.cloudsim.googletrace.GoogleTask;
+import org.cloudbus.cloudsim.googletrace.util.DecimalUtil;
 
 public class GoogleInputTraceDataStore extends GoogleDataStore {
 
@@ -112,7 +114,7 @@ public class GoogleInputTraceDataStore extends GoogleDataStore {
 			if (connection != null) {
 				statement = connection.createStatement();
 
-				String sql = "SELECT submitTime, runtime, cpuReq, memReq, priority FROM tasks WHERE cpuReq > '0' AND memReq > '0' AND submitTime >= '"
+				String sql = "SELECT submitTime, runtime, cpuReq, memReq, priority FROM tasks WHERE cpuReq > '0.0' AND memReq > '0.0' AND runtime > '0.0' AND submitTime >= '"
 						+ minTime + "' AND submitTime < '" + maxTime + "'";
 
 				ResultSet results = statement.executeQuery(sql);
@@ -124,11 +126,12 @@ public class GoogleInputTraceDataStore extends GoogleDataStore {
 					 * taskId (depending of the interval size).  
 					 */
 					nextTaskId++;
+					//TODO review it
 					GoogleTask task = new GoogleTask(nextTaskId,
 							results.getDouble("submitTime"),
-							results.getDouble("runtime"),
-							results.getDouble("cpuReq"),
-							results.getDouble("memReq"),
+							DecimalUtil.format(results.getDouble("runtime"), GoogleHost.DECIMAL_ACCURACY),
+							DecimalUtil.format(results.getDouble("cpuReq"), GoogleHost.DECIMAL_ACCURACY),
+							DecimalUtil.format(results.getDouble("memReq"), GoogleHost.DECIMAL_ACCURACY),
 							convertPriorityToPriorityClass(results.getInt("priority")));
 					
 					googleTasks.add(task);
