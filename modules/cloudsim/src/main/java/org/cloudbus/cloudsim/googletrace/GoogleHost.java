@@ -136,7 +136,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		for (Integer priority : getPriorityToInUseMips().keySet()) {
 			totalUsage += getPriorityToInUseMips().get(priority);
 		}
-		return totalUsage;
+		return DecimalUtil.format(totalUsage, DECIMAL_ACCURACY);
 	}
 	@Override
 	public void vmDestroy(Vm vm) {
