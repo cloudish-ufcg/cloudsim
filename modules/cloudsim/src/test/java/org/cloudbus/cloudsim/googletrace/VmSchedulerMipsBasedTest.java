@@ -16,6 +16,7 @@ import java.util.List;
 
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Vm;
+import org.cloudbus.cloudsim.VmScheduler;
 import org.cloudbus.cloudsim.lists.PeList;
 import org.cloudbus.cloudsim.CloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
@@ -301,6 +302,132 @@ public class VmSchedulerMipsBasedTest {
     }
 
     @Test
+    public void testAllocatePesForVM2(){
+
+        double ACCETABLE_DIFFERENCE = 0.000000000000001;
+
+        int id = 0;
+        int userId = 1;
+        double cpuReq = 0.00000001;
+        double memReq = 0;
+        double subTime = 0;
+        int priority = 1;
+        double runTime = 0.4;
+
+        List<Pe> peList1 = new ArrayList<Pe>();
+        peList1.add(new Pe(0, new PeProvisionerSimple(5 * cpuReq)));
+        VmScheduler schedulerMipsBased = new VmSchedulerMipsBased(peList1);
+
+        Vm vm1 = new GoogleVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime);
+        Vm vm2 = new GoogleVm(id++, userId, 5 * cpuReq, memReq, subTime, priority - 1 , runTime);
+        Vm vm3 = new GoogleVm(id++, userId, 2 * cpuReq, memReq, subTime, priority, runTime);
+        Vm vm4 = new GoogleVm(id++, userId, 3 * cpuReq, memReq, subTime, priority, runTime);
+        Vm vm5 = new GoogleVm(id++, userId, 4 * cpuReq, memReq, subTime, priority + 1, runTime);
+        Vm vm6 = new GoogleVm(id++, userId, 6 * cpuReq, memReq, subTime, priority + 1, runTime);
+
+        Assert.assertEquals(5*cpuReq, schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+        Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm1, vm1.getCurrentRequestedMips()));
+        Assert.assertEquals(4*cpuReq, schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+        Assert.assertFalse(schedulerMipsBased.allocatePesForVm(vm2, vm2.getCurrentRequestedMips()));
+        Assert.assertEquals(4*cpuReq, schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+        Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm3, vm3.getCurrentRequestedMips()));
+        Assert.assertEquals(2*cpuReq, schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+        schedulerMipsBased.deallocatePesForVm(vm3);
+        Assert.assertEquals(4*cpuReq, schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+        Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm5, vm5.getCurrentRequestedMips()));
+        Assert.assertEquals(0*cpuReq, schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+        schedulerMipsBased.deallocatePesForVm(vm1);
+        Assert.assertEquals(1*cpuReq, schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+        schedulerMipsBased.deallocatePesForVm(vm5);
+        Assert.assertEquals(5*cpuReq, schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+        Assert.assertFalse(schedulerMipsBased.allocatePesForVm(vm6, vm6.getCurrentRequestedMips()));
+        Assert.assertEquals(5*cpuReq, schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+
+        Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm4, vm4.getCurrentRequestedMips()));
+        Assert.assertEquals(2*cpuReq, schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+    }
+
+
+    @Test
+    public void testAllocatePesForVm3() {
+
+        double ACCEPTABLE_DIFFERENCE = 0.000000000000001;
+
+        int id = 0;
+        int userId = 1;
+        double cpuReq = 0.00000001;
+        double memReq = 0;
+        double subTime = 0;
+        int priority = 1;
+        double runTime = 0.4;
+
+        double cpuCapacity = 6603.25;
+
+        List<Pe> peList1 = new ArrayList<Pe>();
+        peList1.add(new Pe(0, new PeProvisionerSimple(cpuCapacity)));
+        VmScheduler schedulerMipsBased = new VmSchedulerMipsBased(peList1);
+
+        Vm vm1 = new GoogleVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime);
+        Vm vm2 = new GoogleVm(id++, userId, 5 * cpuReq, memReq, subTime, priority - 1 , runTime);
+        Vm vm3 = new GoogleVm(id++, userId, 2 * cpuReq, memReq, subTime, priority, runTime);
+        Vm vm4 = new GoogleVm(id++, userId, 3 * cpuReq, memReq, subTime, priority, runTime);
+        Vm vm5 = new GoogleVm(id++, userId, 4 * cpuReq, memReq, subTime, priority + 1, runTime);
+        Vm vm6 = new GoogleVm(id++, userId, 6 * cpuReq, memReq, subTime, priority + 1, runTime);
+
+        Assert.assertEquals(cpuCapacity, schedulerMipsBased.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm1, vm1.getCurrentRequestedMips()));
+        Assert.assertEquals(cpuCapacity - cpuReq, schedulerMipsBased.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm2, vm2.getCurrentRequestedMips()));
+        Assert.assertEquals(cpuCapacity - (6 * cpuReq), schedulerMipsBased.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm3, vm3.getCurrentRequestedMips()));
+        Assert.assertEquals(cpuCapacity - (8 * cpuReq), schedulerMipsBased.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        schedulerMipsBased.deallocatePesForVm(vm2);
+        Assert.assertEquals(cpuCapacity - (3 * cpuReq), schedulerMipsBased.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        // detect imprecision of 12 decimal places in available mips
+        Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm4, vm4.getCurrentRequestedMips()));
+        Assert.assertFalse(cpuCapacity - (6 * cpuReq) == schedulerMipsBased.getAvailableMips());
+        Assert.assertEquals(cpuCapacity - (6 * cpuReq), schedulerMipsBased.getAvailableMips(), this.ACCEPTABLE_DIFFERENCE);
+
+        Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm5, vm5.getCurrentRequestedMips()));
+        Assert.assertFalse(cpuCapacity - (10 * cpuReq) == schedulerMipsBased.getAvailableMips());
+        Assert.assertEquals(cpuCapacity - (10 * cpuReq), schedulerMipsBased.getAvailableMips(), this.ACCEPTABLE_DIFFERENCE);
+
+        schedulerMipsBased.deallocatePesForVm(vm1);
+        Assert.assertFalse(cpuCapacity - (9 * cpuReq) == schedulerMipsBased.getAvailableMips());
+        Assert.assertEquals(cpuCapacity - (9 * cpuReq), schedulerMipsBased.getAvailableMips(), this.ACCEPTABLE_DIFFERENCE);
+
+        Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm6, vm6.getCurrentRequestedMips()));
+        Assert.assertFalse(cpuCapacity - (15 * cpuReq) == schedulerMipsBased.getAvailableMips());
+        Assert.assertEquals(cpuCapacity - (15 * cpuReq), schedulerMipsBased.getAvailableMips(), this.ACCEPTABLE_DIFFERENCE);
+
+        schedulerMipsBased.deallocatePesForVm(vm3);
+        schedulerMipsBased.deallocatePesForVm(vm4);
+        schedulerMipsBased.deallocatePesForVm(vm5);
+        schedulerMipsBased.deallocatePesForVm(vm6);
+
+        // the list of getCurrentRequestedMips is empty because the vm is not being instantiated
+        vm6.setBeingInstantiated(false);
+        //the vm is allocated but the available mips is not changed
+        Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm6, vm6.getCurrentRequestedMips()));
+        Assert.assertEquals(cpuCapacity, schedulerMipsBased.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        //the vm is deallocate and the available mips is not changed
+        schedulerMipsBased.deallocatePesForVm(vm6);
+        Assert.assertEquals(cpuCapacity, schedulerMipsBased.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+    }
+        @Test
     public void testGetPeCapacity(){
 
         double peCapacity = 1000.0;
