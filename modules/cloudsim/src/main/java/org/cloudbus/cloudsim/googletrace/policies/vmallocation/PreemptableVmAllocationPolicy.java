@@ -13,6 +13,7 @@ import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.googletrace.GoogleHost;
 import org.cloudbus.cloudsim.googletrace.GoogleVm;
+import org.cloudbus.cloudsim.googletrace.SimulationTimeUtil;
 import org.cloudbus.cloudsim.googletrace.policies.hostselection.HostSelectionPolicy;
 import org.cloudbus.cloudsim.googletrace.util.PriorityHostComparator;
 
@@ -29,6 +30,7 @@ public class PreemptableVmAllocationPolicy extends VmAllocationPolicy implements
 	 * and the value is the allocated host for that VM.
 	 */
 	private Map<String, Host> vmTable;
+	SimulationTimeUtil simulationTimeUtil;
 
 	private HostSelectionPolicy hostSelector;
 	private Map<Integer, SortedSet<GoogleHost>> priorityToSortedHost;
@@ -36,7 +38,7 @@ public class PreemptableVmAllocationPolicy extends VmAllocationPolicy implements
 	public PreemptableVmAllocationPolicy(List<GoogleHost> hosts, HostSelectionPolicy hostSelector) {
 		super(new ArrayList<Host>(0));
 		setHostSelector(hostSelector);
-		
+		setSimulationTimeUtil(new SimulationTimeUtil());
 		priorityToSortedHost = new HashMap<Integer, SortedSet<GoogleHost>>();
 		int numberOfPriorities = hosts.get(0).getNumberOfPriorities();
 
@@ -63,7 +65,7 @@ public class PreemptableVmAllocationPolicy extends VmAllocationPolicy implements
 		if (host == null) {
 			return false;
 		}
-		vm.preempt(CloudSim.clock());
+		vm.preempt(simulationTimeUtil.clock());
 		// just to update the sorted set
 		removePriorityHost(host);
 		host.vmDestroy(vm);
@@ -188,6 +190,10 @@ public class PreemptableVmAllocationPolicy extends VmAllocationPolicy implements
 			}
 		}
 		return null;
+	}
+
+	public void setSimulationTimeUtil(SimulationTimeUtil simulationTimeUtil) {
+		this.simulationTimeUtil = simulationTimeUtil;
 	}
 }
 
