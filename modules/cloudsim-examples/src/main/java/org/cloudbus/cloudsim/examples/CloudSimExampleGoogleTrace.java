@@ -24,24 +24,20 @@ import java.util.Properties;
 
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
-import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Storage;
-import org.cloudbus.cloudsim.VmAllocationPolicySimple;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.googletrace.GoogleDatacenter;
 import org.cloudbus.cloudsim.googletrace.GoogleHost;
 import org.cloudbus.cloudsim.googletrace.GoogleTask;
 import org.cloudbus.cloudsim.googletrace.GoogleTaskState;
 import org.cloudbus.cloudsim.googletrace.GoogleTraceDatacenterBroker;
-import org.cloudbus.cloudsim.googletrace.HostUtilizationEntry;
+import org.cloudbus.cloudsim.googletrace.UsageEntry;
 import org.cloudbus.cloudsim.googletrace.VmSchedulerMipsBased;
 import org.cloudbus.cloudsim.googletrace.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
 import org.cloudbus.cloudsim.googletrace.policies.vmallocation.PreemptableVmAllocationPolicy;
-import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
-import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 
 /**
  * An example showing how to pause and resume the simulation, and create
@@ -59,6 +55,8 @@ public class CloudSimExampleGoogleTrace {
 	public static void main(String[] args) {
 		System.out.println("Starting CloudSimExample Google Trace ...");
 
+
+		
 		long now = System.currentTimeMillis();
 		
 		try {
@@ -102,7 +100,7 @@ public class CloudSimExampleGoogleTrace {
 
 			CloudSim.stopSimulation();
 			
-			List<HostUtilizationEntry> utilizationEntries = datacenter0.getHostUtilizationEntries();
+			List<UsageEntry> utilizationEntries = datacenter0.getHostUtilizationEntries();
 
 			printGoogleTaskStates(newList);
 			
