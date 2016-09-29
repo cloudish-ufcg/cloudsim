@@ -120,7 +120,8 @@ public class GoogleHost extends Host implements Comparable<Host> {
 			double totalUsage = getTotalUsage();
 			Log.printConcatLine(CloudSim.clock(), ": Host #", getId(), " currentTotalUsage=", totalUsage, ", currentAvailableMips=", getAvailableMips());
 
-			if (totalUsage > getTotalMips()) {
+			//TODO check it better
+			if ((totalUsage - getTotalMips()) > 0.00000001) {
 				throw new SimulationException("The total usage (" + totalUsage
 						+ ") on host #" + getId()
 						+ " was bigger than the total capacity ("
