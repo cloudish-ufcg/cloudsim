@@ -1,6 +1,7 @@
 package org.cloudbus.cloudsim.googletrace;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -24,6 +25,8 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	public static final int DECIMAL_ACCURACY = 15;
 
 	private Map<Double, Double> utilizationMap;
+	
+	private List<UsageEntry> usageEntries;
 
 	public GoogleHost(int id, List<? extends Pe> peList, VmScheduler vmScheduler, int numberOfPriorities) {
 		super(id, new RamProvisionerSimple(Integer.MAX_VALUE),
@@ -36,7 +39,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		
 		setPriorityToVms(new HashMap<Integer, SortedSet<Vm>>());
 		setPriorityToInUseMips(new HashMap<Integer, Double>());
-		setUtilizationMap(new HashMap<Double, Double>());
+		setUsageEntries(new LinkedList<UsageEntry>());
 		setNumberOfPriorities(numberOfPriorities);
 		
 		// initializing maps
@@ -174,14 +177,6 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		this.numberOfPriorities = numberOfPriorities;
 	}
 	
-	public Map<Double, Double> getUtilizationMap() {
-		return utilizationMap;
-	}
-
-	protected void setUtilizationMap(Map<Double, Double> utilizationMap) {
-		this.utilizationMap = utilizationMap;
-	}
-		
 	/*
 	 * TODO we need to refactor this code. we should not use cast here We also
 	 * need to check where getTotalMips from Host class is being used because
@@ -203,11 +198,18 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		return ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips();
 	}
 	
+	public List<UsageEntry> getUsageEntries() {
+		return usageEntries;
+	}
+	public void setUsageEntries(List<UsageEntry> usageEntries) {
+		this.usageEntries = usageEntries;
+	}
+	
 	public void updateUtilization(double time) {
 		double totalMips = ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips();
 		double utilization = (totalMips - getAvailableMips()) / totalMips;
-		getUtilizationMap().put(time, utilization);
-	
+		System.out.println(time +  ": updating usage to " + getTotalUsage());
+		getUsageEntries().add(new UsageEntry(getId(), time, getPriorityToInUseMips(), getPriorityToVms(), getTotalUsage(), getAvailableMips()));
 //		//TODO remove it
 //		double totalUsage = 0;
 //		for (Integer priority : getPriorityToInUseMips().keySet()) {
@@ -217,7 +219,9 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	}
 
 	public void resetUtilizationMap() {
-		getUtilizationMap().clear();
+		System.out.println("reseting usage to " + getUsageEntries().size());
+
+		getUsageEntries().clear();
 	}
 	
 	public double getUsageByPriority(int priority) {

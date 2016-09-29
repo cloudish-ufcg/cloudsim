@@ -5,11 +5,25 @@ public class HostUtilizationEntry {
 	private int hostId;
 	private double time;
 	private double utilization;
+	private UsageEntry usageEntry;
 	
 	public HostUtilizationEntry(int hostId, double time, double utilization) {
 		setHostId(hostId);
 		setTime(time);
 		setUtilization(utilization);
+	}
+	
+	public HostUtilizationEntry(int hostId, UsageEntry usageEntry) {
+		setHostId(hostId);
+		setUsageEntry(usageEntry);
+	}
+
+	public UsageEntry getUsageEntry() {
+		return usageEntry;
+	}
+
+	public void setUsageEntry(UsageEntry usageEntry) {
+		this.usageEntry = usageEntry;
 	}
 
 	public int getHostId() {
