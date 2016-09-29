@@ -186,6 +186,10 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
             // creating the first utilization store event
             // TODO we need to consider the storing interval related to utilization 
             send(getDatacenterId(), SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()), GoogleDatacenter.STORE_HOST_UTILIZATION_EVENT);
+            
+            // creating the first datacenter store event
+            // TODO we need to consider the datacenter storing interval related to utilization 
+            send(getDatacenterId(), SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()), GoogleDatacenter.STORE_DATACENTER_DATA_EVENT);
         }
     }
 

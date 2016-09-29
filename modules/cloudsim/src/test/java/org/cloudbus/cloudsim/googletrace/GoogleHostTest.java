@@ -1008,4 +1008,44 @@ public class GoogleHostTest {
 		Assert.assertTrue(host2.vmCreate(vm1));
 		Assert.assertEquals(host2.getAvailableMips(), 0, NEW_ACCEPTABLE_DIFFERENCE);
 	}
+	
+	@Test
+	public void testGetUsageByPriority() {
+		// creating hosts
+		List<Pe> peList1 = new ArrayList<Pe>();
+		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
+		GoogleHost host1 = new GoogleHost(1, peList1, new VmSchedulerMipsBased(
+				peList1), 3);
+
+		// priority 0
+		GoogleVm vm0 = new GoogleVm(0, 1, 50, 1.0, 0, 0, 0);
+
+		Assert.assertTrue(host1.vmCreate(vm0));
+
+		Assert.assertEquals(50, host1.getUsageByPriority(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0, host1.getUsageByPriority(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0, host1.getUsageByPriority(2), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0, host1.getUsageByPriority(3), ACCEPTABLE_DIFFERENCE);
+		
+		// priority 1
+		GoogleVm vm1 = new GoogleVm(1, 1, 20, 1.0, 0, 1, 0);
+
+		Assert.assertTrue(host1.vmCreate(vm1));
+
+		Assert.assertEquals(50, host1.getUsageByPriority(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(20, host1.getUsageByPriority(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0, host1.getUsageByPriority(2), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0, host1.getUsageByPriority(3), ACCEPTABLE_DIFFERENCE);
+	
+		// priority 2
+		GoogleVm vm2 = new GoogleVm(2, 1, 20, 1.0, 0, 2, 0);
+
+		Assert.assertTrue(host1.vmCreate(vm2));
+
+		Assert.assertEquals(50, host1.getUsageByPriority(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(20, host1.getUsageByPriority(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(20, host1.getUsageByPriority(2), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0, host1.getUsageByPriority(3), ACCEPTABLE_DIFFERENCE);
+
+	}
 }

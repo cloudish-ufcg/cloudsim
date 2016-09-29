@@ -7,9 +7,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.cloudbus.cloudsim.Host;
+import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmScheduler;
+import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.googletrace.util.DecimalUtil;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
@@ -19,7 +21,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	private Map<Integer, Double> priorityToInUseMips;
 	private Map<Integer, SortedSet<Vm>> priorityToVms;
 	private int numberOfPriorities;
-	private static final int DECIMAL_ACCURACY = 15;
+	public static final int DECIMAL_ACCURACY = 15;
 
 	private Map<Double, Double> utilizationMap;
 
@@ -95,21 +97,44 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		 * TODO The Host class add the VM into a List. We don't need that list.
 		 * We may optimize the code.
 		 */
-		if (vm == null) return false;
+		if (vm == null) {
+			return false;
+		}
+		GoogleVm gVm = (GoogleVm) vm;
 
+		Log.printConcatLine(CloudSim.clock(), ": Creating VM#", vm.getId(), "(priority ", gVm.getPriority(),") on host #", getId());
+		
 		boolean result = super.vmCreate(vm);
 		
 		if (result) {
 			// updating maps
-			GoogleVm gVm = (GoogleVm) vm;
 			
 			getPriorityToVms().get(gVm.getPriority()).add(gVm);
 			double priorityCurrentUse = getPriorityToInUseMips().get(gVm.getPriority()); 
-			getPriorityToInUseMips().put(gVm.getPriority(), priorityCurrentUse + gVm.getMips());
+			getPriorityToInUseMips().put( gVm.getPriority(),
+					DecimalUtil.format(priorityCurrentUse + gVm.getMips(), DECIMAL_ACCURACY));
+			
+			double totalUsage = getTotalUsage();
+			Log.printConcatLine(CloudSim.clock(), ": Host #", getId(), " currentTotalUsage=", totalUsage, ", currentAvailableMips=", getAvailableMips());
+
+			if (totalUsage > getTotalMips()) {
+				throw new SimulationException("The total usage (" + totalUsage
+						+ ") on host #" + getId()
+						+ " was bigger than the total capacity ("
+						+ getTotalMips() + ") while creating VM #" + vm.getId()
+						+ ".");
+			}
 		}
 		return result;
 	}
 	
+	public double getTotalUsage() {
+		double totalUsage = 0;
+		for (Integer priority : getPriorityToInUseMips().keySet()) {
+			totalUsage += getPriorityToInUseMips().get(priority);
+		}
+		return totalUsage;
+	}
 	@Override
 	public void vmDestroy(Vm vm) {
 		super.vmDestroy(vm);
@@ -119,7 +144,9 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		
 		getPriorityToVms().get(gVm.getPriority()).remove(vm);
 		double priorityCurrentUse = getPriorityToInUseMips().get(gVm.getPriority()); 
-		getPriorityToInUseMips().put(gVm.getPriority(), priorityCurrentUse - gVm.getMips());
+		
+		getPriorityToInUseMips().put( gVm.getPriority(),
+				DecimalUtil.format(priorityCurrentUse - gVm.getMips(), DECIMAL_ACCURACY));
 	}
 
 	public Map<Integer, Double> getPriorityToInUseMips() {
@@ -127,8 +154,8 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	}
 
 	protected void setPriorityToInUseMips(
-			Map<Integer, Double> priorityToAvailableMips) {
-		this.priorityToInUseMips = priorityToAvailableMips;
+			Map<Integer, Double> priorityToMipsInUse) {
+		this.priorityToInUseMips = priorityToMipsInUse;
 	}
 
 	public Map<Integer, SortedSet<Vm>> getPriorityToVms() {
@@ -154,7 +181,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	protected void setUtilizationMap(Map<Double, Double> utilizationMap) {
 		this.utilizationMap = utilizationMap;
 	}
-
+		
 	/*
 	 * TODO we need to refactor this code. we should not use cast here We also
 	 * need to check where getTotalMips from Host class is being used because
@@ -171,13 +198,32 @@ public class GoogleHost extends Host implements Comparable<Host> {
 				- DecimalUtil.format(inUseByNonPreemptiveVms, DECIMAL_ACCURACY);
 	}
 
+	@Override
+	public double getTotalMips(){
+		return ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips();
+	}
+	
 	public void updateUtilization(double time) {
 		double totalMips = ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips();
 		double utilization = (totalMips - getAvailableMips()) / totalMips;
 		getUtilizationMap().put(time, utilization);
+	
+//		//TODO remove it
+//		double totalUsage = 0;
+//		for (Integer priority : getPriorityToInUseMips().keySet()) {
+//			totalUsage += getPriorityToInUseMips().get(priority);
+//		}
+//		System.out.println("currenTime=" + time + ", totalUsage=" + totalUsage);
 	}
 
 	public void resetUtilizationMap() {
 		getUtilizationMap().clear();
+	}
+	
+	public double getUsageByPriority(int priority) {
+		if (getPriorityToInUseMips().get(priority) != null) {
+			return getPriorityToInUseMips().get(priority);
+		}
+		return 0;
 	}
 }
