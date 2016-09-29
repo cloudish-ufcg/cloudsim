@@ -337,7 +337,7 @@ public class Host {
 	 * 
 	 * @return the total mips
 	 */
-	public int getTotalMips() {
+	public double getTotalMips() {
 		return PeList.getTotalMips(getPeList());
 	}
 
