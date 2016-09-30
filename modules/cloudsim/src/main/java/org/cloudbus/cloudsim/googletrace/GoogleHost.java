@@ -23,10 +23,8 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	private Map<Integer, SortedSet<Vm>> priorityToVms;
 	private int numberOfPriorities;
 	public static final int DECIMAL_ACCURACY = 9;
-
-	private Map<Double, Double> utilizationMap;
 	
-	private List<UsageEntry> usageEntries;
+	private Map<Double, UsageEntry> usageEntries;
 
 	public GoogleHost(int id, List<? extends Pe> peList, VmScheduler vmScheduler, int numberOfPriorities) {
 		super(id, new RamProvisionerSimple(Integer.MAX_VALUE),
@@ -39,7 +37,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		
 		setPriorityToVms(new HashMap<Integer, SortedSet<Vm>>());
 		setPriorityToInUseMips(new HashMap<Integer, Double>());
-		setUsageEntries(new LinkedList<UsageEntry>());
+		setUsageEntries(new HashMap<Double, UsageEntry>());
 		setNumberOfPriorities(numberOfPriorities);
 		
 		// initializing maps
@@ -120,20 +118,12 @@ public class GoogleHost extends Host implements Comparable<Host> {
 			double totalUsage = getTotalUsage();
 			Log.printConcatLine(CloudSim.clock(), ": Host #", getId(), " currentTotalUsage=", totalUsage, ", currentAvailableMips=", getAvailableMips());
 
-			//TODO check it better
-			if (totalUsage > getTotalMips()) {
-				
-				System.out.println("The total usage (" + totalUsage
+			if ((totalUsage - getTotalMips()) > 0.00001) {
+				throw new SimulationException("The total usage (" + totalUsage
 						+ ") on host #" + getId()
 						+ " was bigger than the total capacity ("
 						+ getTotalMips() + ") while creating VM #" + vm.getId()
 						+ ".");
-//				
-//				throw new SimulationException("The total usage (" + totalUsage
-//						+ ") on host #" + getId()
-//						+ " was bigger than the total capacity ("
-//						+ getTotalMips() + ") while creating VM #" + vm.getId()
-//						+ ".");
 			}
 		}
 		return result;
@@ -207,17 +197,17 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	}
 	
 	public List<UsageEntry> getUsageEntries() {
-		return usageEntries;
+		return new LinkedList<UsageEntry>(usageEntries.values());
 	}
-	public void setUsageEntries(List<UsageEntry> usageEntries) {
+	private void setUsageEntries(Map<Double, UsageEntry> usageEntries) {
 		this.usageEntries = usageEntries;
 	}
 	
 	public void updateUtilization(double time) {
-		double totalMips = ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips();
-		double utilization = (totalMips - getAvailableMips()) / totalMips;
 
-		getUsageEntries().add(new UsageEntry(getId(), time, getPriorityToInUseMips(), getPriorityToVms(), getTotalUsage(), getAvailableMips()));
+		getUsageEntries()
+				.add(new UsageEntry(getId(), time, getPriorityToInUseMips(),
+						getPriorityToVms(), getTotalUsage(), getAvailableMips()));
 //		//TODO remove it
 //		double totalUsage = 0;
 //		for (Integer priority : getPriorityToInUseMips().keySet()) {
