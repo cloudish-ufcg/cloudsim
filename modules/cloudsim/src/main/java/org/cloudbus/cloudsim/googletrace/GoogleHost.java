@@ -24,7 +24,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	private int numberOfPriorities;
 	public static final int DECIMAL_ACCURACY = 9;
 	
-	private Map<Double, UsageEntry> usageEntries;
+	private Map<Double, UsageEntry> usageMap;
 
 	public GoogleHost(int id, List<? extends Pe> peList, VmScheduler vmScheduler, int numberOfPriorities) {
 		super(id, new RamProvisionerSimple(Integer.MAX_VALUE),
@@ -37,7 +37,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 		
 		setPriorityToVms(new HashMap<Integer, SortedSet<Vm>>());
 		setPriorityToInUseMips(new HashMap<Integer, Double>());
-		setUsageEntries(new HashMap<Double, UsageEntry>());
+		setUsageMap(new HashMap<Double, UsageEntry>());
 		setNumberOfPriorities(numberOfPriorities);
 		
 		// initializing maps
@@ -197,16 +197,19 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	}
 	
 	public List<UsageEntry> getUsageEntries() {
-		return new LinkedList<UsageEntry>(usageEntries.values());
+		return new LinkedList<UsageEntry>(usageMap.values());
 	}
-	private void setUsageEntries(Map<Double, UsageEntry> usageEntries) {
-		this.usageEntries = usageEntries;
+	
+	private void setUsageMap(Map<Double, UsageEntry> usageEntries) {
+		this.usageMap = usageEntries;
+	}
+	
+	private Map<Double, UsageEntry> getUsageMap() {
+		return usageMap;
 	}
 	
 	public void updateUtilization(double time) {
-
-		getUsageEntries()
-				.add(new UsageEntry(getId(), time, getPriorityToInUseMips(),
+		getUsageMap().put(time, new UsageEntry(getId(), time, getPriorityToInUseMips(),
 						getPriorityToVms(), getTotalUsage(), getAvailableMips()));
 //		//TODO remove it
 //		double totalUsage = 0;
@@ -217,7 +220,7 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	}
 
 	public void resetUtilizationMap() {
-		getUsageEntries().clear();
+		getUsageMap().clear();
 	}
 	
 	public double getUsageByPriority(int priority) {

@@ -28,6 +28,7 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.googletrace.DatacenterInfo;
 import org.cloudbus.cloudsim.googletrace.GoogleDatacenter;
 import org.cloudbus.cloudsim.googletrace.GoogleHost;
 import org.cloudbus.cloudsim.googletrace.GoogleTask;
@@ -54,8 +55,6 @@ public class CloudSimExampleGoogleTrace {
 	 */
 	public static void main(String[] args) {
 		System.out.println("Starting CloudSimExample Google Trace ...");
-
-
 		
 		long now = System.currentTimeMillis();
 		
@@ -100,12 +99,18 @@ public class CloudSimExampleGoogleTrace {
 
 			CloudSim.stopSimulation();
 			
-			List<UsageEntry> utilizationEntries = datacenter0.getHostUtilizationEntries();
-
 			printGoogleTaskStates(newList);
+			newList.clear();
 			
+			List<UsageEntry> utilizationEntries = datacenter0.getHostUtilizationEntries();
 			System.out.println("Utilization Entries: " + utilizationEntries.size());
-
+			utilizationEntries.clear();
+			
+			List<DatacenterInfo> datacenterInfo = datacenter0.getAllDatacenterInfo();
+			System.out.println("DatacenterInfo Entries: " + datacenterInfo.size());
+			datacenterInfo.clear();
+			
+			
 			Log.printLine("Execution Time "
 					+ (((System.currentTimeMillis() - now) / 1000) / 60)
 					+ " minutes");

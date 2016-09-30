@@ -8,8 +8,11 @@
 package org.cloudbus.cloudsim.googletrace;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -21,6 +24,7 @@ import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
+import org.cloudbus.cloudsim.googletrace.datastore.DatacenterDataStore;
 import org.cloudbus.cloudsim.googletrace.datastore.UtilizationDataStore;
 import org.cloudbus.cloudsim.googletrace.policies.vmallocation.PreemptableVmAllocationPolicy;
 
@@ -46,6 +50,9 @@ public class GoogleDatacenter extends Datacenter {
 	private SortedSet<GoogleVm> vmsRunning = new TreeSet<GoogleVm>();
 	private SortedSet<GoogleVm> vmsForScheduling = new TreeSet<GoogleVm>();
 	private UtilizationDataStore hostUsageDataStore;
+	private DatacenterDataStore datacenterDataStore;
+	
+	private List<DatacenterInfo> datacenterInfo;
 		
 	private double storingIntervalSize;
 	
@@ -61,23 +68,31 @@ public class GoogleDatacenter extends Datacenter {
 		super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
 		
 		hostUsageDataStore = new UtilizationDataStore(properties);
+		datacenterDataStore = new DatacenterDataStore(properties);
 		
         int storingIntervalSize = properties
                 .getProperty("utilization_storing_interval_size") == null ? DEFAULT_UTILIZATION_STORING_INTERVAL_SIZE
                 : Integer.parseInt(properties.getProperty("utilization_storing_interval_size"));
         
         setStoringIntervalSize(storingIntervalSize);
+        setDatacenterInfo(new LinkedList<DatacenterInfo>());
 	}
 	
 	@Override
 	protected void processOtherEvent(SimEvent ev) {
 		switch (ev.getTag()) {
 			case STORE_HOST_UTILIZATION_EVENT:
-				storeHostUtilization();
+				storeHostUtilization(false);
 				break;
 				
 			case STORE_DATACENTER_DATA_EVENT:
-				storeDatacenterData();
+				collectDatacenterInfo(false);
+				break;
+				
+			case CloudSimTags.END_OF_SIMULATION:
+				terminateSimulation();
+				storeHostUtilization(true);
+				collectDatacenterInfo(true);
 				break;
 	
 			// other unknown tags are processed by this method
@@ -88,33 +103,94 @@ public class GoogleDatacenter extends Datacenter {
 	}
 	
 	
-	private void storeDatacenterData() {
-		Log.printConcatLine(simulationTimeUtil.clock(), ": Storing datacenter data into database.");
+	private void terminateSimulation() {
+		Log.printConcatLine(simulationTimeUtil.clock(),
+				": Finishing all VMs (", getVmsRunning().size(),
+				" running and ", getVmsForScheduling().size(), " waiting).");
 
+		Set<Integer> brokerIds = new HashSet<Integer>();
+		
+		// terminating Vms running
+		for (GoogleVm vmRunning : getVmsRunning()) {
+			GoogleHost host = (GoogleHost) vmRunning.getHost();
+			getVmAllocationPolicy().deallocateHostForVm(vmRunning);
+		
+			double now = simulationTimeUtil.clock();
+			
+			vmRunning.setRuntime(vmRunning.getActualRuntime(now));
+			sendNow(vmRunning.getUserId(), CloudSimTags.VM_DESTROY_ACK, vmRunning);
+
+			host.updateUtilization(simulationTimeUtil.clock());
+			
+			brokerIds.add(vmRunning.getUserId());
+		}
+		
+		// terminating Vms waiting
+		for (GoogleVm vmForScheduling : getVmsForScheduling()) {
+			double now = simulationTimeUtil.clock();
+			
+			vmForScheduling.setRuntime(vmForScheduling.getActualRuntime(now));
+			sendNow(vmForScheduling.getUserId(), CloudSimTags.VM_DESTROY_ACK, vmForScheduling);
+			
+			brokerIds.add(vmForScheduling.getUserId());
+		}
+
+		// sending end of simulation event to broker
+		Log.printConcatLine(simulationTimeUtil.clock(),
+				": Sending end of simulation to ", brokerIds.size(),
+				" brokers.");
+		
+		for (Integer brokerId : brokerIds) {
+			sendNow(brokerId, CloudSimTags.END_OF_SIMULATION);
+		}
+	}
+
+	private void collectDatacenterInfo(boolean endOfSimulation) {
+		Log.printConcatLine(simulationTimeUtil.clock(), ": Collecting datacenter data into database.");
+
+		int vmsRunningP0 = 0;
+		int vmsRunningP1 = 0;
+		int vmsRunningP2 = 0;
+		int vmsRunning = getVmsRunning().size();
+		int vmsForScheduling = getVmsForScheduling().size();
+		
 		for (Host host : getHostList()) {
 			GoogleHost gHost = (GoogleHost) host;
-			System.out.println("time=" + simulationTimeUtil.clock() + "hostId:" + gHost.getId() + ", totalUsage=" + gHost.getTotalUsage()+ ", availableMips=" + gHost.getAvailableMips());
-			System.out.println("#VMs Running: " + getVmsRunning().size());
-			System.out.println("#VMs For Scheduling: " + getVmsForScheduling().size());
-			System.out.println("Priority0: usage=" + gHost.getUsageByPriority(0)+ ", available=" + gHost.getAvailableMipsByPriority(0) + ", running=" + gHost.getPriorityToVms().get(0).size());
-			System.out.println("Priority1: usage=" + gHost.getUsageByPriority(1)+ ", available=" + gHost.getAvailableMipsByPriority(1) + ", running=" + gHost.getPriorityToVms().get(1).size());
-			System.out.println("Priority2: usage=" + gHost.getUsageByPriority(2)+ ", available=" + gHost.getAvailableMipsByPriority(2) + ", running=" + gHost.getPriorityToVms().get(2).size());
+			vmsRunningP0 += gHost.getUsageByPriority(0);
+			vmsRunningP1 += gHost.getUsageByPriority(1);
+			vmsRunningP2 += gHost.getUsageByPriority(2);
+//			System.out.println("time=" + simulationTimeUtil.clock() + "hostId:" + gHost.getId() + ", totalUsage=" + gHost.getTotalUsage()+ ", availableMips=" + gHost.getAvailableMips());
+//			System.out.println("#VMs For Scheduling: " + getVmsForScheduling().size());
+//			System.out.println("Priority0: usage=" + gHost.getUsageByPriority(0)+ ", available=" + gHost.getAvailableMipsByPriority(0) + ", running=" + gHost.getPriorityToVms().get(0).size());
+//			System.out.println("Priority1: usage=" + gHost.getUsageByPriority(1)+ ", available=" + gHost.getAvailableMipsByPriority(1) + ", running=" + gHost.getPriorityToVms().get(1).size());
+//			System.out.println("Priority2: usage=" + gHost.getUsageByPriority(2)+ ", available=" + gHost.getAvailableMipsByPriority(2) + ", running=" + gHost.getPriorityToVms().get(2).size());
 		}
 		
-		for (int i = 0; i < 3; i++) {
-			int numberOfVms = 0;
-			for (GoogleVm vm : getVmsForScheduling()) {
-				if (vm.getPriority() == i) {
-					numberOfVms++;
-				} else if (vm.getPriority() > i) {
-					break;
-				}
+		int vmsForSchedulingP0 = 0;
+		int vmsForSchedulingP1 = 0;
+		int vmsForSchedulingP2 = 0;
+		
+		for (GoogleVm vm : getVmsForScheduling()) {
+			if (vm.getPriority() == 0) {
+				vmsForSchedulingP0++;
+			} else if (vm.getPriority() == 1) {
+				vmsForSchedulingP1++;
+			} else if (vm.getPriority() == 2) {
+				vmsForSchedulingP2++;
+			} else {
+				System.out.println("#VMs with invalid priority "
+						+ vm.getPriority());
 			}
-			System.out.println("#VMs For Scheduling (priority"+i+"): " + numberOfVms);	
 		}
+		
+		getDatacenterInfo().add(
+				new DatacenterInfo(simulationTimeUtil.clock(), vmsRunning,
+						vmsRunningP0, vmsRunningP1, vmsRunningP2,
+						vmsForScheduling, vmsForSchedulingP0,
+						vmsForSchedulingP1, vmsForSchedulingP2));
 		
 		// creating next event if the are more vms to be concluded
-		if (!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) {
+		if ((!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) && !endOfSimulation) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
 					": Scheduling next store datacenter data event will be in ",
 					SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()),
@@ -124,7 +200,7 @@ public class GoogleDatacenter extends Datacenter {
 		}
 	}
 
-	private void storeHostUtilization() {
+	private void storeHostUtilization(boolean endOfSimulation) {
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Storing host utilization  into database.");
 
 		List<UsageEntry> usageEntries = new ArrayList<UsageEntry>();
@@ -140,9 +216,14 @@ public class GoogleDatacenter extends Datacenter {
 		Log.printConcatLine(simulationTimeUtil.clock(), ":", usageEntries.size()," will be stored into database now.");
 		
 		hostUsageDataStore.addUsageEntries(usageEntries);
+		
+		// dumping datacenterinfo into database
+		if (datacenterDataStore.addDatacenterInfo(getDatacenterInfo())) {
+			getDatacenterInfo().clear();
+		}
 
 		// creating next event if the are more vms to be concluded
-		if (!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) {
+		if ((!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) && !endOfSimulation) {
 			Log.printConcatLine(
 					simulationTimeUtil.clock(),
 					": Scheduling next store host utilization event in be in ",
@@ -385,6 +466,16 @@ public class GoogleDatacenter extends Datacenter {
 	protected void setStoringIntervalSize(double storingIntervalSize) {
 		this.storingIntervalSize = storingIntervalSize;
 	}
-	
-	
+
+	public List<DatacenterInfo> getDatacenterInfo() {
+		return datacenterInfo;
+	}
+
+	public void setDatacenterInfo(List<DatacenterInfo> datacenterInfo) {
+		this.datacenterInfo = datacenterInfo;
+	}
+
+	public List<DatacenterInfo> getAllDatacenterInfo() {
+		return datacenterDataStore.getAllDatacenterInfo();
+	}
 }

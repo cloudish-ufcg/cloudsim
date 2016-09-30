@@ -238,7 +238,11 @@ public class UtilizationDataStore extends GoogleDataStore {
 			ResultSet rs = statement.getResultSet();
 
 			while (rs.next()) {
-				entries.add(new UsageEntry(rs.getInt("host_id"), rs.getDouble("time"), rs.getDouble("p0Usage"), rs.getDouble("p1Usage"), rs.getDouble("p2Usage"), rs.getInt("p0Vms"), rs.getInt("p1Vms"), rs.getInt("p2Vms"), rs.getDouble("availableMips")));
+				entries.add(new UsageEntry(rs.getInt("host_id"), rs
+						.getDouble("time"), rs.getDouble("p0Usage"), rs
+						.getDouble("p1Usage"), rs.getDouble("p2Usage"), rs
+						.getInt("p0Vms"), rs.getInt("p1Vms"), rs
+						.getInt("p2Vms"), rs.getDouble("availableMips")));
 			}
 			return entries;
 		} catch (SQLException e) {
