@@ -1008,8 +1008,63 @@ public class GoogleDatacenterTest {
 		executingSimulationRuntime3(ACCEPTABLE_DIFFERENCE, numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1, destroyVm);
 		executingSimulationRuntime4(ACCEPTABLE_DIFFERENCE, numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1, destroyVm);
 		executingSimulationRuntime5(ACCEPTABLE_DIFFERENCE, numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1, destroyVm);
+		executingSimulationRuntime6(ACCEPTABLE_DIFFERENCE, numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1, destroyVm);
 		executingSimulationRuntime7(ACCEPTABLE_DIFFERENCE, numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1, destroyVm);
 		executingSimulationRuntime8(ACCEPTABLE_DIFFERENCE, numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1, destroyVm);
+
+		double ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY = 0.01;
+
+		double finishTime = 8.0;
+		// asserting VM availability of P0S0
+		for (int i = 0; i < numberOfVms; i++) {
+			GoogleVm vm = (GoogleVm) vmP0S0.get(i);
+			Assert.assertEquals(1, vm.getRuntime()/(finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+		}
+
+		finishTime = 7.0;
+		// asserting VM availability of P1S0
+		for (int i = 0; i < numberOfVms; i++) {
+			GoogleVm vm = (GoogleVm) vmP1S0.get(i);
+			Assert.assertEquals(0.714, vm.getRuntime()/(finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+		}
+
+		// asserting VM availability of P2S0
+		finishTime = 4.0;
+		for (int i = 0; i < 3301; i++) {
+			GoogleVm vm = (GoogleVm) vmP2S0.get(i);
+			Assert.assertEquals(0.5, vm.getRuntime()/(finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+		}
+
+
+		finishTime = 5.0;
+		for (int i = 3301; i < 6602; i++) {
+			GoogleVm vm = (GoogleVm) vmP2S0.get(i);
+			Assert.assertEquals(0.4, vm.getRuntime()/(finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+		}
+
+		finishTime = 6.0;
+		for (int i = 6602; i < numberOfVms; i++) {
+			GoogleVm vm = (GoogleVm) vmP2S0.get(i);
+			Assert.assertEquals(0.33, vm.getRuntime()/(finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+		}
+
+		finishTime = 3.0;
+		// asserting VM availability of P0S1
+		for (int i = 0; i < 5502; i++) {
+			GoogleVm vm = (GoogleVm) vmP0S1.get(i);
+			Assert.assertEquals(1, vm.getRuntime()/(finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+		}
+
+
+		finishTime = 5.0;
+		// asserting VM availability of P0S1
+		for (int i = 5502; i < numberOfVms; i++) {
+			GoogleVm vm = (GoogleVm) vmP0S1.get(i);
+			Assert.assertEquals(0.5, vm.getRuntime()/(finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+		}
+
+
+
 	}
 
 	private void executingSimulationRuntime8(double ACCEPTABLE_DIFFERENCE, int numberOfVms, List<Vm> vmP0S0, List<Vm> vmP1S0, List<Vm> vmP2S0, List<Vm> vmP0S1, SimEvent destroyVm) {
@@ -1050,8 +1105,6 @@ public class GoogleDatacenterTest {
 		Mockito.when(timeUtil.clock()).thenReturn(7.0);
 
 		// finishing vms of priority 1, submit time 0, runtime 5
-		// and the last of vms with priority 2, submit time 0, runtime 2
-		// both that are finished in simulation time 7
 
 		for (int i = 0; i < numberOfVms; i++) {
 
@@ -1068,10 +1121,7 @@ public class GoogleDatacenterTest {
 			datacenter.processVmDestroy(destroyVm, false);
 		}
 
-		//testing new available considering the end of vms described before, and reallocate of
-		/*after deallocate 6603 vms of vmP1S0 available mips are 3301.55
-		* after deallocate 1 vm of vmP2S0, the available mips are 3301.75
-		* */
+		//testing new available considering the end of vms described above
 		Assert.assertEquals(3301.75, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(3301.75, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(3301.75, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
@@ -1082,13 +1132,45 @@ public class GoogleDatacenterTest {
 		Assert.assertEquals(6603, datacenter.getVmsRunning().size());
 	}
 
+	private void executingSimulationRuntime6(double ACCEPTABLE_DIFFERENCE, int numberOfVms, List<Vm> vmP0S0, List<Vm> vmP1S0, List<Vm> vmP2S0, List<Vm> vmP0S1, SimEvent destroyVm) {
+		// passing time to 6
+		Mockito.when(timeUtil.clock()).thenReturn(6.0);
+
+		// finishing the last one VM with priority 2
+
+		for (int i = 0; i < numberOfVms; i++) {
+
+			Mockito.when(destroyVm.getData()).thenReturn((Object) vmP0S0.get(i));
+			datacenter.processVmDestroy(destroyVm, false);
+
+			Mockito.when(destroyVm.getData()).thenReturn((Object) vmP1S0.get(i));
+			datacenter.processVmDestroy(destroyVm, false);
+
+			Mockito.when(destroyVm.getData()).thenReturn((Object) vmP2S0.get(i));
+			datacenter.processVmDestroy(destroyVm, false);
+
+			Mockito.when(destroyVm.getData()).thenReturn((Object) vmP0S1.get(i));
+			datacenter.processVmDestroy(destroyVm, false);
+		}
+
+		//testing new available considering the end of vms described above
+		Assert.assertEquals(1320.85, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(3301.75, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(1320.85, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(1320.85, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+
+		//testing size of lists consider the ending of vms and reallocating as described before
+		Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
+		Assert.assertEquals(2 * 6603, datacenter.getVmsRunning().size());
+	}
+
 	private void executingSimulationRuntime5(double ACCEPTABLE_DIFFERENCE, int numberOfVms, List<Vm> vmP0S0, List<Vm> vmP1S0, List<Vm> vmP2S0, List<Vm> vmP0S1, SimEvent destroyVm) {
 		// passing time to 5
 		Mockito.when(timeUtil.clock()).thenReturn(5.0);
 
 		// finishing vms of priority 2, submit time 0, runtime 2 and
 		// finishing vms of priority 0, submit time 1, runtime 2
-		// both are finished in simulation time 5
+		// both are finished at time 5
 
 		for (int i = 0; i < numberOfVms; i++) {
 
@@ -1124,7 +1206,7 @@ public class GoogleDatacenterTest {
 		// passing time to 4
 		Mockito.when(timeUtil.clock()).thenReturn(4.0);
 
-		// finishing vms of priority 2, submit time 0, and runtime 2 that are finished in simulation time 4
+		// finishing vms of priority 2, submit time 0, and runtime 2 that are finished at time 4
 
 		for (int i = 0; i < numberOfVms; i++) {
 
@@ -1141,7 +1223,7 @@ public class GoogleDatacenterTest {
 			datacenter.processVmDestroy(destroyVm, false);
 		}
 
-		//testing new available considering the end of vms described before, and reallocate of
+		//testing new available considering the end of vms described above, and reallocate of
 		/*after deallocate of 3301 vms of vmP2S0 available mips are 660.25
 		* after allocate 3301 vms of vmP2S0, the available mips are 0.05
 		* */
@@ -1159,7 +1241,7 @@ public class GoogleDatacenterTest {
 		// passing time to 3
 		Mockito.when(timeUtil.clock()).thenReturn(3.0);
 
-		// finishing vms of priority 0, submit time 1, and runtime 2 that the runtime is complete in simulation time 3
+		// finishing vms of priority 0, submit time 1, and runtime 2, because the runtime is completed at time 3
 		for (int i = 0; i < numberOfVms; i++) {
 
 			Mockito.when(destroyVm.getData()).thenReturn((Object) vmP0S0.get(i));
@@ -1175,10 +1257,10 @@ public class GoogleDatacenterTest {
 			datacenter.processVmDestroy(destroyVm, false);
 		}
 
-		//testing new available considering the end of vms described before, and reallocate of
-		/*after deallocate available mips are 3301.75
-		* after allocate remaining vms of vmP0S1, the available mips are 2641.15
-		* after allocate all vms(6603) of vmP1S0, the available mips are 660.25
+		//testing new available considering the end of vms described above, and reallocating of
+		/*after deallocate available mips is 3301.75
+		* after allocate remaining vms of vmP0S1, the available mips is 2641.15
+		* after allocate all vms(6603) of vmP1S0, the available mips is 660.25
 		* after allocate 3301 vms of vmP2S0, the available mips are 0.05
 		* */
 		Assert.assertEquals(0.05, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
@@ -1204,14 +1286,14 @@ public class GoogleDatacenterTest {
 
 		//testing capacity of host
 		//TODO discuss about imprecision on results
-		//TODO results are different because of backfilling and vms of priority 1 and 2 are preempt and not reallocated
+		//TODO results can be different because of backfilling and vms of priority 1 and 2 can not be preempted reallocated at same time
 		Assert.assertEquals(0.55, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(0.55, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(0.55, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(0.55, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
 		//testing size of lists
-		//TODO results are different because of backfilling and vms of priority 1 and 2 are preempt and not reallocated
+		//TODO results can be different because of backfilling and vms of priority 1 and 2 can not be preempted reallocated at same time
 		Assert.assertEquals(14307, datacenter.getVmsForScheduling().size()); //14305
 		Assert.assertEquals(12105, datacenter.getVmsRunning().size()); //12107
 	}
@@ -1254,14 +1336,14 @@ public class GoogleDatacenterTest {
 		Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
 		Assert.assertEquals(2 * numberOfVms, datacenter.getVmsRunning().size());
 
-		//allocate 6603 vms os priority 2, submit time 0, and Cpu requisition of 0.2
+		//allocate 6603 vms of priority 2, submit time 0, and Cpu requisition of 0.2
 		//with total requested Cpu equals 1320.6
 
 		for (int i = 0; i < numberOfVms; i++) {
 			datacenter.allocateHostForVm(false, (GoogleVm) vmP2S0.get(i), null);
 		}
 		//testing capacity of host
-		//TODO discuss about the impreciosion of results (expetecd 0.2, and actual is 0.249999999186723)
+		//TODO discuss about the imprecision of results (expetecd 0.25, and actual is 0.249999999186723)
 		Assert.assertEquals(0.25, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(3301.75, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(1320.85, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);

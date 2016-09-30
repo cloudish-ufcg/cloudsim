@@ -359,7 +359,7 @@ public class VmSchedulerMipsBasedTest {
     @Test
     public void testAllocatePesForVm3() {
 
-        double ACCEPTABLE_DIFFERENCE = 0.000000000000001;
+        double ACCEPTABLE_DIFFERENCE = 0.000000001;
 
         int id = 0;
         int userId = 1;
@@ -396,21 +396,16 @@ public class VmSchedulerMipsBasedTest {
         schedulerMipsBased.deallocatePesForVm(vm2);
         Assert.assertEquals(cpuCapacity - (3 * cpuReq), schedulerMipsBased.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
 
-        // detect imprecision of 12 decimal places in available mips
         Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm4, vm4.getCurrentRequestedMips()));
-        Assert.assertFalse(cpuCapacity - (6 * cpuReq) == schedulerMipsBased.getAvailableMips());
         Assert.assertEquals(cpuCapacity - (6 * cpuReq), schedulerMipsBased.getAvailableMips(), this.ACCEPTABLE_DIFFERENCE);
 
         Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm5, vm5.getCurrentRequestedMips()));
-        Assert.assertFalse(cpuCapacity - (10 * cpuReq) == schedulerMipsBased.getAvailableMips());
         Assert.assertEquals(cpuCapacity - (10 * cpuReq), schedulerMipsBased.getAvailableMips(), this.ACCEPTABLE_DIFFERENCE);
 
         schedulerMipsBased.deallocatePesForVm(vm1);
-        Assert.assertFalse(cpuCapacity - (9 * cpuReq) == schedulerMipsBased.getAvailableMips());
         Assert.assertEquals(cpuCapacity - (9 * cpuReq), schedulerMipsBased.getAvailableMips(), this.ACCEPTABLE_DIFFERENCE);
 
         Assert.assertTrue(schedulerMipsBased.allocatePesForVm(vm6, vm6.getCurrentRequestedMips()));
-        Assert.assertFalse(cpuCapacity - (15 * cpuReq) == schedulerMipsBased.getAvailableMips());
         Assert.assertEquals(cpuCapacity - (15 * cpuReq), schedulerMipsBased.getAvailableMips(), this.ACCEPTABLE_DIFFERENCE);
 
         schedulerMipsBased.deallocatePesForVm(vm3);

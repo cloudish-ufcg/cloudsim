@@ -879,17 +879,17 @@ public class GoogleHostTest {
 	public void testDecimalAccuracy(){
 
 		// setting a new acceptable difference considering accuracy
-		double NEW_ACCEPTABLE_DIFFERENCE = 0.0000000000000001;
+		double NEW_ACCEPTABLE_DIFFERENCE = 0.000000001;
 
-		// creating a new host with capacity that will be rounding to 1
+		// creating a new host with capacity that will be rounded to 1
 		List<Pe> peList2 = new ArrayList<Pe>();
-		peList2.add(new Pe(0, new PeProvisionerSimple(1.0000000000000001))); // round to 1
+		peList2.add(new Pe(0, new PeProvisionerSimple(1.0000000001))); // round to 1
 		GoogleHost host1 = new GoogleHost(HOST_ID + 1, peList2,
 				new VmSchedulerMipsBased(peList2), NUMBER_OF_PRIORITIES);
 
-		// creating a new host with capacity that won't be rounding to 1
+		// creating a new host with capacity that won't be rounded to 1
 		List<Pe> peList3 = new ArrayList<Pe>();
-		peList3.add(new Pe(0, new PeProvisionerSimple(1.000000000000001)));
+		peList3.add(new Pe(0, new PeProvisionerSimple(1.000000001)));
 		GoogleHost host2 = new GoogleHost(HOST_ID + 2, peList3,
 				new VmSchedulerMipsBased(peList3), NUMBER_OF_PRIORITIES);
 
@@ -902,16 +902,16 @@ public class GoogleHostTest {
 
 		// asserting new available mips of two hosts
 		Assert.assertEquals(host1.getAvailableMips(), 0, NEW_ACCEPTABLE_DIFFERENCE);
-		Assert.assertEquals(host2.getAvailableMips(), 1.0E-15, NEW_ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(host2.getAvailableMips(), 1.0E-9, NEW_ACCEPTABLE_DIFFERENCE);
 
 		// destroying vm1 from hosts to do new testes and asserting the new available mips
 		host1.vmDestroy(vm1);
 		Assert.assertEquals(host1.getAvailableMips(), 1, NEW_ACCEPTABLE_DIFFERENCE);
 		host2.vmDestroy(vm1);
-		Assert.assertEquals(host2.getAvailableMips(), 1 + 1.0E-15, NEW_ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(host2.getAvailableMips(), 1 + 1.0E-9, NEW_ACCEPTABLE_DIFFERENCE);
 
-		// vm1 with mips required tha can not be allocated at host1, but can be allocated at host2
-		vm1 = new GoogleVm(0, 1, 1.000000000000001, 1.0, 0, 0, 0);
+		// vm1 with mips required that can not be allocated at host1, but can be allocated at host2
+		vm1 = new GoogleVm(0, 1, 1.000000001, 1.0, 0, 0, 0);
 		Assert.assertFalse(host1.vmCreate(vm1));
 		Assert.assertTrue(host2.vmCreate(vm1));
 
@@ -921,26 +921,22 @@ public class GoogleHostTest {
 
 		// destroying vm1 from host2 to do new testes and asserting the new available mips
 		host2.vmDestroy(vm1);
-		Assert.assertEquals(host2.getAvailableMips(), 1 + 1.0E-15, NEW_ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(host2.getAvailableMips(), 1 + 1.0E-9, NEW_ACCEPTABLE_DIFFERENCE);
 
-		// vm1 with mips required bugger than host1 and host2 capacity
-		vm1 = new GoogleVm(0, 1, 1.0000000000000016, 1.0, 0, 0, 0);
+		// vm1 with mips required bigger than host1 and host2 capacity
+		vm1 = new GoogleVm(0, 1, 1.0000000016, 1.0, 0, 0, 0);
 		Assert.assertFalse(host1.vmCreate(vm1));
 		Assert.assertFalse(host2.vmCreate(vm1));
 		Assert.assertEquals(host1.getAvailableMips(), 1, NEW_ACCEPTABLE_DIFFERENCE);
-		Assert.assertEquals(host2.getAvailableMips(), 1 + 1.0E-15, NEW_ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(host2.getAvailableMips(), 1 + 1.0E-9, NEW_ACCEPTABLE_DIFFERENCE);
 
 
-		// vm1 with mips required equals than host2 capacity and bigger than host1 capacity
-		vm1 = new GoogleVm(0, 1, 1.0000000000000012, 1.0, 0, 0, 0);
+		// vm1 with mips required bigger than host1 and host2 capacity
+		vm1 = new GoogleVm(0, 1, 1.0000000011, 1.0, 0, 0, 0);
 		Assert.assertFalse(host1.vmCreate(vm1));
-		Assert.assertTrue(host2.vmCreate(vm1));
+		Assert.assertFalse(host2.vmCreate(vm1));
 		Assert.assertEquals(host1.getAvailableMips(), 1, NEW_ACCEPTABLE_DIFFERENCE);
-		Assert.assertEquals(host2.getAvailableMips(), 0, NEW_ACCEPTABLE_DIFFERENCE);
-
-		// destroying vm1 from host2 to do new testes and asserting the new available mips
-		host2.vmDestroy(vm1);
-		Assert.assertEquals(host2.getAvailableMips(), 1 + 1.0E-15, NEW_ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(host2.getAvailableMips(), 1 + 1.0E-9, NEW_ACCEPTABLE_DIFFERENCE);
 
 
 	}
@@ -948,28 +944,28 @@ public class GoogleHostTest {
 	@Test
 	public void testDecimalAccuracy2(){
 		// setting a new acceptable difference considering accuracy
-		double NEW_ACCEPTABLE_DIFFERENCE = 0.0000000000000001;
+		double NEW_ACCEPTABLE_DIFFERENCE = 0.000000001;
 
-		// creating a new host with capacity that will be rounding to 1
+		// creating a new host with capacity that will be rounded to 1
 		List<Pe> peList2 = new ArrayList<Pe>();
-		peList2.add(new Pe(0, new PeProvisionerSimple(1.0000000000000001))); // round to 1
+		peList2.add(new Pe(0, new PeProvisionerSimple(1.0000000001))); // round to 1
 		GoogleHost host1 = new GoogleHost(HOST_ID + 1, peList2,
 				new VmSchedulerMipsBased(peList2), NUMBER_OF_PRIORITIES);
 
-		// creating a new host with capacity that won't be rounding to 1
+		// creating a new host with capacity that won't be rounded to 1
 		List<Pe> peList3 = new ArrayList<Pe>();
-		peList3.add(new Pe(0, new PeProvisionerSimple(1.000000000000001)));
+		peList3.add(new Pe(0, new PeProvisionerSimple(1.000000001)));
 		GoogleHost host2 = new GoogleHost(HOST_ID + 2, peList3,
 				new VmSchedulerMipsBased(peList3), NUMBER_OF_PRIORITIES);
 
 		// setting vms
 		GoogleVm vm1 = new GoogleVm(1, 1, 1, 1.0, 0, 0, 0);
-		GoogleVm vm2 = new GoogleVm(2, 1, 0.999999999999999, 1.0, 0, 0, 0);
-		GoogleVm vm3 = new GoogleVm(3, 1, 0.000000000000001, 1.0, 0, 0, 0);
+		GoogleVm vm2 = new GoogleVm(2, 1, 0.999999999, 1.0, 0, 0, 0);
+		GoogleVm vm3 = new GoogleVm(3, 1, 0.000000001, 1.0, 0, 0, 0);
 
 		// asserting that vm2 can be allocated at host1 and new capacity of host
 		Assert.assertTrue(host1.vmCreate(vm2));
-		Assert.assertEquals(host1.getAvailableMips(), 0.000000000000001, NEW_ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(host1.getAvailableMips(), 0.000000001, NEW_ACCEPTABLE_DIFFERENCE);
 
 		// asserting that vm3 can be allocated at host1 and new capacity of host
 		Assert.assertTrue(host1.vmCreate(vm3));
@@ -977,19 +973,19 @@ public class GoogleHostTest {
 
 		// destroying vm2 and vm3 from host1 to do new testes and asserting the new available mips
 		host1.vmDestroy(vm2);
-		Assert.assertEquals(host1.getAvailableMips(), 0.999999999999999, NEW_ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(host1.getAvailableMips(), 0.999999999, NEW_ACCEPTABLE_DIFFERENCE);
 		host1.vmDestroy(vm3);
 		Assert.assertEquals(host1.getAvailableMips(), 1, NEW_ACCEPTABLE_DIFFERENCE);
 
 		// same test, but now replacing insertion order of vms (first vm3 and second vm2)
 		Assert.assertTrue(host1.vmCreate(vm3));
-		Assert.assertEquals(host1.getAvailableMips(), 0.999999999999999, NEW_ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(host1.getAvailableMips(), 0.999999999, NEW_ACCEPTABLE_DIFFERENCE);
 		Assert.assertTrue(host1.vmCreate(vm2));
 		Assert.assertEquals(host1.getAvailableMips(), 0, NEW_ACCEPTABLE_DIFFERENCE);
 
 		// asserting that vm1 can be allocated at host2 and new capacity of host
 		Assert.assertTrue(host2.vmCreate(vm1));
-		Assert.assertEquals(host2.getAvailableMips(), 0.000000000000001, NEW_ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(host2.getAvailableMips(), 0.000000001, NEW_ACCEPTABLE_DIFFERENCE);
 
 		// asserting that vm3 can be allocated at host2 and new capacity of host
 		Assert.assertTrue(host2.vmCreate(vm3));
@@ -1000,7 +996,7 @@ public class GoogleHostTest {
 		host2.vmDestroy(vm1);
 		Assert.assertEquals(host2.getAvailableMips(), 1, NEW_ACCEPTABLE_DIFFERENCE);
 		host2.vmDestroy(vm3);
-		Assert.assertEquals(host2.getAvailableMips(), 1.000000000000001, NEW_ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(host2.getAvailableMips(), 1.000000001, NEW_ACCEPTABLE_DIFFERENCE);
 
 		// same test, but now replacing insertion order of vms (first vm3 and second vm1)
 		Assert.assertTrue(host2.vmCreate(vm3));
