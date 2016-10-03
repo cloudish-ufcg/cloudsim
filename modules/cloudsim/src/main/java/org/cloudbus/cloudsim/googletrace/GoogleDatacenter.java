@@ -154,16 +154,29 @@ public class GoogleDatacenter extends Datacenter {
 		int vmsRunning = getVmsRunning().size();
 		int vmsForScheduling = getVmsForScheduling().size();
 		
-		for (Host host : getHostList()) {
-			GoogleHost gHost = (GoogleHost) host;
-			vmsRunningP0 += gHost.getUsageByPriority(0);
-			vmsRunningP1 += gHost.getUsageByPriority(1);
-			vmsRunningP2 += gHost.getUsageByPriority(2);
+//		for (Host host : getHostList()) {
+//			GoogleHost gHost = (GoogleHost) host;
+//			vmsRunningP0 += gHost.getUsageByPriority(0);
+//			vmsRunningP1 += gHost.getUsageByPriority(1);
+//			vmsRunningP2 += gHost.getUsageByPriority(2);
 //			System.out.println("time=" + simulationTimeUtil.clock() + "hostId:" + gHost.getId() + ", totalUsage=" + gHost.getTotalUsage()+ ", availableMips=" + gHost.getAvailableMips());
 //			System.out.println("#VMs For Scheduling: " + getVmsForScheduling().size());
 //			System.out.println("Priority0: usage=" + gHost.getUsageByPriority(0)+ ", available=" + gHost.getAvailableMipsByPriority(0) + ", running=" + gHost.getPriorityToVms().get(0).size());
 //			System.out.println("Priority1: usage=" + gHost.getUsageByPriority(1)+ ", available=" + gHost.getAvailableMipsByPriority(1) + ", running=" + gHost.getPriorityToVms().get(1).size());
 //			System.out.println("Priority2: usage=" + gHost.getUsageByPriority(2)+ ", available=" + gHost.getAvailableMipsByPriority(2) + ", running=" + gHost.getPriorityToVms().get(2).size());
+//		}
+		
+		for (GoogleVm vm : getVmsRunning()) {
+			if (vm.getPriority() == 0) {
+				vmsRunningP0++;
+			} else if (vm.getPriority() == 1) {
+				vmsRunningP1++;
+			} else if (vm.getPriority() == 2) {
+				vmsRunningP2++;
+			} else {
+				System.out.println("#VMs with invalid priority "
+						+ vm.getPriority());
+			}
 		}
 		
 		int vmsForSchedulingP0 = 0;
