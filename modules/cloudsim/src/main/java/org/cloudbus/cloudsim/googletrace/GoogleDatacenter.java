@@ -37,11 +37,17 @@ import org.cloudbus.cloudsim.googletrace.policies.vmallocation.PreemptableVmAllo
 public class GoogleDatacenter extends Datacenter {
 
 	private static final int DATACENTER_BASE = 600;
+
+	// datacenter events
+	public static final int SCHEDULE_DATACENTER_EVENTS_EVENT = DATACENTER_BASE + 1;
+	public static final int STORE_HOST_UTILIZATION_EVENT = DATACENTER_BASE + 2;
+	public static final int COLLECT_DATACENTER_INFO_EVENT = DATACENTER_BASE + 3;
+	public static final int STORE_DATACENTER_INFO_EVENT = DATACENTER_BASE + 4;
 	
-	public static final int STORE_HOST_UTILIZATION_EVENT = DATACENTER_BASE + 1;
-	public static final int STORE_DATACENTER_DATA_EVENT = DATACENTER_BASE + 2;
-	
-    public static final int DEFAULT_UTILIZATION_STORING_INTERVAL_SIZE = 5;
+	// default interval sizes 
+    public static final int DEFAULT_UTILIZATION_STORING_INTERVAL_SIZE = 1440; // onde day in minutes
+	private static final int DEFAULT_DATACENTER_INFO_STORING_INTERVAL_SIZE = 1440; // one day in minutes
+	private static final int DEFAULT_DATACENTER_COLLECT_INFO_INTERVAL_SIZE = 5; // in minutes
 
 	PreemptableVmAllocationPolicy vmAllocationPolicy;
 	
@@ -49,15 +55,17 @@ public class GoogleDatacenter extends Datacenter {
 
 	private SortedSet<GoogleVm> vmsRunning = new TreeSet<GoogleVm>();
 	private SortedSet<GoogleVm> vmsForScheduling = new TreeSet<GoogleVm>();
+	private List<DatacenterInfo> datacenterInfo;
+	
+	// data stores
 	private UtilizationDataStore hostUsageDataStore;
 	private DatacenterDataStore datacenterDataStore;
 	
-	private List<DatacenterInfo> datacenterInfo;
-		
-	private double storingIntervalSize;
-	
-	//TODO make it configurable
-	private double datacenterStoringIntervalSize = 5;
+	private double hostUsageStoringIntervalSize;
+	private double datacenterCollectInfoIntervalSize;
+	private double datacenterStoringInfoIntervalSize;
+
+	private boolean collectDatacenterInfo = false;
 	
 	public GoogleDatacenter(
 			String name,
@@ -70,29 +78,57 @@ public class GoogleDatacenter extends Datacenter {
 		hostUsageDataStore = new UtilizationDataStore(properties);
 		datacenterDataStore = new DatacenterDataStore(properties);
 		
-        int storingIntervalSize = properties
+        int hostUsageStoringIntervalSize = properties
                 .getProperty("utilization_storing_interval_size") == null ? DEFAULT_UTILIZATION_STORING_INTERVAL_SIZE
                 : Integer.parseInt(properties.getProperty("utilization_storing_interval_size"));
         
-        setStoringIntervalSize(storingIntervalSize);
+        setHostUsageStoringIntervalSize(hostUsageStoringIntervalSize);
         setDatacenterInfo(new LinkedList<DatacenterInfo>());
+        
+		if (properties.getProperty("collect_datacenter_summary_info") != null
+				&& properties.getProperty("collect_datacenter_summary_info")
+						.equals("yes")) {
+			collectDatacenterInfo = true;
+			
+			double datacenterStoringInfoIntervalSize = properties
+					.getProperty("datacenter_storing_interval_size") == null ? DEFAULT_DATACENTER_INFO_STORING_INTERVAL_SIZE
+							: Double.parseDouble(properties.getProperty("datacenter_storing_interval_size"));
+
+			setDatacenterStoringInfoIntervalSize(datacenterStoringInfoIntervalSize);
+						
+			double datacenterCollectInfoIntervalSize = properties
+					.getProperty("datacenter_collect_info_interval_size") == null ? DEFAULT_DATACENTER_COLLECT_INFO_INTERVAL_SIZE
+							: Double.parseDouble(properties.getProperty("datacenter_collect_info_interval_size"));
+
+			setDatacenterCollectInfoIntervalSize(datacenterCollectInfoIntervalSize);
+		}
+        
 	}
 	
 	@Override
 	protected void processOtherEvent(SimEvent ev) {
 		switch (ev.getTag()) {
+			case SCHEDULE_DATACENTER_EVENTS_EVENT:
+				scheduleDatacenterEvents();
+				break;
+		
 			case STORE_HOST_UTILIZATION_EVENT:
 				storeHostUtilization(false);
 				break;
 				
-			case STORE_DATACENTER_DATA_EVENT:
+			case COLLECT_DATACENTER_INFO_EVENT:
 				collectDatacenterInfo(false);
+				break;
+				
+			case STORE_DATACENTER_INFO_EVENT:
+				storeDatacenterInfo(false);
 				break;
 				
 			case CloudSimTags.END_OF_SIMULATION:
 				terminateSimulation();
 				storeHostUtilization(true);
 				collectDatacenterInfo(true);
+				storeDatacenterInfo(true);
 				break;
 	
 			// other unknown tags are processed by this method
@@ -102,7 +138,22 @@ public class GoogleDatacenter extends Datacenter {
 		}
 	}
 	
-	
+
+	private void scheduleDatacenterEvents() {
+		// creating the first utilization store event
+		send(getId(),
+				SimulationTimeUtil.getTimeInMicro(getHostUsageStoringIntervalSize()),
+				GoogleDatacenter.STORE_HOST_UTILIZATION_EVENT);
+        
+		if (collectDatacenterInfo) {
+			// creating the first datacenter store event
+			// TODO we need to consider the datacenter storing interval related to utilization 
+			send(getId(), SimulationTimeUtil.getTimeInMicro(getDatacenterCollectInfoIntervalSize()), GoogleDatacenter.COLLECT_DATACENTER_INFO_EVENT);
+			
+			send(getId(), SimulationTimeUtil.getTimeInMicro(getDatacenterStoringInfoIntervalSize()), GoogleDatacenter.STORE_DATACENTER_INFO_EVENT);			
+		}	
+	}
+
 	private void terminateSimulation() {
 		Log.printConcatLine(simulationTimeUtil.clock(),
 				": Finishing all VMs (", getVmsRunning().size(),
@@ -146,7 +197,7 @@ public class GoogleDatacenter extends Datacenter {
 	}
 
 	private void collectDatacenterInfo(boolean endOfSimulation) {
-		Log.printConcatLine(simulationTimeUtil.clock(), ": Collecting datacenter data into database.");
+		Log.printConcatLine(simulationTimeUtil.clock(), ": Collecting datacenter info.");
 
 		int vmsRunningP0 = 0;
 		int vmsRunningP1 = 0;
@@ -193,16 +244,31 @@ public class GoogleDatacenter extends Datacenter {
 		// creating next event if the are more vms to be concluded
 		if ((!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) && !endOfSimulation) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
-					": Scheduling next store datacenter data event will be in ",
-					SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()),
+					": Scheduling next collect datacenter info event will be in ",
+					SimulationTimeUtil.getTimeInMicro(getHostUsageStoringIntervalSize()),
 					" microseconds.");
-			send(getId(), SimulationTimeUtil.getTimeInMicro(datacenterStoringIntervalSize),
-					STORE_DATACENTER_DATA_EVENT);
+			send(getId(), SimulationTimeUtil.getTimeInMicro(getDatacenterCollectInfoIntervalSize()),
+					COLLECT_DATACENTER_INFO_EVENT);
 		}
+	}
+	
+	private void storeDatacenterInfo(boolean endOfSimulation) {
+		if (datacenterDataStore.addDatacenterInfo(getDatacenterInfo())) {
+			getDatacenterInfo().clear();
+		}
+
+		// creating next event if the are more vms to be concluded
+		if ((!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) && !endOfSimulation) {
+			Log.printConcatLine(simulationTimeUtil.clock(),
+					": Scheduling next store datacenter info event in be in ",
+					SimulationTimeUtil.getTimeInMicro(getHostUsageStoringIntervalSize()),
+					" microseconds.");
+			send(getId(), SimulationTimeUtil.getTimeInMicro(getHostUsageStoringIntervalSize()), STORE_DATACENTER_INFO_EVENT);
+		}		
 	}
 
 	private void storeHostUtilization(boolean endOfSimulation) {
-		Log.printConcatLine(simulationTimeUtil.clock(), ": Storing host utilization  into database.");
+		Log.printConcatLine(simulationTimeUtil.clock(), ": Storing host usage into database.");
 
 		List<UsageEntry> usageEntries = new ArrayList<UsageEntry>();
 		
@@ -218,19 +284,14 @@ public class GoogleDatacenter extends Datacenter {
 		
 		hostUsageDataStore.addUsageEntries(usageEntries);
 		
-		// dumping datacenterinfo into database
-		if (datacenterDataStore.addDatacenterInfo(getDatacenterInfo())) {
-			getDatacenterInfo().clear();
-		}
-
 		// creating next event if the are more vms to be concluded
 		if ((!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) && !endOfSimulation) {
 			Log.printConcatLine(
 					simulationTimeUtil.clock(),
 					": Scheduling next store host utilization event in be in ",
-					SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()),
+					SimulationTimeUtil.getTimeInMicro(getHostUsageStoringIntervalSize()),
 					" microseconds.");
-			send(getId(), SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()), STORE_HOST_UTILIZATION_EVENT);
+			send(getId(), SimulationTimeUtil.getTimeInMicro(getHostUsageStoringIntervalSize()), STORE_HOST_UTILIZATION_EVENT);
 		}
 	}
 	
@@ -283,10 +344,6 @@ public class GoogleDatacenter extends Datacenter {
 			if (vm.isBeingInstantiated()) {
 				vm.setBeingInstantiated(false);
 			}
-			
-			// We don't need to update the vm processing because there aren't cloudlets running in the vm
-//			vm.updateVmProcessing(simulationTimeUtil.clock(), getVmAllocationPolicy().getHost(vm).getVmScheduler()
-//					.getAllocatedMipsForVm(vm));
 			
 			getVmsForScheduling().remove(vm);
 			
@@ -429,11 +486,13 @@ public class GoogleDatacenter extends Datacenter {
 		
 		// choosing the vms to request now
 		for (GoogleVm currentVm : new ArrayList<GoogleVm>(getVmsForScheduling())) {
+			
 			if (host.isSuitableForVm(currentVm)) {
-
-				Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to Allocate VM #", currentVm.getId(), " now on host #", gHost.getId());
+				Log.printConcatLine(simulationTimeUtil.clock(),
+						": Trying to Allocate VM #", currentVm.getId(),
+						" now on host #", gHost.getId());
 				allocateHostForVm(false, currentVm, gHost);
-				
+
 			}
 		}
 	}
@@ -460,12 +519,12 @@ public class GoogleDatacenter extends Datacenter {
 		this.simulationTimeUtil = simulationTimeUtil;
 	}
 
-	protected double getStoringIntervalSize() {
-		return storingIntervalSize;
+	protected double getHostUsageStoringIntervalSize() {
+		return hostUsageStoringIntervalSize;
 	}
 
-	protected void setStoringIntervalSize(double storingIntervalSize) {
-		this.storingIntervalSize = storingIntervalSize;
+	protected void setHostUsageStoringIntervalSize(double storingIntervalSize) {
+		this.hostUsageStoringIntervalSize = storingIntervalSize;
 	}
 
 	public List<DatacenterInfo> getDatacenterInfo() {
@@ -478,5 +537,23 @@ public class GoogleDatacenter extends Datacenter {
 
 	public List<DatacenterInfo> getAllDatacenterInfo() {
 		return datacenterDataStore.getAllDatacenterInfo();
+	}
+
+	public double getDatacenterCollectInfoIntervalSize() {
+		return datacenterCollectInfoIntervalSize;
+	}
+
+	public void setDatacenterCollectInfoIntervalSize(
+			double datacenterCollectInfoIntervalSize) {
+		this.datacenterCollectInfoIntervalSize = datacenterCollectInfoIntervalSize;
+	}
+
+	public double getDatacenterStoringInfoIntervalSize() {
+		return datacenterStoringInfoIntervalSize;
+	}
+
+	public void setDatacenterStoringInfoIntervalSize(
+			double datacenterStoringInfoIntervalSize) {
+		this.datacenterStoringInfoIntervalSize = datacenterStoringInfoIntervalSize;
 	}
 }

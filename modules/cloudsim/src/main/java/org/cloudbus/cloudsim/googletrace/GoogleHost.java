@@ -211,12 +211,6 @@ public class GoogleHost extends Host implements Comparable<Host> {
 	public void updateUtilization(double time) {
 		getUsageMap().put(time, new UsageEntry(getId(), time, getPriorityToInUseMips(),
 						getPriorityToVms(), getTotalUsage(), getAvailableMips()));
-//		//TODO remove it
-//		double totalUsage = 0;
-//		for (Integer priority : getPriorityToInUseMips().keySet()) {
-//			totalUsage += getPriorityToInUseMips().get(priority);
-//		}
-//		System.out.println("currenTime=" + time + ", totalUsage=" + totalUsage);
 	}
 
 	public void resetUtilizationMap() {

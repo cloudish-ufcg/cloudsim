@@ -8,12 +8,18 @@
 
 package org.cloudbus.cloudsim.googletrace;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
@@ -29,16 +35,13 @@ import org.cloudbus.cloudsim.googletrace.datastore.GoogleOutputTaskDataStore;
 public class GoogleTraceDatacenterBroker extends SimEntity {
 
     private static final int BROKER_BASE = 500;
+    // broker events
     protected static final int LOAD_NEXT_TASKS_EVENT = BROKER_BASE + 1;
     protected static final int STORE_FINISHED_TASKS_EVENT = BROKER_BASE + 2;
 
-    private static final int DEFAULT_LOADING_INTERVAL_SIZE = 5;
-    private static final int DEFAULT_STORING_INTERVAL_SIZE = 5;
+    private static final int DEFAULT_TASK_INTERVAL_SIZE = 5;
 
     protected TreeSet<GoogleTask> createdTasks;
-
-    protected Map<Integer, GoogleTask> submittedTasks;
-
     protected List<GoogleTaskState> finishedTasks;
     
     Properties properties;
@@ -55,8 +58,8 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
     protected Map<Integer, DatacenterCharacteristics> datacenterCharacteristicsList;
 
     private int intervalIndex;
-    private int loadingIntervalSize; // in minutes
-    private int storingIntervalSize; // in minutes
+    private int taskLoadingIntervalSize; // in minutes
+    private int taskStoringIntervalSize; // in minutes
 
     private GoogleInputTraceDataStore inputTraceDataStore;
 
@@ -66,20 +69,19 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
         super(name);
 
         setCreatedTasks(new TreeSet<GoogleTask>());
-        setSubmittedTasks(new HashMap<Integer, GoogleTask>());
         setFinishedTasks(new ArrayList<GoogleTaskState>());
 
-        int loadingIntervalSize = properties
-                .getProperty("loading_interval_size") == null ? DEFAULT_LOADING_INTERVAL_SIZE
+        int taskLoadingIntervalSize = properties
+                .getProperty("loading_interval_size") == null ? DEFAULT_TASK_INTERVAL_SIZE
                 : Integer.parseInt(properties.getProperty("loading_interval_size"));
 
-        int storingIntervalSize = properties
-                .getProperty("storing_interval_size") == null ? DEFAULT_STORING_INTERVAL_SIZE
+        int taskStoringIntervalSize = properties
+                .getProperty("storing_interval_size") == null ? DEFAULT_TASK_INTERVAL_SIZE
                 : Integer.parseInt(properties.getProperty("storing_interval_size"));
 
         setIntervalIndex(0);
-        setLoadingIntervalSize(loadingIntervalSize);
-        setStoringIntervalSize(storingIntervalSize);
+        setTaskLoadingIntervalSize(taskLoadingIntervalSize);
+        setTaskStoringIntervalSize(taskStoringIntervalSize);
 
         setDatacenterIdsList(new LinkedList<Integer>());
         setDatacenterCharacteristicsList(new HashMap<Integer, DatacenterCharacteristics>());
@@ -104,7 +106,6 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
                 break;
             // if the simulation finishes
             case CloudSimTags.END_OF_SIMULATION:
-//                shutdownEntity();
             	storeFinishedTasks(true);
                 break;
             case CloudSimTags.VM_DESTROY_ACK:
@@ -142,8 +143,8 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
         
         // creating next event if the are more events to be treated
         if (inputTraceDataStore.hasMoreEvents(getIntervalIndex(),
-                SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()))) {
-            send(getId(), SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
+                SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize()))) {
+            send(getId(), SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
         }
     }
 
@@ -152,14 +153,6 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
 
         Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": VM #",
                 vm.getId(), " is being destroyed now.");
-
-        GoogleTask task = getSubmittedTasks().remove(vm.getId());
-
-        if (vm.getRuntime() < task.getRuntime()) {
-			Log.printConcatLine(CloudSim.clock(), ":  VM #", vm.getId(),
-					" was terminated before and its runtime was changed from ",
-					task.getRuntime(), " to ", vm.getRuntime());
-        }
         
         double now = CloudSim.clock();
 
@@ -167,21 +160,6 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
                 vm.getMips(), vm.getSubmitTime(), vm.getStartExec(), now,
                 vm.getRuntime(), Cloudlet.SUCCESS, vm.getPriority());
         finishedTasks.add(taskState);
-
-//        if (getCreatedTasks().size() == 0 && getSubmittedTasks().size() == 0) {
-//            Log.printConcatLine(CloudSim.clock(), ": ", getName(),
-//                    ": All Tasks executed. Finishing...");
-//            finishExecution();
-//        }
-    }
-
-    private GoogleTask getTaskById(List<GoogleTask> tasks, int id) {
-        for (GoogleTask task : tasks) {
-            if (task.getId() == id) {
-                return task;
-            }
-        }
-        return null;
     }
 
     /**
@@ -198,17 +176,11 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
         if (getDatacenterCharacteristicsList().size() == getDatacenterIdsList().size()) {
             loadNextGoogleTasks();
             
-            // creating initial events
             // creating the first task store event
-            send(getId(), SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
+            send(getId(), SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
             
-            // creating the first utilization store event
-            // TODO we need to consider the storing interval related to utilization 
-            send(getDatacenterId(), SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()), GoogleDatacenter.STORE_HOST_UTILIZATION_EVENT);
-            
-            // creating the first datacenter store event
-            // TODO we need to consider the datacenter storing interval related to utilization 
-            send(getDatacenterId(), SimulationTimeUtil.getTimeInMicro(getStoringIntervalSize()), GoogleDatacenter.STORE_DATACENTER_DATA_EVENT);
+            // scheduling datacenter events
+            sendNow(getDatacenterId(), GoogleDatacenter.SCHEDULE_DATACENTER_EVENTS_EVENT);
             
             // creating end of simulation event
             if (properties.getProperty("end_of_simulation_time") != null) {
@@ -223,7 +195,7 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
         Log.printLine("Loading next google tasks. Interval index " + getIntervalIndex());
 
         List<GoogleTask> nextGoogleTasks = inputTraceDataStore
-                .getGoogleTaskInterval(getIntervalIndex(), SimulationTimeUtil.getTimeInMicro(getLoadingIntervalSize()));
+                .getGoogleTaskInterval(getIntervalIndex(), SimulationTimeUtil.getTimeInMicro(getTaskLoadingIntervalSize()));
 
         // if nextGoogleTasks == null there are not more tasks
         if (nextGoogleTasks != null) {
@@ -231,7 +203,7 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
             submitTasks();
             setIntervalIndex(++intervalIndex);
 
-            send(getId(), SimulationTimeUtil.getTimeInMicro(getLoadingIntervalSize()), LOAD_NEXT_TASKS_EVENT);
+            send(getId(), SimulationTimeUtil.getTimeInMicro(getTaskLoadingIntervalSize()), LOAD_NEXT_TASKS_EVENT);
         }
     }
 
@@ -302,7 +274,6 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
                 + datacenterId);
 
         getCreatedTasks().remove(task);
-        getSubmittedTasks().put(task.getId(), task);
 
         double delay = task.getSubmitTime() - CloudSim.clock();
         send(datacenterId, delay, CloudSimTags.VM_CREATE, vm);
@@ -319,17 +290,6 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
         return getDatacenterIdsList().get(0);
     }
 
-    /**
-     * Send an internal event communicating the end of the simulation.
-     *
-     * @pre $none
-     * @post $none
-     */
-//    protected void finishExecution() {
-//        storeFinishedTasks();
-//        sendNow(getId(), CloudSimTags.END_OF_SIMULATION);
-//    }
-
     @Override
     public void shutdownEntity() {
         Log.printConcatLine(getName(), " is shutting down...");
@@ -343,14 +303,6 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
 
     public SortedSet<GoogleTask> getCreatedTasks() {
         return createdTasks;
-    }
-
-    public Map<Integer, GoogleTask> getSubmittedTasks() {
-        return submittedTasks;
-    }
-
-    protected void setSubmittedTasks(HashMap<Integer, GoogleTask> submittedTasks) {
-        this.submittedTasks = submittedTasks;
     }
 
     protected void setCreatedTasks(TreeSet<GoogleTask> createdTasks) {
@@ -410,20 +362,20 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
         this.intervalIndex = intervalIndex;
     }
 
-    public int getLoadingIntervalSize() {
-        return loadingIntervalSize;
+    public int getTaskLoadingIntervalSize() {
+        return taskLoadingIntervalSize;
     }
 
-    private void setLoadingIntervalSize(int intervalSize) {
-        this.loadingIntervalSize = intervalSize;
+    private void setTaskLoadingIntervalSize(int intervalSize) {
+        this.taskLoadingIntervalSize = intervalSize;
     }
 
-    public int getStoringIntervalSize() {
-        return storingIntervalSize;
+    public int getTaskStoringIntervalSize() {
+        return taskStoringIntervalSize;
     }
 
-    private void setStoringIntervalSize(int storingIntervalSize) {
-        this.storingIntervalSize = storingIntervalSize;
+    private void setTaskStoringIntervalSize(int storingIntervalSize) {
+        this.taskStoringIntervalSize = storingIntervalSize;
     }
 
     public List<GoogleTaskState> getFinishedTasks() {

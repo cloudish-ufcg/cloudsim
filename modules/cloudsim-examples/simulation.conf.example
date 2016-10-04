@@ -27,3 +27,12 @@ utilization_database_url=jdbc:sqlite:/path/to/utilization.sqlite3
 
 # interval size (in minutes) for dumping
 #utilization_storing_interval_size=1440
+
+# time (in microseconds) that you wish to terminate the simulation
+#end_of_simulation_time=
+
+# datacenter info
+#collect_datacenter_summary_info=yes
+#datacenter_storing_interval_size=
+#datacenter_collect_info_interval_size=
+#datacenter_database_url=jdbc:sqlite:/path/to/datacenter.sqlite3
