@@ -294,9 +294,8 @@ public class CloudSimExampleGoogleTrace {
 		String indent = "    ";
 		System.out.println();
 		System.out.println("========== OUTPUT ==========");
-		System.out.println("Cloudlet ID" + indent + "STATUS" + indent
-				+ "Data center ID" + indent + "VM ID" + indent + indent
-				+ "Time" + indent + "Start Time" + indent + "Finish Time"+ indent + indent + "Priority" + indent + indent + "Availability");
+		System.out.println("Cloudlet ID" + indent + "VM ID" + indent + indent
+				+ "Time" + indent + "Finish Time"+ indent + indent + "Priority" + indent + indent + "Availability");
 
 		DecimalFormat dft = new DecimalFormat("###.####");
 		double totalVm0Availability = 0;
@@ -310,7 +309,7 @@ public class CloudSimExampleGoogleTrace {
 			googleTask = newList.get(i);
 			System.out.println(indent + googleTask.getTaskId() + indent + indent);
 
-			if (googleTask.getStatus() == Cloudlet.SUCCESS) {
+//			if (googleTask.getStatus() == Cloudlet.SUCCESS) {
 				System.out.println("SUCCESS");
 				
 				double vmAvailabilty = googleTask.getRuntime() / (googleTask.getFinishTime() - googleTask.getSubmitTime());
@@ -325,14 +324,19 @@ public class CloudSimExampleGoogleTrace {
 					count2++;
 				}
 
-				System.out.println(indent + indent + googleTask.getResourceId()
-						+ indent + indent + indent + googleTask.getTaskId()
+				System.out.println(indent + indent + indent + googleTask.getTaskId()
 						+ indent + indent + indent + googleTask.getRuntime()
-						+ indent + indent + googleTask.getStartTime() + indent
-						+ indent + indent + googleTask.getFinishTime() + indent
+						+ indent + indent + indent + googleTask.getFinishTime() + indent
 						+ indent + indent + googleTask.getPriority() + indent
 						+ indent + indent + dft.format(vmAvailabilty));
-			}
+//				System.out.println(indent + indent + googleTask.getResourceId()
+//						+ indent + indent + indent + googleTask.getTaskId()
+//						+ indent + indent + indent + googleTask.getRuntime()
+//						+ indent + indent + googleTask.getStartTime() + indent
+//						+ indent + indent + googleTask.getFinishTime() + indent
+//						+ indent + indent + googleTask.getPriority() + indent
+//						+ indent + indent + dft.format(vmAvailabilty));
+//			}
 		}
 		
 		System.out.println("========== MEAN VM AVAILABILITY (priority 0) is " + dft.format((totalVm0Availability/count0)) + " =========");

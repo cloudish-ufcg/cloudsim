@@ -33,13 +33,10 @@ public class GoogleOutputTaskDataStore extends GoogleDataStore {
 			statement
 					.execute("CREATE TABLE IF NOT EXISTS googletask("
 							+ "cloudlet_id INTEGER NOT NULL, "
-							+ "resource_id INTEGER, "
 							+ "cpu_req REAL, "
 							+ "submit_time REAL, "
-							+ "start_time REAL, "
 							+ "finish_time REAL, "
 							+ "runtime REAL, "
-							+ "status INTEGER, "
 							+ "priority INTEGER, "
 							+ "PRIMARY KEY (cloudlet_id)"
 							+ ")");
@@ -52,7 +49,7 @@ public class GoogleOutputTaskDataStore extends GoogleDataStore {
 	}
 	
 	private static final String INSERT_TASK_SQL = "INSERT INTO " + GOOGLE_TASK_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?)";
 	
 	public boolean addTaskList(List<GoogleTaskState> taskStates) {
 		if (taskStates == null) {
@@ -117,14 +114,11 @@ public class GoogleOutputTaskDataStore extends GoogleDataStore {
 	private void addTask(PreparedStatement insertMemberStatement,
 			GoogleTaskState taskState) throws SQLException {
 		insertMemberStatement.setInt(1, taskState.getTaskId());
-		insertMemberStatement.setInt(2, taskState.getResourceId());
-		insertMemberStatement.setDouble(3, taskState.getCpuReq());
-		insertMemberStatement.setDouble(4, taskState.getSubmitTime());
-		insertMemberStatement.setDouble(5, taskState.getStartTime());
-		insertMemberStatement.setDouble(6, taskState.getFinishTime());
-		insertMemberStatement.setDouble(7, taskState.getRuntime());
-		insertMemberStatement.setInt(8, taskState.getStatus());
-		insertMemberStatement.setInt(9, taskState.getPriority());
+		insertMemberStatement.setDouble(2, taskState.getCpuReq());
+		insertMemberStatement.setDouble(3, taskState.getSubmitTime());
+		insertMemberStatement.setDouble(4, taskState.getFinishTime());
+		insertMemberStatement.setDouble(5, taskState.getRuntime());
+		insertMemberStatement.setInt(6, taskState.getPriority());
 		insertMemberStatement.addBatch();
 	}
 	
@@ -143,11 +137,10 @@ public class GoogleOutputTaskDataStore extends GoogleDataStore {
 			ResultSet rs = statement.getResultSet();
 
 			while (rs.next()) {
-				taskStates.add(new GoogleTaskState(rs
-						.getInt("cloudlet_id"), rs.getInt("resource_id"), rs
+				taskStates.add(new GoogleTaskState(rs.getInt("cloudlet_id"), rs
 						.getDouble("cpu_req"), rs.getDouble("submit_time"), rs
-						.getDouble("start_time"), rs.getDouble("finish_time"),
-						rs.getDouble("runtime"), rs.getInt("status"), rs.getInt("priority")));
+						.getDouble("finish_time"), rs.getDouble("runtime"), rs
+						.getInt("priority")));
 			}
 			return taskStates;
 		} catch (SQLException e) {

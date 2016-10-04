@@ -156,9 +156,8 @@ public class GoogleTraceDatacenterBroker extends SimEntity {
         
         double now = CloudSim.clock();
 
-        GoogleTaskState taskState = new GoogleTaskState(vm.getId(), 2,
-                vm.getMips(), vm.getSubmitTime(), vm.getStartExec(), now,
-                vm.getRuntime(), Cloudlet.SUCCESS, vm.getPriority());
+        GoogleTaskState taskState = new GoogleTaskState(vm.getId(), vm.getMips(), vm.getSubmitTime(), now,
+                vm.getRuntime(), vm.getPriority());
         finishedTasks.add(taskState);
     }
 
