@@ -31,7 +31,7 @@ public class UsageEntry {
 	}
 
 	public UsageEntry(int hostId, double time, double p0Usage, double p1Usage,
-			double p2Usage, int p0Vms, int p1Vms, int p2Vms, double availableMips) {
+					  double p2Usage, int p0Vms, int p1Vms, int p2Vms, double availableMips) {
 		
 		this.hostId = hostId;
 		this.time = time;
@@ -70,6 +70,38 @@ public class UsageEntry {
 
 	public int getNumberOfVmsByPriority(int priority) {
 		return priorityToNumberOfVms.get(priority);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		UsageEntry that = (UsageEntry) o;
+
+		if (hostId != that.hostId) return false;
+		if (Double.compare(that.time, time) != 0) return false;
+		if (Double.compare(that.totalUsage, totalUsage) != 0) return false;
+		if (Double.compare(that.availableMips, availableMips) != 0) return false;
+		if (!priorityToUsage.equals(that.priorityToUsage)) return false;
+		return priorityToNumberOfVms.equals(that.priorityToNumberOfVms);
+
+	}
+
+	@Override
+	public int hashCode() {
+		int result;
+		long temp;
+		result = hostId;
+		temp = Double.doubleToLongBits(time);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(totalUsage);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(availableMips);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		result = 31 * result + priorityToUsage.hashCode();
+		result = 31 * result + priorityToNumberOfVms.hashCode();
+		return result;
 	}
 	
 }

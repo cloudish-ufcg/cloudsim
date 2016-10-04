@@ -62,4 +62,40 @@ public class DatacenterInfo {
 	public int getVmsForSchedulingP2() {
 		return vmsForSchedulingP2;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		DatacenterInfo that = (DatacenterInfo) o;
+
+		if (Double.compare(that.time, time) != 0) return false;
+		if (vmsRunning != that.vmsRunning) return false;
+		if (usageByPriority0 != that.usageByPriority0) return false;
+		if (usageByPriority1 != that.usageByPriority1) return false;
+		if (usageByPriority2 != that.usageByPriority2) return false;
+		if (vmsForScheduling != that.vmsForScheduling) return false;
+		if (vmsForSchedulingP0 != that.vmsForSchedulingP0) return false;
+		if (vmsForSchedulingP1 != that.vmsForSchedulingP1) return false;
+		return vmsForSchedulingP2 == that.vmsForSchedulingP2;
+
+	}
+
+	@Override
+	public int hashCode() {
+		int result;
+		long temp;
+		temp = Double.doubleToLongBits(time);
+		result = (int) (temp ^ (temp >>> 32));
+		result = 31 * result + vmsRunning;
+		result = 31 * result + usageByPriority0;
+		result = 31 * result + usageByPriority1;
+		result = 31 * result + usageByPriority2;
+		result = 31 * result + vmsForScheduling;
+		result = 31 * result + vmsForSchedulingP0;
+		result = 31 * result + vmsForSchedulingP1;
+		result = 31 * result + vmsForSchedulingP2;
+		return result;
+	}
 }

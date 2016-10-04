@@ -431,37 +431,27 @@ public class GoogleHostTest {
 
 		Assert.assertTrue(googleHost.vmCreate(vm3));
 		Assert.assertEquals(cpuCapacity - (8 * cpuReq), googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
-		System.out.println(googleHost.getAvailableMips());
 
 		googleHost.vmDestroy(vm2);
 		Assert.assertEquals(cpuCapacity - (3 * cpuReq), googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
-		System.out.println(googleHost.getAvailableMips());
 
 		// detect imprecision of 12 decimal places in available mips
 		Assert.assertTrue(googleHost.vmCreate(vm4));
-		System.out.println(googleHost.getAvailableMips());
-//        Assert.assertEquals(cpuCapacity - (6 * cpuReq), schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
+        Assert.assertEquals(cpuCapacity - (6 * cpuReq), googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
 
 		Assert.assertTrue(googleHost.vmCreate(vm5));
-//        Assert.assertEquals(cpuCapacity - (10 * cpuReq), schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
-		System.out.println(googleHost.getAvailableMips());
+        Assert.assertEquals(cpuCapacity - (10 * cpuReq), googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
 
 		googleHost.vmDestroy(vm1);
-//        Assert.assertEquals(cpuCapacity - (9 * cpuReq), schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
-		System.out.println(googleHost.getAvailableMips());
+        Assert.assertEquals(cpuCapacity - (9 * cpuReq), googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
 
 		Assert.assertTrue(googleHost.vmCreate(vm6));
-//        Assert.assertEquals(cpuCapacity - (15 * cpuReq), schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
-		System.out.println(googleHost.getAvailableMips());
+        Assert.assertEquals(cpuCapacity - (15 * cpuReq), googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
 
 		googleHost.vmDestroy(vm3);
-		System.out.println(googleHost.getAvailableMips());
 		googleHost.vmDestroy(vm4);
-		System.out.println(googleHost.getAvailableMips());
 		googleHost.vmDestroy(vm5);
-		System.out.println(googleHost.getAvailableMips());
 		googleHost.vmDestroy(vm6);
-		System.out.println(googleHost.getAvailableMips());
 
 
 	}

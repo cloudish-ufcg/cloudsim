@@ -14,6 +14,7 @@ import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEvent;
+import org.cloudbus.cloudsim.googletrace.datastore.DatacenterDataStore;
 import org.cloudbus.cloudsim.googletrace.datastore.UtilizationDataStore;
 import org.cloudbus.cloudsim.googletrace.policies.hostselection.HostSelectionPolicy;
 import org.cloudbus.cloudsim.googletrace.policies.vmallocation.PreemptableVmAllocationPolicy;
@@ -71,7 +72,9 @@ public class GoogleDatacenterTest {
 		preemptableVmAllocationPolicy = new PreemptableVmAllocationPolicy(googleHostList, hostSelector);
 
 		Properties properties = Mockito.mock(Properties.class);
-		Mockito.when(properties.getProperty(UtilizationDataStore.DATABASE_URL_PROP)).thenReturn("jdbc:sqlite:inputUtilizationTest.sqlite3");
+		Mockito.when(properties.getProperty(UtilizationDataStore.DATABASE_URL_PROP)).thenReturn("jdbc:sqlite:outputUtilizationTest.sqlite3");
+		Mockito.when(properties.getProperty(DatacenterDataStore.DATABASE_URL_PROP)).thenReturn("jdbc:sqlite:outputDatacenterTest.sqlite3");
+
 
 		datacenter = new GoogleDatacenter("datacenter",
 				characteristics, preemptableVmAllocationPolicy,
@@ -504,7 +507,6 @@ public class GoogleDatacenterTest {
 
 		Assert.assertEquals(1 * cpuReq, host.getAvailableMips(),
 				ACCEPTABLE_DIFFERENCE);
-		System.out.println(host.getAvailableMips());
 		Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
 		Assert.assertEquals(2, datacenter.getVmsRunning().size());
 		Assert.assertEquals(vm3, datacenter.getVmsRunning().first());
@@ -518,7 +520,6 @@ public class GoogleDatacenterTest {
 		// checking
 		Assert.assertEquals(2 * cpuReq, host.getAvailableMips(),
 				ACCEPTABLE_DIFFERENCE);
-		System.out.println(host.getAvailableMips());
 		Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
 		Assert.assertEquals(1, datacenter.getVmsRunning().size());
 		Assert.assertEquals(vm3, datacenter.getVmsRunning().first());
@@ -528,7 +529,6 @@ public class GoogleDatacenterTest {
 		datacenter.processVmDestroy(destroyVm, false);
 
 		Assert.assertEquals(10, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-		System.out.println(host.getAvailableMips());
 		Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
 		Assert.assertTrue(datacenter.getVmsRunning().isEmpty());
 	}
@@ -1270,7 +1270,6 @@ public class GoogleDatacenterTest {
 
 		//testing size of lists consider the ending of vms and reallocating as described before
 		Assert.assertEquals(3302, datacenter.getVmsForScheduling().size());
-		System.out.println(datacenter.getVmsForScheduling().first().getActualRuntime(3.0));
 		Assert.assertEquals(17608, datacenter.getVmsRunning().size());
 	}
 
