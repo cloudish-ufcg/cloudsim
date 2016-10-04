@@ -154,18 +154,6 @@ public class GoogleDatacenter extends Datacenter {
 		int vmsRunning = getVmsRunning().size();
 		int vmsForScheduling = getVmsForScheduling().size();
 		
-//		for (Host host : getHostList()) {
-//			GoogleHost gHost = (GoogleHost) host;
-//			vmsRunningP0 += gHost.getUsageByPriority(0);
-//			vmsRunningP1 += gHost.getUsageByPriority(1);
-//			vmsRunningP2 += gHost.getUsageByPriority(2);
-//			System.out.println("time=" + simulationTimeUtil.clock() + "hostId:" + gHost.getId() + ", totalUsage=" + gHost.getTotalUsage()+ ", availableMips=" + gHost.getAvailableMips());
-//			System.out.println("#VMs For Scheduling: " + getVmsForScheduling().size());
-//			System.out.println("Priority0: usage=" + gHost.getUsageByPriority(0)+ ", available=" + gHost.getAvailableMipsByPriority(0) + ", running=" + gHost.getPriorityToVms().get(0).size());
-//			System.out.println("Priority1: usage=" + gHost.getUsageByPriority(1)+ ", available=" + gHost.getAvailableMipsByPriority(1) + ", running=" + gHost.getPriorityToVms().get(1).size());
-//			System.out.println("Priority2: usage=" + gHost.getUsageByPriority(2)+ ", available=" + gHost.getAvailableMipsByPriority(2) + ", running=" + gHost.getPriorityToVms().get(2).size());
-//		}
-		
 		for (GoogleVm vm : getVmsRunning()) {
 			if (vm.getPriority() == 0) {
 				vmsRunningP0++;
@@ -414,7 +402,7 @@ public class GoogleDatacenter extends Datacenter {
 				host.updateUtilization(simulationTimeUtil.clock());
 							
 				if (!getVmsForScheduling().isEmpty()) {
-					tryingToAllocateVms(host);
+					processBackfilling(host);
 				}
 			} else {
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
@@ -429,7 +417,7 @@ public class GoogleDatacenter extends Datacenter {
 	/*
 	 * TODO we need to review this code. only the available mips is not the correct way to do it
 	 */
-	private void tryingToAllocateVms(Host host) {	
+	private void processBackfilling(Host host) {	
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to allocate more VMs on host #", host.getId() + " after a detroying.");
 		
 		GoogleHost gHost = (GoogleHost) host;
