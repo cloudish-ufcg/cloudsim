@@ -28,16 +28,16 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.core.CloudSim;
-import org.cloudbus.cloudsim.googletrace.DatacenterInfo;
-import org.cloudbus.cloudsim.googletrace.GoogleDatacenter;
-import org.cloudbus.cloudsim.googletrace.GoogleHost;
-import org.cloudbus.cloudsim.googletrace.GoogleTask;
-import org.cloudbus.cloudsim.googletrace.GoogleTaskState;
-import org.cloudbus.cloudsim.googletrace.GoogleTraceDatacenterBroker;
-import org.cloudbus.cloudsim.googletrace.UsageEntry;
-import org.cloudbus.cloudsim.googletrace.VmSchedulerMipsBased;
-import org.cloudbus.cloudsim.googletrace.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
-import org.cloudbus.cloudsim.googletrace.policies.vmallocation.PreemptableVmAllocationPolicy;
+import org.cloudbus.cloudsim.preemption.DatacenterInfo;
+import org.cloudbus.cloudsim.preemption.PreemptiveDatacenter;
+import org.cloudbus.cloudsim.preemption.PreemptiveHost;
+import org.cloudbus.cloudsim.preemption.Task;
+import org.cloudbus.cloudsim.preemption.TaskState;
+import org.cloudbus.cloudsim.preemption.TraceDatacenterBroker;
+import org.cloudbus.cloudsim.preemption.UsageEntry;
+import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
+import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 
 /**
@@ -46,7 +46,7 @@ import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
  */
 public class CloudSimExampleGoogleTrace {
 
-	private static List<GoogleTask> googleTasks;
+	private static List<Task> googleTasks;
 
 	// //////////////////////// STATIC METHODS ///////////////////////
 
@@ -82,9 +82,9 @@ public class CloudSimExampleGoogleTrace {
 			// Datacenters are the resource providers in CloudSim. We need at
 			// list one of them to run a CloudSim simulation
 			@SuppressWarnings("unused")
-			GoogleDatacenter datacenter0 = createGoogleDatacenter("cloud-0", properties);
+			PreemptiveDatacenter datacenter0 = createGoogleDatacenter("cloud-0", properties);
 			
-			GoogleTraceDatacenterBroker broker = createGoogleTraceBroker(
+			TraceDatacenterBroker broker = createGoogleTraceBroker(
 					"Google_Broker_0", properties);
 //			int brokerId = broker.getId();
 //
@@ -95,7 +95,7 @@ public class CloudSimExampleGoogleTrace {
 
 			CloudSim.startSimulation();
 
-			List<GoogleTaskState> newList = broker.getStoredTasks();
+			List<TaskState> newList = broker.getStoredTasks();
 
 			CloudSim.stopSimulation();
 			
@@ -132,7 +132,7 @@ public class CloudSimExampleGoogleTrace {
 		Log.printLine("Reading trace from URL ...");
 		Connection conn = DriverManager.getConnection(databaseURL);
 
-		googleTasks = new ArrayList<GoogleTask>();
+		googleTasks = new ArrayList<Task>();
 
 		if (conn != null) {
 			Log.printLine("Connected to the database");
@@ -210,7 +210,7 @@ public class CloudSimExampleGoogleTrace {
 		}
 	}
 
-	private static GoogleDatacenter createGoogleDatacenter(String name,
+	private static PreemptiveDatacenter createGoogleDatacenter(String name,
 			Properties properties) {
 
 		int numberOfHosts = Integer.parseInt(properties
@@ -223,14 +223,14 @@ public class CloudSimExampleGoogleTrace {
 				+ " total capacity and " + numberOfHosts
 				+ " hosts, each one with " + mipsPerHost + " mips.");
 
-		List<GoogleHost> hostList = new ArrayList<GoogleHost>();
+		List<PreemptiveHost> hostList = new ArrayList<PreemptiveHost>();
 
 		for (int hostId = 0; hostId < numberOfHosts; hostId++) {
 			List<Pe> peList1 = new ArrayList<Pe>();
 
 			peList1.add(new Pe(0, new PeProvisionerSimple(mipsPerHost)));
 
-			GoogleHost host = new GoogleHost(hostId, peList1,
+			PreemptiveHost host = new PreemptiveHost(hostId, peList1,
 					new VmSchedulerMipsBased(peList1), 3);
 
 			hostList.add(host);
@@ -253,11 +253,11 @@ public class CloudSimExampleGoogleTrace {
 				arch, os, vmm, hostList, time_zone, cost, costPerMem,
 				costPerStorage, costPerBw);
 
-		GoogleDatacenter datacenter = null;
+		PreemptiveDatacenter datacenter = null;
 		try {
 //			datacenter = new GoogleDatacenter(name, characteristics,
 //					new VmAllocationPolicySimple(hostList), storageList, 0);
-			datacenter = new GoogleDatacenter(name, characteristics,
+			datacenter = new PreemptiveDatacenter(name, characteristics,
 					new PreemptableVmAllocationPolicy(hostList,
 							new WorstFitMipsBasedHostSelectionPolicy()),
 					storageList, 0, properties);
@@ -268,12 +268,12 @@ public class CloudSimExampleGoogleTrace {
 		return datacenter;
 	}
 
-	private static GoogleTraceDatacenterBroker createGoogleTraceBroker(String name,
+	private static TraceDatacenterBroker createGoogleTraceBroker(String name,
 			Properties properties) {
 
-		GoogleTraceDatacenterBroker broker = null;
+		TraceDatacenterBroker broker = null;
 		try {
-			broker = new GoogleTraceDatacenterBroker(name, properties);
+			broker = new TraceDatacenterBroker(name, properties);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
@@ -287,9 +287,9 @@ public class CloudSimExampleGoogleTrace {
 	 * @param newList
 	 *            list of Cloudlets
 	 */
-	private static void printGoogleTaskStates(List<GoogleTaskState> newList) {
+	private static void printGoogleTaskStates(List<TaskState> newList) {
 		int size = newList.size();
-		GoogleTaskState googleTask;
+		TaskState googleTask;
 
 		String indent = "    ";
 		System.out.println();
