@@ -26,6 +26,7 @@ import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.HostUsageDataStore;
+import org.cloudbus.cloudsim.preemption.datastore.PreemptableVmDataStore;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 
 /**
@@ -43,11 +44,13 @@ public class PreemptiveDatacenter extends Datacenter {
 	public static final int STORE_HOST_UTILIZATION_EVENT = DATACENTER_BASE + 2;
 	public static final int COLLECT_DATACENTER_INFO_EVENT = DATACENTER_BASE + 3;
 	public static final int STORE_DATACENTER_INFO_EVENT = DATACENTER_BASE + 4;
+	public static final int MAKE_DATACENTER_CHECKPOINT_EVENT = DATACENTER_BASE + 5;
 	
 	// default interval sizes 
     public static final int DEFAULT_UTILIZATION_STORING_INTERVAL_SIZE = 1440; // onde day in minutes
 	private static final int DEFAULT_DATACENTER_INFO_STORING_INTERVAL_SIZE = 1440; // one day in minutes
 	private static final int DEFAULT_DATACENTER_COLLECT_INFO_INTERVAL_SIZE = 5; // in minutes
+	private static final int DEFAULT_CHECKPOINT_INTERVAL_SIZE = 1440; // one day in minutes
 
 	PreemptableVmAllocationPolicy vmAllocationPolicy;
 	
@@ -64,8 +67,11 @@ public class PreemptiveDatacenter extends Datacenter {
 	private double hostUsageStoringIntervalSize;
 	private double datacenterCollectInfoIntervalSize;
 	private double datacenterStoringInfoIntervalSize;
+	private double checkpointIntervalSize;
 
 	private boolean collectDatacenterInfo = false;
+	private boolean makeCheckpoint = false;
+	private Properties properties;
 	
 	public PreemptiveDatacenter(
 			String name,
@@ -75,15 +81,28 @@ public class PreemptiveDatacenter extends Datacenter {
 			double schedulingInterval, Properties properties) throws Exception {
 		super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
 		
-		hostUsageDataStore = new HostUsageDataStore(properties);
-		datacenterDataStore = new DatacenterUsageDataStore(properties);
+		this.hostUsageDataStore = new HostUsageDataStore(properties);
+		this.datacenterDataStore = new DatacenterUsageDataStore(properties);
+		this.properties = properties;
 		
-        int hostUsageStoringIntervalSize = properties
+        double hostUsageStoringIntervalSize = properties
                 .getProperty("utilization_storing_interval_size") == null ? DEFAULT_UTILIZATION_STORING_INTERVAL_SIZE
                 : Integer.parseInt(properties.getProperty("utilization_storing_interval_size"));
         
+        
         setHostUsageStoringIntervalSize(hostUsageStoringIntervalSize);
         setDatacenterInfo(new LinkedList<DatacenterInfo>());
+       
+		if (properties.getProperty("make_checkpoint") != null
+				&& properties.getProperty("make_checkpoint")
+						.equals("yes")) {
+			makeCheckpoint = true;			
+			double checkpointIntervalSize = properties
+					.getProperty("checkpoint_interval_size") == null ? DEFAULT_CHECKPOINT_INTERVAL_SIZE
+							: Double.parseDouble(properties.getProperty("checkpoint_interval_size"));
+			
+			setCheckpointIntervalSize(checkpointIntervalSize);
+		}
         
 		if (properties.getProperty("collect_datacenter_summary_info") != null
 				&& properties.getProperty("collect_datacenter_summary_info")
@@ -124,6 +143,10 @@ public class PreemptiveDatacenter extends Datacenter {
 				storeDatacenterInfo(false);
 				break;
 				
+			case MAKE_DATACENTER_CHECKPOINT_EVENT:
+				makeCheckpoint();
+				break;
+				
 			case CloudSimTags.END_OF_SIMULATION:
 				terminateSimulation();
 				storeHostUtilization(true);
@@ -139,18 +162,49 @@ public class PreemptiveDatacenter extends Datacenter {
 	}
 	
 
+	private void makeCheckpoint() {
+		Log.printConcatLine(simulationTimeUtil.clock(), ": Building datacenter checkpoint.");
+		
+		PreemptableVmDataStore vmDataStore = new PreemptableVmDataStore(properties, simulationTimeUtil.clock());
+		
+		if (!vmDataStore.addWaitingVms(getVmsForScheduling())) {
+			Log.printConcatLine(simulationTimeUtil.clock(),
+					": There was an error while making checkpoint of vms for scheduling.");
+		}
+		
+		if (!vmDataStore.addRunningVms(getVmsRunning())) {
+			Log.printConcatLine(simulationTimeUtil.clock(),
+					": There was an error while making checkpoint of vms running.");	
+		}
+
+		//scheduling next checkpoint event
+		if (!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) {
+			Log.printConcatLine(simulationTimeUtil.clock(),
+					": Scheduling next checkpoint event will be in ",
+					SimulationTimeUtil.getTimeInMicro(getHostUsageStoringIntervalSize()),
+					" microseconds.");
+			send(getId(), SimulationTimeUtil.getTimeInMicro(getCheckpointIntervalSize()), PreemptiveDatacenter.MAKE_DATACENTER_CHECKPOINT_EVENT);
+		}
+	}
+
 	private void scheduleDatacenterEvents() {
+		Log.printConcatLine(simulationTimeUtil.clock(), ": Scheduling the first datacenter events.");
+		
 		// creating the first utilization store event
 		send(getId(),
 				SimulationTimeUtil.getTimeInMicro(getHostUsageStoringIntervalSize()),
 				PreemptiveDatacenter.STORE_HOST_UTILIZATION_EVENT);
         
+		// creating the first datacenter store event
 		if (collectDatacenterInfo) {
-			// creating the first datacenter store event
-			// TODO we need to consider the datacenter storing interval related to utilization 
 			send(getId(), SimulationTimeUtil.getTimeInMicro(getDatacenterCollectInfoIntervalSize()), PreemptiveDatacenter.COLLECT_DATACENTER_INFO_EVENT);
 			
 			send(getId(), SimulationTimeUtil.getTimeInMicro(getDatacenterStoringInfoIntervalSize()), PreemptiveDatacenter.STORE_DATACENTER_INFO_EVENT);			
+		}
+		
+		// creating the first checkpoint event
+		if (makeCheckpoint) {
+			send(getId(), SimulationTimeUtil.getTimeInMicro(getCheckpointIntervalSize()), PreemptiveDatacenter.MAKE_DATACENTER_CHECKPOINT_EVENT);
 		}
 	}
 
@@ -555,5 +609,13 @@ public class PreemptiveDatacenter extends Datacenter {
 	public void setDatacenterStoringInfoIntervalSize(
 			double datacenterStoringInfoIntervalSize) {
 		this.datacenterStoringInfoIntervalSize = datacenterStoringInfoIntervalSize;
+	}
+
+	public double getCheckpointIntervalSize() {
+		return checkpointIntervalSize;
+	}
+
+	public void setCheckpointIntervalSize(double checkpointIntervalSize) {
+		this.checkpointIntervalSize = checkpointIntervalSize;
 	}
 }

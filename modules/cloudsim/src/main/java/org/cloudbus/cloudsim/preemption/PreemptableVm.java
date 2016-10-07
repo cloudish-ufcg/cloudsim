@@ -72,6 +72,10 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	public void setStartExec(double startExec) {
 		this.startExec = startExec;
 	}
+	
+	public void setActualRuntime(double actualRuntime) {
+		this.actualRuntime = actualRuntime;
+	}
 
 	public double getActualRuntime(double currentTime) {
 		if (getStartExec() != NOT_EXECUTING_TIME) {
