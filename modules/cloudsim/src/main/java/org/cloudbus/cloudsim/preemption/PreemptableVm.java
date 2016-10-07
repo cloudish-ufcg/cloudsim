@@ -11,6 +11,8 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	private double runtime;
 	private double startExec;
 	private double actualRuntime;
+	private int numberOfPreemptions;
+	private int numberOfBackfillingChoice;
 
 	public PreemptableVm(int id, int userId, double cpuReq, double memReq, double submitTime, int priority, double runtime) {
 		super(id, userId, cpuReq, 1, (int) memReq, 0, 0, "default", new CloudletSchedulerTimeShared());
@@ -19,6 +21,8 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		setPriority(priority);
 		setRuntime(runtime);
 		setStartExec(NOT_EXECUTING_TIME);
+		setNumberOfPreemptions(0);
+		setNumberOfBackfillingChoice(0);
 		actualRuntime = 0;
 	}
 
@@ -39,6 +43,7 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	public void preempt(double currentTime) {
 		actualRuntime += (currentTime - getStartExec());		
 		setStartExec(NOT_EXECUTING_TIME);
+		setNumberOfPreemptions(getNumberOfPreemptions() + 1);
 	}
 
 	public double getSubmitTime() {
@@ -86,5 +91,21 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 
 	public boolean achievedRuntime(double currentTime) {
 		return getActualRuntime(currentTime) >= getRuntime();
+	}
+
+	public int getNumberOfPreemptions() {
+		return numberOfPreemptions;
+	}
+
+	public void setNumberOfPreemptions(int numberOfPreemptions) {
+		this.numberOfPreemptions = numberOfPreemptions;
+	}
+
+	public int getNumberOfBackfillingChoice() {
+		return numberOfBackfillingChoice;
+	}
+
+	public void setNumberOfBackfillingChoice(int numberOfBackfillingchoice) {
+		this.numberOfBackfillingChoice = numberOfBackfillingchoice;
 	}
 }

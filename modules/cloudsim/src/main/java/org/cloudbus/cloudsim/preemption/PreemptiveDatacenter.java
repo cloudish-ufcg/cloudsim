@@ -369,10 +369,10 @@ public class PreemptiveDatacenter extends Datacenter {
 	protected void processVmCreate(SimEvent ev, boolean ack) {
 		PreemptableVm vm = (PreemptableVm) ev.getData();
 
-		allocateHostForVm(ack, vm, null);
+		allocateHostForVm(ack, vm, null, false);
 	}
 
-	protected void allocateHostForVm(boolean ack, PreemptableVm vm, PreemptiveHost host) {
+	protected void allocateHostForVm(boolean ack, PreemptableVm vm, PreemptiveHost host, boolean isBackfilling) {
 		
 		if (host == null) {			
 			host = (PreemptiveHost) getVmAllocationPolicy().selectHost(vm);	
@@ -387,6 +387,10 @@ public class PreemptiveDatacenter extends Datacenter {
 		if (result) {
 			getVmsRunning().add(vm);
 			vm.setStartExec(simulationTimeUtil.clock());
+			
+			if (isBackfilling) {
+				vm.setNumberOfBackfillingChoice(vm.getNumberOfBackfillingChoice() + 1);				
+			}
 			
 			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 					vm.getId(), " was allocated on host #", host.getId(),
@@ -532,6 +536,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to allocate more VMs on host #", host.getId() + " after a detroying.");
 		
 		PreemptiveHost gHost = (PreemptiveHost) host;
+		boolean isBackfilling = false;
 		
 		/*
 		 * TODO
@@ -545,8 +550,10 @@ public class PreemptiveDatacenter extends Datacenter {
 				Log.printConcatLine(simulationTimeUtil.clock(),
 						": Trying to Allocate VM #", currentVm.getId(),
 						" now on host #", gHost.getId());
-				allocateHostForVm(false, currentVm, gHost);
+				allocateHostForVm(false, currentVm, gHost, isBackfilling);
 
+			} else {
+				isBackfilling = true;
 			}
 		}
 	}

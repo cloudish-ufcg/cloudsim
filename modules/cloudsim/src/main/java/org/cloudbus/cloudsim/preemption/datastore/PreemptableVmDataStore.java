@@ -48,6 +48,8 @@ public class PreemptableVmDataStore extends DataStore {
 							+ "runtime REAL, "
 							+ "startExec REAL, "
 							+ "actualRuntime REAL, "
+							+ "preemptions INTEGER, "
+							+ "backfillingChoice INTEGER, "
 							+ "hostId INTEGER, "
 							+ "running INTEGER, "
 							+ "PRIMARY KEY (vmId)"
@@ -61,7 +63,7 @@ public class PreemptableVmDataStore extends DataStore {
 	}
 
 	private static final String INSERT_DATACENTER_INFO_SQL = "INSERT INTO " + VMS_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	
 	public boolean addWaitingVms(SortedSet<PreemptableVm> waitingVms) {
 		if (waitingVms == null) {
@@ -110,13 +112,15 @@ public class PreemptableVmDataStore extends DataStore {
 				insertMemberStatement.setDouble(7, vm.getRuntime());
 				insertMemberStatement.setDouble(8, vm.getStartExec());
 				insertMemberStatement.setDouble(9, vm.getActualRuntime(time));
+				insertMemberStatement.setInt(10, vm.getNumberOfPreemptions());
+				insertMemberStatement.setInt(11, vm.getNumberOfBackfillingChoice());
 				
 				if (running) {
-					insertMemberStatement.setInt(10, vm.getHost().getId()); //vm is waiting and doesn't have host
-					insertMemberStatement.setInt(11, RUNNING);
+					insertMemberStatement.setInt(12, vm.getHost().getId()); //vm is waiting and doesn't have host
+					insertMemberStatement.setInt(13, RUNNING);
 				} else {
-					insertMemberStatement.setInt(10, -1); //vm is waiting and doesn't have host
-					insertMemberStatement.setInt(11, WAITING);
+					insertMemberStatement.setInt(12, -1); //vm is waiting and doesn't have host
+					insertMemberStatement.setInt(13, WAITING);
 				}
 				insertMemberStatement.addBatch();
 			}
