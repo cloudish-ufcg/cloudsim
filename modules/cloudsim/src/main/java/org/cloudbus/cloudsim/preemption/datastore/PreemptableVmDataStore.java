@@ -64,21 +64,27 @@ public class PreemptableVmDataStore extends DataStore {
 			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	
 	public boolean addWaitingVms(SortedSet<PreemptableVm> waitingVms) {
-		return addVms(waitingVms, false);		
-	}
-	
-	public boolean addRunningVms(SortedSet<PreemptableVm> runningVms) {
-		return addVms(runningVms, true);
-	}
-
-	private boolean addVms(SortedSet<PreemptableVm> runningVms, boolean running) {
-		if (runningVms == null) {
+		if (waitingVms == null) {
 			Log.printLine("waitingVms must not be null.");
 			return false;
 		}		
-		Log.printLine("Adding " + runningVms.size() + " waiting VMs into database.");
+		Log.printLine("Adding " + waitingVms.size() + " waiting VMs into database.");
 		
-		if (runningVms.isEmpty()) {
+		return addVms(waitingVms, false);		
+	}
+	
+	public boolean addRunningVms(SortedSet<PreemptableVm> runningVms) {		
+		if (runningVms == null) {
+			Log.printLine("runningVms must not be null.");
+			return false;
+		}		
+		Log.printLine("Adding " + runningVms.size() + " running VMs into database.");
+		
+		return addVms(runningVms, true);
+	}
+
+	private boolean addVms(SortedSet<PreemptableVm> vms, boolean running) {
+		if (vms.isEmpty()) {
 			return true;
 		}
 		
@@ -94,7 +100,7 @@ public class PreemptableVmDataStore extends DataStore {
 			insertMemberStatement = connection
 					.prepareStatement(INSERT_DATACENTER_INFO_SQL);
 			
-			for (PreemptableVm vm : runningVms) {
+			for (PreemptableVm vm : vms) {
 				insertMemberStatement.setInt(1, vm.getId());
 				insertMemberStatement.setInt(2, vm.getUserId());
 				insertMemberStatement.setDouble(3, vm.getMips());
