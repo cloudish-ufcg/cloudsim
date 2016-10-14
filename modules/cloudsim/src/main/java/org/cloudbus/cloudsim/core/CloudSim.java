@@ -637,7 +637,7 @@ public class CloudSim {
 	 * @param p the p
 	 */
 	public static void wait(int src, Predicate p) {
-		entities.get(src).setState(SimEntity.WAITING);
+			entities.get(src).setState(SimEntity.WAITING);
 		if (p != SIM_ANY) {
 			// If a predicate has been used store it in order to check it
 			waitPredicates.put(src, p);

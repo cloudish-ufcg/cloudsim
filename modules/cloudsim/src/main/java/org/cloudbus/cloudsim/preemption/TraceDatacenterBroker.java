@@ -43,7 +43,10 @@ public class TraceDatacenterBroker extends SimEntity {
 
     protected TreeSet<Task> createdTasks;
     protected List<TaskState> finishedTasks;
-    
+
+    private int submittedTasks;
+    private int concludedTasks;
+
     Properties properties;
 
     /**
@@ -68,6 +71,8 @@ public class TraceDatacenterBroker extends SimEntity {
     public TraceDatacenterBroker(String name, Properties properties) throws Exception {
         super(name);
 
+        setSubmittedTasks(0);
+        setConcludedTasks(0);
         setCreatedTasks(new TreeSet<Task>());
         setFinishedTasks(new ArrayList<TaskState>());
 
@@ -106,7 +111,7 @@ public class TraceDatacenterBroker extends SimEntity {
                 break;
             // if the simulation finishes
             case CloudSimTags.END_OF_SIMULATION:
-            	storeFinishedTasks(true);
+                storeFinishedTasks(true);
                 break;
             case CloudSimTags.VM_DESTROY_ACK:
                 processVmDestroyAck(ev);
@@ -143,7 +148,8 @@ public class TraceDatacenterBroker extends SimEntity {
         
         // creating next event if the are more events to be treated
         if (inputTraceDataStore.hasMoreEvents(getIntervalIndex(),
-                SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize()))) {
+                SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize())) ||
+                getSubmittedTasks() > getConcludedTasks()) {
             send(getId(), SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
         }
     }
@@ -159,6 +165,7 @@ public class TraceDatacenterBroker extends SimEntity {
         TaskState taskState = new TaskState(vm.getId(), vm.getMips(), vm.getSubmitTime(), now,
                 vm.getRuntime(), vm.getPriority());
         finishedTasks.add(taskState);
+        setConcludedTasks(getConcludedTasks() + 1);
     }
 
     /**
@@ -273,6 +280,7 @@ public class TraceDatacenterBroker extends SimEntity {
                 + datacenterId);
 
         getCreatedTasks().remove(task);
+        setSubmittedTasks(getSubmittedTasks() + 1);
 
         double delay = task.getSubmitTime() - CloudSim.clock();
         send(datacenterId, delay, CloudSimTags.VM_CREATE, vm);
@@ -383,5 +391,21 @@ public class TraceDatacenterBroker extends SimEntity {
 
     public void setFinishedTasks(List<TaskState> finishedTasks) {
         this.finishedTasks = finishedTasks;
+    }
+
+    public void setSubmittedTasks(int submittedTasks) {
+        this.submittedTasks = submittedTasks;
+    }
+
+    public int getSubmittedTasks() {
+        return this.submittedTasks;
+    }
+
+    public void setConcludedTasks(int concludedTasks) {
+        this.concludedTasks = concludedTasks;
+    }
+
+    public int getConcludedTasks() {
+        return this.concludedTasks;
     }
 }
