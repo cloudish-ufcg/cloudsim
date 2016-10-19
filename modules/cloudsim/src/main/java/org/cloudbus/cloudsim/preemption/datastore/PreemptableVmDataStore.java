@@ -226,5 +226,5 @@ public class PreemptableVmDataStore extends DataStore {
 			Log.printLine("Couldn't get tasks from DB.");
 			return null;
 		}		
-	}	
+	}
 }
