@@ -131,7 +131,7 @@ public class TraceDatacenterBroker extends SimEntity {
         }
     }
 
-    private void storeFinishedTasks(boolean endOfSimulation) {    	
+    protected void storeFinishedTasks(boolean endOfSimulation) {
         List<TaskState> toStore = new ArrayList<TaskState>(getFinishedTasks());
         if (toStore != null && !toStore.isEmpty()
                 && taskDataStore.addTaskList(toStore)) {
@@ -154,7 +154,7 @@ public class TraceDatacenterBroker extends SimEntity {
         }
     }
 
-    private void processVmDestroyAck(SimEvent ev) {
+    protected void processVmDestroyAck(SimEvent ev) {
         PreemptableVm vm = (PreemptableVm) ev.getData();
 
         Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": VM #",
@@ -197,7 +197,7 @@ public class TraceDatacenterBroker extends SimEntity {
         }
     }
 
-    private void loadNextGoogleTasks() {
+    protected void loadNextGoogleTasks() {
         Log.printLine("Loading next google tasks. Interval index " + getIntervalIndex());
 
         List<Task> nextGoogleTasks = inputTraceDataStore
