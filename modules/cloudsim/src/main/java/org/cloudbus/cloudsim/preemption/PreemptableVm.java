@@ -83,6 +83,7 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	}
 
 	public double getActualRuntime(double currentTime) {
+
 		if (getStartExec() != NOT_EXECUTING_TIME) {
 			return actualRuntime + (currentTime - getStartExec());
 		}
@@ -107,5 +108,34 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 
 	public void setNumberOfBackfillingChoice(int numberOfBackfillingchoice) {
 		this.numberOfBackfillingChoice = numberOfBackfillingchoice;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		PreemptableVm that = (PreemptableVm) o;
+
+		return this.getId() == that.getId();
+
+	}
+
+	@Override
+	public int hashCode() {
+		int result;
+		long temp;
+		result = priority;
+		temp = Double.doubleToLongBits(submitTime);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(runtime);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(startExec);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(actualRuntime);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		result = 31 * result + numberOfPreemptions;
+		result = 31 * result + numberOfBackfillingChoice;
+		return result;
 	}
 }

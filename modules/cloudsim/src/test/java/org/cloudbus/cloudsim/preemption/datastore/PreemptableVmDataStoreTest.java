@@ -15,10 +15,9 @@ import java.util.TreeSet;
  */
 public class PreemptableVmDataStoreTest {
 
-    public static final int TIME = 1;
+    public static final double TIME = 1;
 
     private static String databaseFile = "VmDataStoreTest.sqlite3";
-    private static String databaseURL = "jdbc:sqlite:" + databaseFile;
     private static Properties properties;
 
     PreemptableVmDataStore dataStore;
@@ -41,7 +40,7 @@ public class PreemptableVmDataStoreTest {
 
         // creating the dataStore
         properties = new Properties();
-        properties.setProperty(PreemptableVmDataStore.CHECKPOINT_DIR_PROP, databaseURL);
+        properties.setProperty(PreemptableVmDataStore.CHECKPOINT_DIR_PROP, databaseFile);
 
         // creating data store
         dataStore = new PreemptableVmDataStore(properties, TIME);
@@ -79,16 +78,17 @@ public class PreemptableVmDataStoreTest {
         Mockito.when(vm3.getHost().getId()).thenReturn(1);
         Mockito.when(vm4.getHost().getId()).thenReturn(2);
 
-
         // assert initial state
         Assert.assertEquals(0, dataStore.getAllRunningVms().size());
         Assert.assertEquals(0, dataStore.getAllWaitingVms().size());
+
     }
 
     @After
     public void tearDown() {
         new File(properties.getProperty(PreemptableVmDataStore.CHECKPOINT_DIR_PROP)
-                + "vms-" + properties.getProperty("number_of_hosts") + "-hosts-" + String.valueOf(TIME)).delete();
+                + "vms-" + properties.getProperty("number_of_hosts") + "-hosts-"
+                + String.valueOf(TIME)).delete();
     }
 
     @Test
@@ -112,7 +112,7 @@ public class PreemptableVmDataStoreTest {
     }
 
     @Test
-    public void testAddRunning() {
+    public void testAddRunning1() {
 
         running.add(vm1);
 
@@ -125,5 +125,156 @@ public class PreemptableVmDataStoreTest {
         for (PreemptableVm vm: dataStore.getAllRunningVms()) {
             Assert.assertTrue(running.contains(vm));
         }
+
+        for (PreemptableVm vm: dataStore.getAllWaitingVms()) {
+            Assert.assertTrue(waiting.contains(vm));
+        }
     }
+
+    @Test
+    public void testAddWaiting1() {
+
+        waiting.add(vm1);
+
+        Assert.assertTrue(dataStore.addWaitingVms(waiting));
+        Assert.assertTrue(dataStore.addRunningVms(running));
+
+        Assert.assertEquals(0, dataStore.getAllRunningVms().size());
+        Assert.assertEquals(1, dataStore.getAllWaitingVms().size());
+
+        for (PreemptableVm vm: dataStore.getAllRunningVms()) {
+            Assert.assertTrue(running.contains(vm));
+        }
+
+        for (PreemptableVm vm: dataStore.getAllWaitingVms()) {
+            Assert.assertTrue(waiting.contains(vm));
+        }
+    }
+
+    @Test
+    public void testeAddRunning2(){
+        running.add(vm1);
+        running.add(vm2);
+
+        Assert.assertTrue(dataStore.addWaitingVms(waiting));
+        Assert.assertTrue(dataStore.addRunningVms(running));
+
+        Assert.assertEquals(2, dataStore.getAllRunningVms().size());
+        Assert.assertEquals(0, dataStore.getAllWaitingVms().size());
+
+        for (PreemptableVm vm: dataStore.getAllRunningVms()) {
+            Assert.assertTrue(running.contains(vm));
+        }
+
+        for (PreemptableVm vm: dataStore.getAllWaitingVms()) {
+            Assert.assertTrue(waiting.contains(vm));
+        }
+
+        Assert.assertArrayEquals(running.toArray(), dataStore.getAllRunningVms().toArray());
+
+        running.remove(vm1);
+        running.remove(vm2);
+
+        running.add(vm3);
+        running.add(vm4);
+
+        Assert.assertTrue(dataStore.addWaitingVms(waiting));
+        Assert.assertTrue(dataStore.addRunningVms(running));
+
+        Assert.assertEquals(4, dataStore.getAllRunningVms().size());
+        Assert.assertEquals(0, dataStore.getAllWaitingVms().size());
+
+        Assert.assertTrue(dataStore.getAllRunningVms().contains(vm1));
+        Assert.assertTrue(dataStore.getAllRunningVms().contains(vm2));
+        Assert.assertTrue(dataStore.getAllRunningVms().contains(vm3));
+        Assert.assertTrue(dataStore.getAllRunningVms().contains(vm4));
+
+    }
+
+    @Test
+    public void testeAddWaiting2(){
+        waiting.add(vm1);
+        waiting.add(vm2);
+
+        Assert.assertTrue(dataStore.addWaitingVms(waiting));
+        Assert.assertTrue(dataStore.addRunningVms(running));
+
+        Assert.assertEquals(0, dataStore.getAllRunningVms().size());
+        Assert.assertEquals(2, dataStore.getAllWaitingVms().size());
+
+        for (PreemptableVm vm: dataStore.getAllRunningVms()) {
+            Assert.assertTrue(running.contains(vm));
+        }
+
+        for (PreemptableVm vm: dataStore.getAllWaitingVms()) {
+            Assert.assertTrue(waiting.contains(vm));
+        }
+
+        Assert.assertArrayEquals(waiting.toArray(), dataStore.getAllWaitingVms().toArray());
+
+        waiting.remove(vm1);
+        waiting.remove(vm2);
+
+        waiting.add(vm3);
+        waiting.add(vm4);
+
+        Assert.assertTrue(dataStore.addWaitingVms(waiting));
+        Assert.assertTrue(dataStore.addRunningVms(running));
+
+        Assert.assertEquals(0, dataStore.getAllRunningVms().size());
+        Assert.assertEquals(4, dataStore.getAllWaitingVms().size());
+
+        Assert.assertTrue(dataStore.getAllWaitingVms().contains(vm1));
+        Assert.assertTrue(dataStore.getAllWaitingVms().contains(vm2));
+        Assert.assertTrue(dataStore.getAllWaitingVms().contains(vm3));
+        Assert.assertTrue(dataStore.getAllWaitingVms().contains(vm4));
+
+    }
+
+    @Test
+    public void testeAddWaitingAndRunning(){
+        running.add(vm1);
+        waiting.add(vm2);
+
+        Assert.assertTrue(dataStore.addWaitingVms(waiting));
+        Assert.assertTrue(dataStore.addRunningVms(running));
+
+        Assert.assertEquals(1, dataStore.getAllRunningVms().size());
+        Assert.assertEquals(1, dataStore.getAllWaitingVms().size());
+
+        for (PreemptableVm vm: dataStore.getAllRunningVms()) {
+            Assert.assertTrue(running.contains(vm));
+        }
+
+        for (PreemptableVm vm: dataStore.getAllWaitingVms()) {
+            Assert.assertTrue(waiting.contains(vm));
+        }
+
+        Assert.assertArrayEquals(waiting.toArray(), dataStore.getAllWaitingVms().toArray());
+        Assert.assertArrayEquals(running.toArray(), dataStore.getAllRunningVms().toArray());
+
+        running.remove(vm1);
+        waiting.remove(vm2);
+        running.add(vm3);
+        waiting.add(vm4);
+
+        Assert.assertTrue(dataStore.addWaitingVms(waiting));
+        Assert.assertTrue(dataStore.addRunningVms(running));
+
+        Assert.assertEquals(2, dataStore.getAllRunningVms().size());
+        Assert.assertEquals(2, dataStore.getAllWaitingVms().size());
+
+        Assert.assertTrue(dataStore.getAllWaitingVms().contains(vm2));
+        Assert.assertTrue(dataStore.getAllWaitingVms().contains(vm4));
+
+        Assert.assertTrue(dataStore.getAllRunningVms().contains(vm1));
+        Assert.assertTrue(dataStore.getAllRunningVms().contains(vm3));
+
+
+    }
+
+
+
+
+
 }
