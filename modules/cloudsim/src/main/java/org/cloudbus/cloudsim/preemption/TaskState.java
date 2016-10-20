@@ -42,4 +42,9 @@ public class TaskState {
 	public int getPriority() {
 		return priority;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		return getTaskId() == ((TaskState) o).getTaskId();
+	}
 }

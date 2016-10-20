@@ -34,9 +34,8 @@ public class PreemptableVmDataStoreTest {
     private double cpuReq, memReq, submitTime, runtime;
 
 
-
     @Before
-    public void setUp(){
+    public void setUp() {
 
         // creating the dataStore
         properties = new Properties();
@@ -122,11 +121,11 @@ public class PreemptableVmDataStoreTest {
         Assert.assertEquals(1, dataStore.getAllRunningVms().size());
         Assert.assertEquals(0, dataStore.getAllWaitingVms().size());
 
-        for (PreemptableVm vm: dataStore.getAllRunningVms()) {
+        for (PreemptableVm vm : dataStore.getAllRunningVms()) {
             Assert.assertTrue(running.contains(vm));
         }
 
-        for (PreemptableVm vm: dataStore.getAllWaitingVms()) {
+        for (PreemptableVm vm : dataStore.getAllWaitingVms()) {
             Assert.assertTrue(waiting.contains(vm));
         }
     }
@@ -142,17 +141,17 @@ public class PreemptableVmDataStoreTest {
         Assert.assertEquals(0, dataStore.getAllRunningVms().size());
         Assert.assertEquals(1, dataStore.getAllWaitingVms().size());
 
-        for (PreemptableVm vm: dataStore.getAllRunningVms()) {
+        for (PreemptableVm vm : dataStore.getAllRunningVms()) {
             Assert.assertTrue(running.contains(vm));
         }
 
-        for (PreemptableVm vm: dataStore.getAllWaitingVms()) {
+        for (PreemptableVm vm : dataStore.getAllWaitingVms()) {
             Assert.assertTrue(waiting.contains(vm));
         }
     }
 
     @Test
-    public void testeAddRunning2(){
+    public void testeAddRunning2() {
         running.add(vm1);
         running.add(vm2);
 
@@ -162,11 +161,11 @@ public class PreemptableVmDataStoreTest {
         Assert.assertEquals(2, dataStore.getAllRunningVms().size());
         Assert.assertEquals(0, dataStore.getAllWaitingVms().size());
 
-        for (PreemptableVm vm: dataStore.getAllRunningVms()) {
+        for (PreemptableVm vm : dataStore.getAllRunningVms()) {
             Assert.assertTrue(running.contains(vm));
         }
 
-        for (PreemptableVm vm: dataStore.getAllWaitingVms()) {
+        for (PreemptableVm vm : dataStore.getAllWaitingVms()) {
             Assert.assertTrue(waiting.contains(vm));
         }
 
@@ -192,7 +191,7 @@ public class PreemptableVmDataStoreTest {
     }
 
     @Test
-    public void testeAddWaiting2(){
+    public void testeAddWaiting2() {
         waiting.add(vm1);
         waiting.add(vm2);
 
@@ -202,11 +201,11 @@ public class PreemptableVmDataStoreTest {
         Assert.assertEquals(0, dataStore.getAllRunningVms().size());
         Assert.assertEquals(2, dataStore.getAllWaitingVms().size());
 
-        for (PreemptableVm vm: dataStore.getAllRunningVms()) {
+        for (PreemptableVm vm : dataStore.getAllRunningVms()) {
             Assert.assertTrue(running.contains(vm));
         }
 
-        for (PreemptableVm vm: dataStore.getAllWaitingVms()) {
+        for (PreemptableVm vm : dataStore.getAllWaitingVms()) {
             Assert.assertTrue(waiting.contains(vm));
         }
 
@@ -232,7 +231,7 @@ public class PreemptableVmDataStoreTest {
     }
 
     @Test
-    public void testeAddWaitingAndRunning(){
+    public void testeAddWaitingAndRunning() {
         running.add(vm1);
         waiting.add(vm2);
 
@@ -242,11 +241,11 @@ public class PreemptableVmDataStoreTest {
         Assert.assertEquals(1, dataStore.getAllRunningVms().size());
         Assert.assertEquals(1, dataStore.getAllWaitingVms().size());
 
-        for (PreemptableVm vm: dataStore.getAllRunningVms()) {
+        for (PreemptableVm vm : dataStore.getAllRunningVms()) {
             Assert.assertTrue(running.contains(vm));
         }
 
-        for (PreemptableVm vm: dataStore.getAllWaitingVms()) {
+        for (PreemptableVm vm : dataStore.getAllWaitingVms()) {
             Assert.assertTrue(waiting.contains(vm));
         }
 
@@ -269,12 +268,39 @@ public class PreemptableVmDataStoreTest {
 
         Assert.assertTrue(dataStore.getAllRunningVms().contains(vm1));
         Assert.assertTrue(dataStore.getAllRunningVms().contains(vm3));
-
-
     }
 
+    @Test
+    public void testAddWaitingAndRunning2() {
 
+        int vmId = 0;
 
+        //adding 50 vms to the set of running
+        for (int i = 0; i < 50; i++) {
+            vm1 = new PreemptableVm(vmId++, USER_ID, cpuReq, memReq, submitTime, priority - 1, runtime);
+            vm1.setHost(host1);
+            running.add(vm1);
+        }
 
+        // adding the set of running into the BD
+        Assert.assertTrue(dataStore.addRunningVms(running));
 
+        // testing the status of BD
+        Assert.assertArrayEquals(running.toArray(), dataStore.getAllRunningVms().toArray());
+        Assert.assertEquals(0, dataStore.getAllWaitingVms().size());
+
+        //adding 50 vms to the set of waiting
+        for (int i = 0; i < 50; i++) {
+            vm1 = new PreemptableVm(vmId++, USER_ID, cpuReq, memReq, submitTime, priority - 1, runtime);
+            vm1.setHost(host1);
+            waiting.add(vm1);
+        }
+
+        // adding the set of waiting into the BD
+        Assert.assertTrue(dataStore.addWaitingVms(waiting));
+
+        // testing the status of BD
+        Assert.assertArrayEquals(running.toArray(), dataStore.getAllRunningVms().toArray());
+        Assert.assertArrayEquals(waiting.toArray(), dataStore.getAllWaitingVms().toArray());
+    }
 }
