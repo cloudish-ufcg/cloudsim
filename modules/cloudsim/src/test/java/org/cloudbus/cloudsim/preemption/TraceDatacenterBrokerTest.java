@@ -5,11 +5,15 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.core.CloudSimTags;
+import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.*;
+import org.mockito.Mockito;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
 
@@ -19,18 +23,23 @@ import java.util.*;
  */
 public class TraceDatacenterBrokerTest {
 
-    private static List<Task> googleTasks;
-
+    private SimEvent event;
+    private TraceDatacenterBroker broker;
+    private PreemptiveDatacenter datacenter;
+    private Properties properties;
+    private static String databaseOutputFile = "traceDatacenterBrokerTestOutput.sqlite3";
+    private static String databaseOutputUrl = "jdbc:sqlite:" + databaseOutputFile;
 
     @Before
     public void setUp() {
 
+        event = Mockito.mock(SimEvent.class);
         System.out.println("Starting CloudSimExample Google Trace ...");
 
         long now = System.currentTimeMillis();
 
         try {
-            Properties properties = createProperties();
+            properties = createProperties();
 
             if (properties.getProperty("logging") != null && properties.getProperty("logging").equals("no")) {
                 Log.disable();
@@ -50,11 +59,12 @@ public class TraceDatacenterBrokerTest {
             // Second step: Create Datacenters
             // Datacenters are the resource providers in CloudSim. We need at
             // list one of them to run a CloudSim simulation
-            @SuppressWarnings("unused")
-            PreemptiveDatacenter datacenter0 = createPreemptiveDatacenter("cloud-0", properties);
+            datacenter = createPreemptiveDatacenter("cloud-0", properties);
+            datacenter.startEntity();
 
-            TraceDatacenterBroker broker = createTraceDatacenterBroker(
-                    "Google_Broker_0", properties);
+            broker = createTraceDatacenterBroker("Google_Broker_0", properties);
+            broker.startEntity();
+            broker.getDatacenterIdsList().add(datacenter.getId());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -62,27 +72,25 @@ public class TraceDatacenterBrokerTest {
         }
     }
 
-   private static Properties createProperties() {
+    private static Properties createProperties() {
 
-       Properties properties = new Properties();
-       String databaseOutputFile = "traceDatacenterBrokerTestOutput.sqlite3";
-        String databaseOutputUrl = "jdbc:sqlite:" + databaseOutputFile;
+        Properties properties = new Properties();
 
-       properties.setProperty("logging", "no");
-       properties.setProperty("input_trace_database_url", "jdbc:sqlite:/local/alessandro.fook/workspace/google-trace-processor/simulated_trace_data.sqlite3");
-       properties.setProperty("number_of_hosts", "1");
-       properties.setProperty("total_cpu_capacity", "6603.25");
-       properties.setProperty("loading_interval_size", "1");
-       properties.setProperty("storing_interval_size", "4");
-       properties.setProperty("output_tasks_database_url", databaseOutputUrl);
-       properties.setProperty("utilization_database_url", databaseOutputUrl);
-       properties.setProperty("utilization_storing_interval_size", "8");
-       properties.setProperty("datacenter_database_url", databaseOutputUrl);
-       properties.setProperty("collect_datacenter_summary_info", "no");
-       properties.setProperty("make_checkpoint", "no");
+        properties.setProperty("logging", "no");
+        properties.setProperty("input_trace_database_url", "jdbc:sqlite:/local/alessandro.fook/workspace/google-trace-processor/simulated_trace_data.sqlite3");
+        properties.setProperty("number_of_hosts", "1");
+        properties.setProperty("total_cpu_capacity", "6603.25");
+        properties.setProperty("loading_interval_size", "1");
+        properties.setProperty("storing_interval_size", "4");
+        properties.setProperty("output_tasks_database_url", databaseOutputUrl);
+        properties.setProperty("utilization_database_url", databaseOutputUrl);
+        properties.setProperty("utilization_storing_interval_size", "8");
+        properties.setProperty("datacenter_database_url", databaseOutputUrl);
+        properties.setProperty("collect_datacenter_summary_info", "no");
+        properties.setProperty("make_checkpoint", "no");
 
-       return properties;
-   }
+        return properties;
+    }
 
     private static PreemptiveDatacenter createPreemptiveDatacenter(String name,
                                                                    Properties properties) {
@@ -151,5 +159,134 @@ public class TraceDatacenterBrokerTest {
             return null;
         }
         return broker;
+    }
+
+    @After
+    public void tearDown() {
+        new File(databaseOutputFile).delete();
+    }
+
+    @Test
+    public void testLoadNextTaskEvents() {
+
+        Mockito.when(event.getTag()).thenReturn(broker.LOAD_NEXT_TASKS_EVENT);
+        broker.processEvent(event);
+        Assert.assertEquals(19809, broker.getSubmittedTasks());
+
+        broker.processEvent(event);
+        Assert.assertEquals(26412, broker.getSubmittedTasks());
+    }
+
+    @Test
+    public void testDestroyVMAck() {
+
+        List<TaskState> taskStates = new ArrayList<>();
+        populateListOfTaskStates(taskStates);
+        int userId = 0;
+        double memReq = 0.24;
+        int concludedTasks = 0;
+
+        for (TaskState taskState : taskStates) {
+            PreemptableVm vm = new PreemptableVm(taskState.getTaskId(), userId, taskState.getCpuReq(), memReq,
+                                                 taskState.getSubmitTime(), taskState.getPriority(),
+                                                 taskState.getPriority());
+
+            Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY_ACK);
+            Mockito.when(event.getData()).thenReturn(vm);
+            broker.processEvent(event);
+            concludedTasks++;
+
+            Assert.assertEquals(concludedTasks, broker.getConcludedTasks());
+        }
+
+        Assert.assertArrayEquals(taskStates.toArray(), broker.getFinishedTasks().toArray());
+    }
+
+    @Test
+    public void testStoredFinishedTasks() {
+
+        List<TaskState> taskStates = new ArrayList<>();
+        populateListOfTaskStates(taskStates);
+        int userId = 0;
+        double memReq = 0.24;
+        int concludedTasks = 0;
+
+        for (TaskState taskState : taskStates) {
+            PreemptableVm vm = new PreemptableVm(taskState.getTaskId(), userId, taskState.getCpuReq(), memReq,
+                    taskState.getSubmitTime(), taskState.getPriority(),
+                    taskState.getPriority());
+
+            Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY_ACK);
+            Mockito.when(event.getData()).thenReturn(vm);
+            broker.processEvent(event);
+            concludedTasks++;
+
+            Assert.assertEquals(concludedTasks, broker.getConcludedTasks());
+        }
+
+        Assert.assertArrayEquals(taskStates.toArray(), broker.getFinishedTasks().toArray());
+
+        Mockito.when(event.getTag()).thenReturn(broker.STORE_FINISHED_TASKS_EVENT);
+        broker.processEvent(event);
+
+        Assert.assertEquals(50, broker.getConcludedTasks());
+        Assert.assertEquals(0, broker.getFinishedTasks().size());
+    }
+
+    @Test
+    public void testEndOfSimulation() {
+
+        List<TaskState> taskStates = new ArrayList<>();
+        populateListOfTaskStates(taskStates);
+        int userId = 0;
+        double memReq = 0.24;
+        int concludedTasks = 0;
+
+        for (TaskState taskState : taskStates) {
+            PreemptableVm vm = new PreemptableVm(taskState.getTaskId(), userId, taskState.getCpuReq(), memReq,
+                    taskState.getSubmitTime(), taskState.getPriority(),
+                    taskState.getPriority());
+
+            Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY_ACK);
+            Mockito.when(event.getData()).thenReturn(vm);
+            broker.processEvent(event);
+            concludedTasks++;
+
+            Assert.assertEquals(concludedTasks, broker.getConcludedTasks());
+        }
+
+        Assert.assertArrayEquals(taskStates.toArray(), broker.getFinishedTasks().toArray());
+
+        Mockito.when(event.getTag()).thenReturn(CloudSimTags.END_OF_SIMULATION);
+        broker.processEvent(event);
+
+        Assert.assertEquals(50, broker.getConcludedTasks());
+        Assert.assertEquals(0, broker.getFinishedTasks().size());
+    }
+
+    public void populateListOfTaskStates(List<TaskState> taskStates) {
+
+        int id = 0;
+        double submitTime = 0;
+        double runTime = 1;
+        double cpuReq = 0.02;
+        int priority = 1;
+
+        for (int i = 0; i < 50; i++) {
+            double now = CloudSim.clock();
+            TaskState taskState = new TaskState(id++, cpuReq, submitTime, now, runTime, priority);
+            taskStates.add(taskState);
+        }
+    }
+
+    @Test
+    public void testProcessOtherEvent() {
+        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
+        broker.processEvent(event);
+    }
+
+    @Test
+    public void testProcessNullEvent() {
+        broker.processEvent(null);
     }
 }

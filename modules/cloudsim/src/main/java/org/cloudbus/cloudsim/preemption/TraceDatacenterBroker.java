@@ -100,6 +100,12 @@ public class TraceDatacenterBroker extends SimEntity {
 
     @Override
     public void processEvent(SimEvent ev) {
+
+        if (ev == null) {
+            Log.printConcatLine(getName(), ".processOtherEvent(): ", "Error - an event is null.");
+            return;
+        }
+
         switch (ev.getTag()) {
             // Resource characteristics request
             case CloudSimTags.RESOURCE_CHARACTERISTICS_REQUEST:
@@ -245,10 +251,6 @@ public class TraceDatacenterBroker extends SimEntity {
      * as abstract in a super class from where new brokers have to be extended.
      */
     protected void processOtherEvent(SimEvent ev) {
-        if (ev == null) {
-            Log.printConcatLine(getName(), ".processOtherEvent(): ", "Error - an event is null.");
-            return;
-        }
 
         Log.printConcatLine(getName(), ".processOtherEvent(): Error - event unknown by this DatacenterBroker.");
     }
