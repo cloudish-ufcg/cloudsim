@@ -35,6 +35,7 @@ import org.cloudbus.cloudsim.preemption.Task;
 import org.cloudbus.cloudsim.preemption.TaskState;
 import org.cloudbus.cloudsim.preemption.TraceDatacenterBroker;
 import org.cloudbus.cloudsim.preemption.UsageEntry;
+import org.cloudbus.cloudsim.preemption.UsageInfo;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
