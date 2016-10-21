@@ -16,7 +16,7 @@ public class TaskDataStore extends DataStore {
 
 	public static final String DATABASE_URL_PROP = "output_tasks_database_url";
 	
-	private static final String GOOGLE_TASK_TABLE_NAME = "googletask";
+	private static final String GOOGLE_TASK_TABLE_NAME = "googletasks";
 			
 	public TaskDataStore(Properties properties) {
 		super(properties.getProperty(DATABASE_URL_PROP));
@@ -31,14 +31,16 @@ public class TaskDataStore extends DataStore {
 			connection = getConnection();
 			statement = connection.createStatement();
 			statement
-					.execute("CREATE TABLE IF NOT EXISTS googletask("
-							+ "cloudlet_id INTEGER NOT NULL, "
-							+ "cpu_req REAL, "
-							+ "submit_time REAL, "
-							+ "finish_time REAL, "
+					.execute("CREATE TABLE IF NOT EXISTS googletasks("
+							+ "taskId INTEGER NOT NULL, "
+							+ "cpuReq REAL, "
+							+ "submitTime REAL, "
+							+ "finishTime REAL, "
 							+ "runtime REAL, "
 							+ "priority INTEGER, "
-							+ "PRIMARY KEY (cloudlet_id)"
+							+ "preemptions INTEGER, "
+							+ "backfillingChoices INTEGER, "
+							+ "PRIMARY KEY (taskId)"
 							+ ")");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -49,7 +51,7 @@ public class TaskDataStore extends DataStore {
 	}
 	
 	private static final String INSERT_TASK_SQL = "INSERT INTO " + GOOGLE_TASK_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
 	
 	public boolean addTaskList(List<TaskState> taskStates) {
 		if (taskStates == null) {
@@ -119,6 +121,8 @@ public class TaskDataStore extends DataStore {
 		insertMemberStatement.setDouble(4, taskState.getFinishTime());
 		insertMemberStatement.setDouble(5, taskState.getRuntime());
 		insertMemberStatement.setInt(6, taskState.getPriority());
+		insertMemberStatement.setInt(7, taskState.getNumberOfPreemptions());
+		insertMemberStatement.setInt(8, taskState.getNumberOfBackfillingChoices());
 		insertMemberStatement.addBatch();
 	}
 	
@@ -137,10 +141,11 @@ public class TaskDataStore extends DataStore {
 			ResultSet rs = statement.getResultSet();
 
 			while (rs.next()) {
-				taskStates.add(new TaskState(rs.getInt("cloudlet_id"), rs
-						.getDouble("cpu_req"), rs.getDouble("submit_time"), rs
-						.getDouble("finish_time"), rs.getDouble("runtime"), rs
-						.getInt("priority")));
+				taskStates.add(new TaskState(rs.getInt("taskId"), rs
+						.getDouble("cpuReq"), rs.getDouble("submitTime"), rs
+						.getDouble("finishTime"), rs.getDouble("runtime"), rs
+						.getInt("priority"), rs.getInt("preemptions"), rs
+						.getInt("backfillingChoices")));
 			}
 			return taskStates;
 		} catch (SQLException e) {
