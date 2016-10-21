@@ -120,22 +120,4 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		return this.getId() == that.getId();
 
 	}
-
-	@Override
-	public int hashCode() {
-		int result;
-		long temp;
-		result = priority;
-		temp = Double.doubleToLongBits(submitTime);
-		result = 31 * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(runtime);
-		result = 31 * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(startExec);
-		result = 31 * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(actualRuntime);
-		result = 31 * result + (int) (temp ^ (temp >>> 32));
-		result = 31 * result + numberOfPreemptions;
-		result = 31 * result + numberOfBackfillingChoice;
-		return result;
-	}
 }

@@ -126,6 +126,12 @@ public class PreemptiveDatacenter extends Datacenter {
 	
 	@Override
 	protected void processOtherEvent(SimEvent ev) {
+
+		if (ev == null) {
+			Log.printConcatLine(getName(), ".processOtherEvent(): Error - an event is null.");
+			return;
+		}
+
 		switch (ev.getTag()) {
 			case SCHEDULE_DATACENTER_EVENTS_EVENT:
 				scheduleDatacenterEvents();
