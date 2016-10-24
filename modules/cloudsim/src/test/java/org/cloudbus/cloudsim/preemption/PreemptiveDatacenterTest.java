@@ -23,6 +23,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import static org.mockito.internal.verification.VerificationModeFactory.times;
+
 public class PreemptiveDatacenterTest {
 
     private static final double ACCEPTABLE_DIFFERENCE = 0.000001;
@@ -1878,4 +1880,43 @@ public class PreemptiveDatacenterTest {
             Assert.assertEquals(actualVMP20.getNumberOfBackfillingChoice(), 0);
         }
     }
+
+    @Test
+    public void testStoreHostUtilizationEvent1(){
+        HostUsageDataStore hostUsage = Mockito.mock(HostUsageDataStore.class);
+        datacenter.setHostUsageDataStore(hostUsage);
+        Mockito.when(event.getTag()).thenReturn(PreemptiveDatacenter.STORE_HOST_UTILIZATION_EVENT);
+
+        datacenter.processEvent(event);
+
+        UsageEntry usageEntry = new UsageEntry(1, 1, 1, 1, 1, 1, 1, 1, 1);
+        List<UsageEntry> list = new ArrayList<>();
+        list.add(usageEntry);
+
+        Mockito.verify(hostUsage, times(0)).addUsageEntries(list);
+        Mockito.verify(hostUsage, times(1)).addUsageEntries(new ArrayList<UsageEntry>());
+
+    }
+
+    @Test
+    public void testStoreHostUtilizationEvent2(){
+        HostUsageDataStore hostUsage = Mockito.mock(HostUsageDataStore.class);
+        datacenter.setHostUsageDataStore(hostUsage);
+        Mockito.when(event.getTag()).thenReturn(PreemptiveDatacenter.STORE_HOST_UTILIZATION_EVENT);
+
+        UsageEntry usageEntry = new UsageEntry(1, 1, 1, 1, 1, 1, 1, 1, 1);
+        List<UsageEntry> list = new ArrayList<>();
+        list.add(usageEntry);
+
+        host.getUsageMap().put(1.0, usageEntry);
+
+        datacenter.processEvent(event);
+
+
+        Mockito.verify(hostUsage, times(1)).addUsageEntries(list);
+        Mockito.verify(hostUsage, times(0)).addUsageEntries(new ArrayList<UsageEntry>());
+
+    }
+
+
 }

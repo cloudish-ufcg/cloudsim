@@ -422,6 +422,8 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	protected void sendFirst(int entityId, double delay, int cloudSimTag, Object data) {
 		if (entityId < 0) {
+			Log.printConcatLine(getName(), ".send(): Error - "
+					+ "invalid entity id ", entityId);
 			return;
 		}
 
@@ -433,12 +435,6 @@ public class PreemptiveDatacenter extends Datacenter {
 		if (Double.isInfinite(delay)) {
 			throw new IllegalArgumentException(
 					"The specified delay is infinite value");
-		}
-
-		if (entityId < 0) {
-			Log.printConcatLine(getName(), ".send(): Error - "
-					+ "invalid entity id ", entityId);
-			return;
 		}
 
 		int srcId = getId();
@@ -630,5 +626,9 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	public void setCheckpointIntervalSize(double checkpointIntervalSize) {
 		this.checkpointIntervalSize = checkpointIntervalSize;
+	}
+
+	public void setHostUsageDataStore(HostUsageDataStore hostUsageDataStore) {
+		this.hostUsageDataStore = hostUsageDataStore;
 	}
 }

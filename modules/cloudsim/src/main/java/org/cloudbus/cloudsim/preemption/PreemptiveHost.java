@@ -205,7 +205,7 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 		this.usageMap = usageEntries;
 	}
 	
-	private Map<Double, UsageEntry> getUsageMap() {
+	protected Map<Double, UsageEntry> getUsageMap() {
 		return usageMap;
 	}
 	
