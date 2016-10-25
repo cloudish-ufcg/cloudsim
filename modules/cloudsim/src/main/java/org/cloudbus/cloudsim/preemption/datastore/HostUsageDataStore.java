@@ -11,6 +11,7 @@ import java.util.Properties;
 
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.preemption.UsageEntry;
+import org.cloudbus.cloudsim.preemption.UsageInfo;
 
 public class HostUsageDataStore extends DataStore {
 
@@ -31,16 +32,13 @@ public class HostUsageDataStore extends DataStore {
 			statement = connection.createStatement();
 			statement
 					.execute("CREATE TABLE IF NOT EXISTS usage("
-							+ "host_id INTEGER NOT NULL, "
+							+ "hostId INTEGER NOT NULL, "
 							+ "time REAL NOT NULL, "
-							+ "p0Usage REAL, "
-							+ "p1Usage REAL, "
-							+ "p2Usage REAL, "
-							+ "p0Vms INTEGER, "
-							+ "p1Vms INTEGER, "
-							+ "p2Vms INTEGER, "
+							+ "usage REAL, "
+							+ "vms INTEGER, "
+							+ "priority INTEGER, "
 							+ "availableMips REAL, "
-							+ "PRIMARY KEY (host_id, time)"
+							+ "PRIMARY KEY (hostId, time, priority)"
 							+ ")");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -51,7 +49,7 @@ public class HostUsageDataStore extends DataStore {
 	}
 	
 	private static final String INSERT_USAGE_ENTRY_SQL = "INSERT INTO " + UTILIZATION_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?)";
 	
 	public boolean addUsageEntries(List<UsageEntry> usageEntries) {
 		if (usageEntries == null) {
@@ -79,13 +77,10 @@ public class HostUsageDataStore extends DataStore {
 			for (UsageEntry entry : usageEntries) {
 				insertMemberStatement.setInt(1, entry.getHostId());
 				insertMemberStatement.setDouble(2, entry.getTime());
-				insertMemberStatement.setDouble(3, entry.getUsageByPriority(0));
-				insertMemberStatement.setDouble(4, entry.getUsageByPriority(1));
-				insertMemberStatement.setDouble(5, entry.getUsageByPriority(2));
-				insertMemberStatement.setInt(6, entry.getNumberOfVmsByPriority(0));
-				insertMemberStatement.setInt(7, entry.getNumberOfVmsByPriority(1));
-				insertMemberStatement.setInt(8, entry.getNumberOfVmsByPriority(2));
-				insertMemberStatement.setDouble(9, entry.getAvailableMips());
+				insertMemberStatement.setDouble(3, entry.getUsage());
+				insertMemberStatement.setInt(4, entry.getNumberOfVms());
+				insertMemberStatement.setInt(5, entry.getPriority());
+				insertMemberStatement.setDouble(6, entry.getAvailableMips());
 				insertMemberStatement.addBatch();
 			}
 			
@@ -114,7 +109,6 @@ public class HostUsageDataStore extends DataStore {
 		} finally {
 			close(insertMemberStatement, connection);
 		}
-		
 	}
 	
 	private static final String SELECT_ALL_USAGE_ENTRIES_SQL = "SELECT * FROM " + UTILIZATION_TABLE_NAME;
@@ -132,11 +126,10 @@ public class HostUsageDataStore extends DataStore {
 			ResultSet rs = statement.getResultSet();
 			
 			while (rs.next()) {
-				entries.add(new UsageEntry(rs.getInt("host_id"), rs
-						.getDouble("time"), rs.getDouble("p0Usage"), rs
-						.getDouble("p1Usage"), rs.getDouble("p2Usage"), rs
-						.getInt("p0Vms"), rs.getInt("p1Vms"), rs
-						.getInt("p2Vms"), rs.getDouble("availableMips")));
+				entries.add(new UsageEntry(rs.getInt("hostId"), rs
+						.getDouble("time"), rs.getDouble("usage"), rs
+						.getInt("vms"), rs.getInt("priority"), rs
+						.getDouble("availableMips")));
 			}
 			return entries;
 		} catch (SQLException e) {

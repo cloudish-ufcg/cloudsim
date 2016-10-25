@@ -1886,9 +1886,9 @@ public class PreemptiveDatacenterTest {
 
         datacenter.processEvent(event);
 
-        UsageEntry usageEntry = new UsageEntry(1, 1, 1, 1, 1, 1, 1, 1, 1);
+        UsageInfo info = new UsageInfo(host.getId(), 0, 0, 0, 0, 0, 0, 0, 0);
         List<UsageEntry> list = new ArrayList<>();
-        list.add(usageEntry);
+        list.addAll(info.getUsageEntries());
 
         Mockito.verify(hostUsage, times(0)).addUsageEntries(list);
         Mockito.verify(hostUsage, times(1)).addUsageEntries(new ArrayList<UsageEntry>());
@@ -1901,11 +1901,11 @@ public class PreemptiveDatacenterTest {
         datacenter.setHostUsageDataStore(hostUsage);
         Mockito.when(event.getTag()).thenReturn(PreemptiveDatacenter.STORE_HOST_UTILIZATION_EVENT);
 
-        UsageEntry usageEntry = new UsageEntry(1, 1, 1, 1, 1, 1, 1, 1, 1);
+        UsageInfo info = new UsageInfo(host.getId(), 0, 0, 0, 0, 0, 0, 0, 0);
         List<UsageEntry> list = new ArrayList<>();
-        list.add(usageEntry);
+        list.addAll(info.getUsageEntries());
 
-        host.getUsageMap().put(1.0, usageEntry);
+        host.getUsageMap().put(1.0, info);
 
         datacenter.processEvent(event);
 
@@ -1916,33 +1916,32 @@ public class PreemptiveDatacenterTest {
 
     @Test
     public void testStoreHostUtilizationEvent3(){
-        List<Host> googleHostList = new ArrayList<Host>();
+        List<Host> hostList = new ArrayList<Host>();
         List<Pe> peList1 = new ArrayList<Pe>();
         peList1.add(new Pe(0, new PeProvisionerSimple(10)));
 
         PreemptiveHost host2 = new PreemptiveHost(2, peList1, new VmSchedulerMipsBased(
                 peList1), 3);
 
-        googleHostList.add(host);
-        googleHostList.add(host2);
+        hostList.add(host);
+        hostList.add(host2);
 
-
-        Mockito.when(datacenter.getHostList()).thenReturn(googleHostList);
-
+        Mockito.when(datacenter.getHostList()).thenReturn(hostList);
 
         HostUsageDataStore hostUsage = Mockito.mock(HostUsageDataStore.class);
         datacenter.setHostUsageDataStore(hostUsage);
+
         Mockito.when(event.getTag()).thenReturn(PreemptiveDatacenter.STORE_HOST_UTILIZATION_EVENT);
 
-        UsageEntry usageEntry = new UsageEntry(1, 1, 1, 1, 1, 1, 1, 1, 1);
-        UsageEntry usageEntry2 = new UsageEntry(2, 1, 1, 1, 1, 1, 1, 1, 1);
-
-        host.getUsageMap().put(1.0, usageEntry);
-        host2.getUsageMap().put(1.0, usageEntry2);
+        UsageInfo info = new UsageInfo(host.getId(), 0, 0, 0, 0, 0, 0, 0, 0);
+        UsageInfo info2 = new UsageInfo(host2.getId(), 0, 0, 0, 0, 0, 0, 0, 0);
 
         List<UsageEntry> list = new ArrayList<>();
-        list.add(usageEntry);
-        list.add(usageEntry2);
+        list.addAll(info.getUsageEntries());
+        list.addAll(info2.getUsageEntries());
+
+        host.getUsageMap().put(1.0, info);
+        host2.getUsageMap().put(1.0, info2);
 
         datacenter.processEvent(event);
 
