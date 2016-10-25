@@ -154,9 +154,9 @@ public class PreemptiveDatacenter extends Datacenter {
 				break;
 				
 			case CloudSimTags.END_OF_SIMULATION:
+				collectDatacenterInfo(true);
 				terminateSimulation();
 				storeHostUtilization(true);
-				collectDatacenterInfo(true);
 				storeDatacenterInfo(true);
 				break;
 	
@@ -235,6 +235,8 @@ public class PreemptiveDatacenter extends Datacenter {
 			
 			brokerIds.add(vmRunning.getUserId());
 		}
+
+		getVmsRunning().clear();
 		
 		// terminating Vms waiting
 		for (PreemptableVm vmForScheduling : getVmsForScheduling()) {
@@ -245,6 +247,8 @@ public class PreemptiveDatacenter extends Datacenter {
 			
 			brokerIds.add(vmForScheduling.getUserId());
 		}
+
+		getVmsForScheduling().clear();
 
 		// sending end of simulation event to broker
 		Log.printConcatLine(simulationTimeUtil.clock(),
@@ -294,7 +298,7 @@ public class PreemptiveDatacenter extends Datacenter {
 						+ vm.getPriority());
 			}
 		}
-		
+
 		getDatacenterInfo().add(
 				new DatacenterInfo(simulationTimeUtil.clock(), vmsRunning,
 						vmsRunningP0, vmsRunningP1, vmsRunningP2,

@@ -1,11 +1,6 @@
 package org.cloudbus.cloudsim.preemption;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
-import java.util.SortedSet;
+import java.util.*;
 import java.io.File;
 
 import org.cloudbus.cloudsim.*;
@@ -14,7 +9,9 @@ import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.HostUsageDataStore;
+import org.cloudbus.cloudsim.preemption.datastore.PreemptableVmDataStore;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.HostSelectionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.vmallocation.Preemptable;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.After;
@@ -1912,11 +1909,114 @@ public class PreemptiveDatacenterTest {
 
         datacenter.processEvent(event);
 
+        Mockito.verify(hostUsage, times(1)).addUsageEntries(list);
+        Mockito.verify(hostUsage, times(0)).addUsageEntries(new ArrayList<UsageEntry>());
+
+    }
+
+    @Test
+    public void testStoreHostUtilizationEvent3(){
+        List<Host> googleHostList = new ArrayList<Host>();
+        List<Pe> peList1 = new ArrayList<Pe>();
+        peList1.add(new Pe(0, new PeProvisionerSimple(10)));
+
+        PreemptiveHost host2 = new PreemptiveHost(2, peList1, new VmSchedulerMipsBased(
+                peList1), 3);
+
+        googleHostList.add(host);
+        googleHostList.add(host2);
+
+
+        Mockito.when(datacenter.getHostList()).thenReturn(googleHostList);
+
+
+        HostUsageDataStore hostUsage = Mockito.mock(HostUsageDataStore.class);
+        datacenter.setHostUsageDataStore(hostUsage);
+        Mockito.when(event.getTag()).thenReturn(PreemptiveDatacenter.STORE_HOST_UTILIZATION_EVENT);
+
+        UsageEntry usageEntry = new UsageEntry(1, 1, 1, 1, 1, 1, 1, 1, 1);
+        UsageEntry usageEntry2 = new UsageEntry(2, 1, 1, 1, 1, 1, 1, 1, 1);
+
+        host.getUsageMap().put(1.0, usageEntry);
+        host2.getUsageMap().put(1.0, usageEntry2);
+
+        List<UsageEntry> list = new ArrayList<>();
+        list.add(usageEntry);
+        list.add(usageEntry2);
+
+        datacenter.processEvent(event);
 
         Mockito.verify(hostUsage, times(1)).addUsageEntries(list);
         Mockito.verify(hostUsage, times(0)).addUsageEntries(new ArrayList<UsageEntry>());
 
     }
 
+    @Test
+    public void testCollectAndStoreDatacenterInfo(){
+        // setting next event to collect datacenter info
+        Mockito.when(event.getTag()).thenReturn(PreemptiveDatacenter.COLLECT_DATACENTER_INFO_EVENT);
+
+        // testing if list of datacenterInfo is empty now
+        Assert.assertEquals(datacenter.getDatacenterInfo().size(), 0);
+
+        // executing process
+        datacenter.processEvent(event);
+
+        // testing if list of datacenterInfo has one element now
+        Assert.assertEquals(datacenter.getDatacenterInfo().size(), 1);
+
+        // setting next event to store datacenter info
+        Mockito.when(event.getTag()).thenReturn(PreemptiveDatacenter.STORE_DATACENTER_INFO_EVENT);
+
+        // executing process
+        datacenter.processEvent(event);
+
+        // testing if list of datacenterInfo is empty again
+        Assert.assertEquals(datacenter.getDatacenterInfo().size(), 0);
+
+    }
+
+    @Test
+    public void testEndOfSimulation(){
+        Mockito.when(event.getTag()).thenReturn(CloudSimTags.END_OF_SIMULATION);
+
+        int priority = 0;
+        double runtime = 2;
+        double subtime = 1;
+        double cpuReq = 0.6;
+        int vmId = 0;
+
+        PreemptableVm vm1 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm2 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm3 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime);
+        PreemptableVm vm4 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime);
+        PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
+        PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
+        vm1.setHost(host);
+        vm2.setHost(host);
+        vm3.setHost(host);
+        vm4.setHost(host);
+        vm5.setHost(host);
+        vm6.setHost(host);
+
+
+        datacenter.getVmsRunning().add(vm1);
+        datacenter.getVmsRunning().add(vm3);
+        datacenter.getVmsRunning().add(vm5);
+
+        datacenter.getVmsForScheduling().add(vm2);
+        datacenter.getVmsForScheduling().add(vm4);
+        datacenter.getVmsForScheduling().add(vm6);
+
+
+        Assert.assertEquals(datacenter.getVmsRunning().size(), 3);
+        Assert.assertEquals(datacenter.getVmsForScheduling().size(), 3);
+
+        datacenter.processEvent(event);
+
+        Assert.assertTrue(datacenter.getVmsRunning().isEmpty());
+        Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
+
+    }
 
 }

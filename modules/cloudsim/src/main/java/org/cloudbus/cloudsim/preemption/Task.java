@@ -87,25 +87,4 @@ public class Task implements Comparable<Task>{
         return Double.compare(that.finishTime, finishTime) == 0;
 
     }
-
-    @Override
-    public int hashCode() {
-        int result;
-        long temp;
-        result = id;
-        result = 31 * result + priority;
-        temp = Double.doubleToLongBits(submitTime);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        temp = Double.doubleToLongBits(runtime);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        temp = Double.doubleToLongBits(cpuReq);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        temp = Double.doubleToLongBits(memReq);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        temp = Double.doubleToLongBits(startTime);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        temp = Double.doubleToLongBits(finishTime);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        return result;
-    }
 }
