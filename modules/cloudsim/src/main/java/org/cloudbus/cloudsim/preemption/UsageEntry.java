@@ -66,20 +66,4 @@ public class UsageEntry {
 			return false;
 		return true;
 	}
-
-//	@Override
-//	public int hashCode() {
-//		int result;
-//		long temp;
-//		result = hostId;
-//		temp = Double.doubleToLongBits(time);
-//		result = 31 * result + (int) (temp ^ (temp >>> 32));
-//		temp = Double.doubleToLongBits(usage);
-//		result = 31 * result + (int) (temp ^ (temp >>> 32));
-//		temp = Double.doubleToLongBits(availableMips);
-//		result = 31 * result + (int) (temp ^ (temp >>> 32));
-//		result = 31 * result + priorityToUsage.hashCode();
-//		result = 31 * result + priorityToNumberOfVms.hashCode();
-//		return result;
-//	}
 }
