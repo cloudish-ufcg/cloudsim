@@ -19,6 +19,7 @@ public class PreemptableVmDataStore extends DataStore {
 	private static final int RUNNING = 1;
 
 	public static final String CHECKPOINT_DIR_PROP = "checkpoint_dir";
+	public static final String CHECKPOINT_URL = "checkpoint_file_url";
 	private static final String VMS_TABLE_NAME = "preemptivevms";
 	private double time;
 	
@@ -60,6 +61,12 @@ public class PreemptableVmDataStore extends DataStore {
 		} finally {
 			close(statement, connection);
 		}
+	}
+
+	//TODO Is it necessary throw any exception here?
+	public PreemptableVmDataStore(Properties properties){
+		super(properties.getProperty(CHECKPOINT_URL));
+
 	}
 
 	private static final String INSERT_DATACENTER_INFO_SQL = "INSERT INTO " + VMS_TABLE_NAME
@@ -185,7 +192,8 @@ public class PreemptableVmDataStore extends DataStore {
 						rs.getDouble("memReq"), rs.getDouble("submitTime"),
 						rs.getInt("priority"), rs.getDouble("runtime"));
 				vm.setStartExec(time);
-				vm.setActualRuntime(rs.getDouble("actualRuntime"));	
+				vm.setActualRuntime(rs.getDouble("actualRuntime"));
+				vm.setHostId(rs.getInt("hostId"));
 				runningVms.add(vm);
 			}
 			return runningVms;
@@ -217,7 +225,8 @@ public class PreemptableVmDataStore extends DataStore {
 						rs.getInt("userId"), rs.getDouble("cpuReq"),
 						rs.getDouble("memReq"), rs.getDouble("submitTime"),
 						rs.getInt("priority"), rs.getDouble("runtime"));
-				vm.setActualRuntime(rs.getDouble("actualRuntime"));	
+				vm.setActualRuntime(rs.getDouble("actualRuntime"));
+				vm.setHostId(rs.getInt("hostId"));
 				waitingVms.add(vm);
 			}
 			return waitingVms;
@@ -226,5 +235,9 @@ public class PreemptableVmDataStore extends DataStore {
 			Log.printLine("Couldn't get tasks from DB.");
 			return null;
 		}		
-	}	
+	}
+
+	private boolean isPropertySet(Properties properties, String propKey) {
+		return properties.getProperty(propKey) != null;
+	}
 }
