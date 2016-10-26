@@ -45,6 +45,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	public static final int COLLECT_DATACENTER_INFO_EVENT = DATACENTER_BASE + 3;
 	public static final int STORE_DATACENTER_INFO_EVENT = DATACENTER_BASE + 4;
 	public static final int MAKE_DATACENTER_CHECKPOINT_EVENT = DATACENTER_BASE + 5;
+	public static final int INITIALIZE_FROM_CHECKPOINT_EVENT = DATACENTER_BASE + 6;
 	
 	// default interval sizes 
     public static final int DEFAULT_UTILIZATION_STORING_INTERVAL_SIZE = 1440; // onde day in minutes
@@ -127,6 +128,11 @@ public class PreemptiveDatacenter extends Datacenter {
 	@Override
 	protected void processOtherEvent(SimEvent ev) {
 		switch (ev.getTag()) {
+
+			case INITIALIZE_FROM_CHECKPOINT_EVENT:
+				initializeFromCheckpoint();
+				break;
+
 			case SCHEDULE_DATACENTER_EVENTS_EVENT:
 				scheduleDatacenterEvents();
 				break;
@@ -160,7 +166,12 @@ public class PreemptiveDatacenter extends Datacenter {
 				break;
 		}
 	}
-	
+
+	private void initializeFromCheckpoint() {
+
+
+	}
+
 
 	private void makeCheckpoint() {
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Building datacenter checkpoint.");
