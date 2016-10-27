@@ -172,6 +172,7 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	private void initializeFromCheckpoint() {
 		Log.printLine(simulationTimeUtil.clock() + ": Initializing datacenter from checkpoint.");
+		System.out.println(simulationTimeUtil.clock() + ": Initializing datacenter from checkpoint.");
 		PreemptableVmDataStore vmDataStore = new PreemptableVmDataStore(properties);
 		List<PreemptableVm> runningVms = vmDataStore.getAllRunningVms();
 		List<PreemptableVm> waitingVms = vmDataStore.getAllWaitingVms();
@@ -192,6 +193,9 @@ public class PreemptiveDatacenter extends Datacenter {
 				double remainingTime = vm.getRuntime() - vm.getActualRuntime(simulationTimeUtil.clock());
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 						vm.getId(), " will be destroyed in ", remainingTime,
+						" microseconds.");
+				System.out.println(simulationTimeUtil.clock() + ": VM #" +
+						vm.getId() + " will be destroyed in " + remainingTime +
 						" microseconds.");
 				sendFirst(getId(), remainingTime, CloudSimTags.VM_DESTROY_ACK, vm);
 

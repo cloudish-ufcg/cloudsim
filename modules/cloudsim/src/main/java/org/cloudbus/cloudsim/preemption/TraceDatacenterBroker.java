@@ -187,6 +187,7 @@ public class TraceDatacenterBroker extends SimEntity {
 
         	if (initFromCheckpoint) {
                 Log.printLine(CloudSim.clock() + ": Initializing execution from checkpoint.");
+                System.out.println(CloudSim.clock() + ": Initializing execution from checkpoint.");
 
         		//check time from when the events will be created
 				if (properties.getProperty("init_from_time") == null
