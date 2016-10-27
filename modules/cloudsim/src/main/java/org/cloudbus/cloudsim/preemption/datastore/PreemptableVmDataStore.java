@@ -191,7 +191,7 @@ public class PreemptableVmDataStore extends DataStore {
 						rs.getInt("userId"), rs.getDouble("cpuReq"),
 						rs.getDouble("memReq"), rs.getDouble("submitTime"),
 						rs.getInt("priority"), rs.getDouble("runtime"));
-				vm.setStartExec(time);
+//				vm.setStartExec(time);
 				vm.setActualRuntime(rs.getDouble("actualRuntime"));
 				vm.setHostId(rs.getInt("hostId"));
 				runningVms.add(vm);

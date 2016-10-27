@@ -168,4 +168,12 @@ public class InputTraceDataStore extends DataStore {
 			double intervalSize) {
 		return (intervalIndex >= 0 && (intervalIndex * intervalSize) <= getMaxInterestedTime());
 	}
+
+	public int getNextTaskId() {
+		return nextTaskId;
+	}
+
+	public void setNextTaskId(int nextTaskId) {
+		this.nextTaskId = nextTaskId;
+	}
 }

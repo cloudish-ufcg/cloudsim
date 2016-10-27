@@ -7,7 +7,16 @@
 
 package org.cloudbus.cloudsim.preemption;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
@@ -15,6 +24,7 @@ import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
+import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
@@ -161,18 +171,24 @@ public class PreemptiveDatacenter extends Datacenter {
 	}
 
 	private void initializeFromCheckpoint() {
+		Log.printLine(simulationTimeUtil.clock() + ": Initializing datacenter from checkpoint.");
 		PreemptableVmDataStore vmDataStore = new PreemptableVmDataStore(properties);
 		List<PreemptableVm> runningVms = vmDataStore.getAllRunningVms();
 		List<PreemptableVm> waitingVms = vmDataStore.getAllWaitingVms();
 		Map<Integer, PreemptiveHost> mapOfHosts = generateMapOfHosts();
 
 		if (waitingVms != null && runningVms != null){
+			Log.printLine(CloudSim.clock() + ": There are " + runningVms.size()
+					+ " runningVms and " + waitingVms.size()
+					+ " waitingVms on checkpoint.");
+			
 			getVmsForScheduling().addAll(waitingVms);
 
 			for (PreemptableVm vm: runningVms){
+				vm.setStartExec(simulationTimeUtil.clock());
 				PreemptiveHost host = mapOfHosts.get(vm.getHostId());
-				host.vmCreate(vm);
-
+				getVmAllocationPolicy().allocateHostForVm(vm, host);
+				
 				double remainingTime = vm.getRuntime() - vm.getActualRuntime(simulationTimeUtil.clock());
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 						vm.getId(), " will be destroyed in ", remainingTime,

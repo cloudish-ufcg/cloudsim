@@ -287,7 +287,7 @@ public class CloudSimExampleGoogleTrace {
      *
      * @param newList list of Cloudlets
      */
-    private static void printGoogleTaskStates(List<TaskState> newList) {
+    public static void printGoogleTaskStates(List<TaskState> newList) {
         int size = newList.size();
         TaskState googleTask;
 
