@@ -7,6 +7,7 @@ import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
+import org.cloudbus.cloudsim.preemption.datastore.DataStore;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
@@ -15,6 +16,7 @@ import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.sql.*;
 import java.util.*;
 
 
@@ -27,11 +29,78 @@ public class TraceDatacenterBrokerTest {
     private TraceDatacenterBroker broker;
     private PreemptiveDatacenter datacenter;
     private Properties properties;
+    private static String DATASTORE_SQLITE_DRIVER = "org.sqlite.JDBC";
+
     private static String databaseOutputFile = "traceDatacenterBrokerTestOutput.sqlite3";
     private static String databaseOutputUrl = "jdbc:sqlite:" + databaseOutputFile;
 
+    private static String databaseFile = "inputTraceTest.sqlite3";
+    private static String databaseURL = "jdbc:sqlite:" + databaseFile;
+
+    private static double DEFAULT_RUNTIME = 1000;
+    private static int NUMBER_OF_TASKS = 100;
+
+    @BeforeClass
+    public static void setUp() throws Exception{
+        createAndPopulateTestDatabase();
+    }
+
+    private static void createAndPopulateTestDatabase() throws ClassNotFoundException, SQLException {
+        Class.forName(DATASTORE_SQLITE_DRIVER);
+        Connection connection = DriverManager.getConnection(databaseURL);
+
+        if (connection != null) {
+            // Creating the database
+            Statement statement = connection.createStatement();
+            statement.execute("CREATE TABLE IF NOT EXISTS tasks("
+                    + "submitTime REAL, "
+                    + "jid REAL, "
+                    + "tid INTEGER, "
+                    + "user TEXT, "
+                    + "schedulingClass INTEGER, "
+                    + "priority INTEGER, "
+                    + "runtime REAL, "
+                    + "endTime REAL, "
+                    + "cpuReq REAL, "
+                    + "memReq REAL, "
+                    + "userClass TEXT" + ")");
+            statement.close();
+
+            String INSERT_CLOUDLET_SQL = "INSERT INTO tasks"
+                    + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            // populating the database
+            for (int i = 1; i <= NUMBER_OF_TASKS; i++) {
+                PreparedStatement insertMemberStatement = connection
+                        .prepareStatement(INSERT_CLOUDLET_SQL);
+                // submit time
+                if (i < NUMBER_OF_TASKS/2 + 1){
+                    insertMemberStatement.setDouble(1, getTimeInMicro(0));
+                } else {
+                    insertMemberStatement.setDouble(1, getTimeInMicro(1));
+                }
+                insertMemberStatement.setDouble(2, -1); // jid is not important for now
+                insertMemberStatement.setInt(3, -1); // tid is not important for now
+                insertMemberStatement.setNString(4, "user"); // user is not important for now
+                insertMemberStatement.setInt(5, -1); // scheduling class is not important for now
+                insertMemberStatement.setInt(6, -1); // priority is not important for now
+                insertMemberStatement.setDouble(7, DEFAULT_RUNTIME); // runtime
+                insertMemberStatement.setDouble(8, i + DEFAULT_RUNTIME); // endtime
+                insertMemberStatement.setDouble(9, 1); // cpuReq is not important for now
+                insertMemberStatement.setDouble(10, 1); // memReq is not important for now
+                insertMemberStatement.setNString(11, "userClass"); // userClass is not important for now
+                insertMemberStatement.execute();
+            }
+            connection.close();
+        }
+    }
+    private static double getTimeInMicro(double timeInMinutes) {
+        return timeInMinutes * 60 * 1000000;
+    }
+
+
     @Before
-    public void setUp() {
+    public void init() {
 
         event = Mockito.mock(SimEvent.class);
         System.out.println("Starting CloudSimExample Google Trace ...");
@@ -77,7 +146,7 @@ public class TraceDatacenterBrokerTest {
         Properties properties = new Properties();
 
         properties.setProperty("logging", "no");
-        properties.setProperty("input_trace_database_url", "jdbc:sqlite:/local/alessandro.fook/workspace/google-trace-processor/simulated_trace_data.sqlite3");
+        properties.setProperty("input_trace_database_url", databaseURL);
         properties.setProperty("number_of_hosts", "1");
         properties.setProperty("total_cpu_capacity", "6603.25");
         properties.setProperty("loading_interval_size", "1");
@@ -166,15 +235,20 @@ public class TraceDatacenterBrokerTest {
         new File(databaseOutputFile).delete();
     }
 
+    @AfterClass
+    public static void tearDownClass() {
+        new File(databaseFile).delete();
+    }
+
     @Test
     public void testLoadNextTaskEvents() {
 
         Mockito.when(event.getTag()).thenReturn(broker.LOAD_NEXT_TASKS_EVENT);
         broker.processEvent(event);
-        Assert.assertEquals(19809, broker.getSubmittedTasks());
+        Assert.assertEquals(50, broker.getSubmittedTasks());
 
         broker.processEvent(event);
-        Assert.assertEquals(26412, broker.getSubmittedTasks());
+        Assert.assertEquals(100, broker.getSubmittedTasks());
     }
 
     @Test
