@@ -18,6 +18,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import static org.mockito.internal.verification.VerificationModeFactory.times;
@@ -2016,6 +2017,187 @@ public class PreemptiveDatacenterTest {
         Assert.assertTrue(datacenter.getVmsRunning().isEmpty());
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
 
+    }
+
+    @Test
+    public void testInitFromCheckpoint(){
+        int priority = 0;
+        double runtime = 2;
+        double subtime = 1;
+        double cpuReq = 0.6;
+        int vmId = 0;
+
+        PreemptableVm vm1 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm2 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm3 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime);
+        PreemptableVm vm4 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime);
+        PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
+        PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
+
+        vm1.setHostId(host.getId());
+        vm3.setHostId(host.getId());
+        vm5.setHostId(host.getId());
+
+        List<PreemptableVm> runningVms = new ArrayList<>();
+        List<PreemptableVm> waitingVms = new ArrayList<>();
+
+        runningVms.add(vm1);
+        runningVms.add(vm3);
+        runningVms.add(vm5);
+
+        waitingVms.add(vm2);
+        waitingVms.add(vm4);
+        waitingVms.add(vm6);
+
+        PreemptableVmDataStore vmDataStore = Mockito.mock(PreemptableVmDataStore.class);
+        Mockito.when(vmDataStore.getAllRunningVms()).thenReturn(runningVms);
+        Mockito.when(vmDataStore.getAllWaitingVms()).thenReturn(waitingVms);
+
+        datacenter.initializeFromCheckpoint(vmDataStore);
+
+        Assert.assertArrayEquals(datacenter.getVmsRunning().toArray(), runningVms.toArray());
+        Assert.assertArrayEquals(datacenter.getVmsForScheduling().toArray(), waitingVms.toArray());
+
+        List<PreemptableVm> runningVmsArray = new ArrayList<>(datacenter.getVmsRunning());
+        List<PreemptableVm> waitingVmsArray = new ArrayList<>(datacenter.getVmsForScheduling());
+
+        for (int i = 0; i < runningVms.size(); i++){
+            Assert.assertEquals(host.hashCode(), runningVmsArray.get(i).getHost().hashCode());
+            Assert.assertNull(waitingVmsArray.get(i).getHost());
+        }
+
+    }
+
+    @Test
+    public void testInitFromCheckpoint2() {
+
+        List<Pe> peList1 = new ArrayList<Pe>();
+        peList1.add(new Pe(0, new PeProvisionerSimple(10)));
+
+        PreemptiveHost host2 = new PreemptiveHost(2, peList1, new VmSchedulerMipsBased(peList1), 3);
+
+        datacenter.getHostList().add(host2);
+
+
+        int priority = 0;
+        double runtime = 2;
+        double subtime = 1;
+        double cpuReq = 0.6;
+        int vmId = 0;
+
+        PreemptableVm vm1 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm2 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm3 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm4 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+
+        vm1.setHostId(host.getId());
+        vm3.setHostId(host.getId());
+        vm5.setHostId(host.getId());
+
+        PreemptableVm vm7 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm8 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm9 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm10 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm11 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm12 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+
+        vm7.setHostId(host2.getId());
+        vm9.setHostId(host2.getId());
+        vm11.setHostId(host2.getId());
+
+        List<PreemptableVm> runningVms = new ArrayList<>();
+        List<PreemptableVm> waitingVms = new ArrayList<>();
+
+        runningVms.add(vm1);
+        runningVms.add(vm3);
+        runningVms.add(vm5);
+        runningVms.add(vm7);
+        runningVms.add(vm9);
+        runningVms.add(vm11);
+
+        waitingVms.add(vm2);
+        waitingVms.add(vm4);
+        waitingVms.add(vm6);
+        waitingVms.add(vm8);
+        waitingVms.add(vm10);
+        waitingVms.add(vm12);
+
+        PreemptableVmDataStore vmDataStore = Mockito.mock(PreemptableVmDataStore.class);
+        Mockito.when(vmDataStore.getAllRunningVms()).thenReturn(runningVms);
+        Mockito.when(vmDataStore.getAllWaitingVms()).thenReturn(waitingVms);
+
+        datacenter.initializeFromCheckpoint(vmDataStore);
+
+        Assert.assertArrayEquals(datacenter.getVmsRunning().toArray(), runningVms.toArray());
+        Assert.assertArrayEquals(datacenter.getVmsForScheduling().toArray(), waitingVms.toArray());
+
+        List<PreemptableVm> runningVmsList = new ArrayList<>(datacenter.getVmsRunning());
+        List<PreemptableVm> waitingVmsList = new ArrayList<>(datacenter.getVmsForScheduling());
+
+        for (int i = 0; i < runningVms.size(); i++){
+
+            if (runningVmsList.get(i).getId() < 6) {
+                Assert.assertEquals(host.hashCode(), runningVmsList.get(i).getHost().hashCode());
+
+            } else {
+                Assert.assertEquals(host2.hashCode(), runningVmsList.get(i).getHost().hashCode());
+            }
+
+            Assert.assertNull(waitingVmsList.get(i).getHost());
+        }
+
+
+
+    }
+
+    @Test
+    public void testHostUpdateUsageInInitFromCheckpoint(){
+        PreemptiveHost host2 = Mockito.mock(PreemptiveHost.class);
+        Mockito.when(host2.getId()).thenReturn(2);
+
+        datacenter.getHostList().add(host2);
+
+        int priority = 0;
+        double runtime = 2;
+        double subtime = 1;
+        double cpuReq = 0.6;
+        int vmId = 0;
+
+        PreemptableVm vm1 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm2 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm3 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime);
+        PreemptableVm vm4 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime);
+        PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
+        PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
+
+        vm1.setHostId(host2.getId());
+        vm3.setHostId(host2.getId());
+        vm5.setHostId(host2.getId());
+
+        List<PreemptableVm> runningVms = new ArrayList<>();
+        List<PreemptableVm> waitingVms = new ArrayList<>();
+
+        runningVms.add(vm1);
+        runningVms.add(vm3);
+        runningVms.add(vm5);
+
+        waitingVms.add(vm2);
+        waitingVms.add(vm4);
+        waitingVms.add(vm6);
+
+        PreemptableVmDataStore vmDataStore = Mockito.mock(PreemptableVmDataStore.class);
+        Mockito.when(vmDataStore.getAllRunningVms()).thenReturn(runningVms);
+        Mockito.when(vmDataStore.getAllWaitingVms()).thenReturn(waitingVms);
+        Mockito.when(host2.vmCreate(vm1)).thenReturn(true);
+        Mockito.when(host2.vmCreate(vm3)).thenReturn(true);
+        Mockito.when(host2.vmCreate(vm5)).thenReturn(true);
+
+
+        datacenter.initializeFromCheckpoint(vmDataStore);
+
+        Mockito.verify(host2, times(3)).updateUsage(0d);
     }
 
 }
