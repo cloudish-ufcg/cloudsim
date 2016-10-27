@@ -7,14 +7,7 @@
 
 package org.cloudbus.cloudsim.preemption;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
@@ -171,13 +164,13 @@ public class PreemptiveDatacenter extends Datacenter {
 		PreemptableVmDataStore vmDataStore = new PreemptableVmDataStore(properties);
 		List<PreemptableVm> runningVms = vmDataStore.getAllRunningVms();
 		List<PreemptableVm> waitingVms = vmDataStore.getAllWaitingVms();
-		List<PreemptiveHost> hostList = getHostList();
+		Map<Integer, PreemptiveHost> mapOfHosts = generateMapOfHosts();
 
 		if (waitingVms != null && runningVms != null){
 			getVmsForScheduling().addAll(waitingVms);
 
 			for (PreemptableVm vm: runningVms){
-				PreemptiveHost host = hostList.get(vm.getHostId());
+				PreemptiveHost host = mapOfHosts.get(vm.getHostId());
 				host.vmCreate(vm);
 
 				double remainingTime = vm.getRuntime() - vm.getActualRuntime(simulationTimeUtil.clock());
@@ -192,7 +185,19 @@ public class PreemptiveDatacenter extends Datacenter {
 
 			}
 		}
-		scheduleDatacenterEvents();
+		sendNow(getId(), SCHEDULE_DATACENTER_EVENTS_EVENT);
+
+	}
+
+	private Map<Integer, PreemptiveHost> generateMapOfHosts(){
+		List<PreemptiveHost> hostList = getHostList();
+		Map<Integer, PreemptiveHost> mapOfHosts = new HashMap<>();
+
+		for (PreemptiveHost host: hostList){
+			mapOfHosts.put(host.getId(), host);
+		}
+
+		return mapOfHosts;
 
 	}
 
