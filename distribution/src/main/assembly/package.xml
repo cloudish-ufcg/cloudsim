@@ -33,7 +33,7 @@
 				<excludes>
 					<exclude>META-INF/</exclude>
 				</excludes>
-			</unpackOptions>			
+			</unpackOptions>
 			<includes>
 				<include>${project.groupId}:cloudsim-examples:jar:sources</include>
 			</includes>
@@ -44,7 +44,7 @@
 				<excludes>
 					<exclude>META-INF/</exclude>
 				</excludes>
-			</unpackOptions>			
+			</unpackOptions>
 			<outputDirectory>/</outputDirectory>
 			<includes>
 				<include>${project.groupId}:documentation</include>
@@ -57,7 +57,7 @@
 				<excludes>
 					<exclude>META-INF/</exclude>
 				</excludes>
-			</unpackOptions>			
+			</unpackOptions>
 			<includes>
 				<include>${project.groupId}:cloudsim:jar:javadoc</include>
 			</includes>

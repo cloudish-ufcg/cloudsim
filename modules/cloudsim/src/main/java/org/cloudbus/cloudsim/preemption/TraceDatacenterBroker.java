@@ -192,8 +192,12 @@ public class TraceDatacenterBroker extends SimEntity {
             send(getId(), SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
             
             // scheduling datacenter events
-            sendNow(getDatacenterId(), PreemptiveDatacenter.SCHEDULE_DATACENTER_EVENTS_EVENT);
-            
+            if (properties.getProperty("init_from_checkpoint").equals("yes")){
+                sendNow(getDatacenterId(), PreemptiveDatacenter.INITIALIZE_FROM_CHECKPOINT_EVENT);
+            } else {
+                sendNow(getDatacenterId(), PreemptiveDatacenter.SCHEDULE_DATACENTER_EVENTS_EVENT);
+            }
+
             // creating end of simulation event
             if (properties.getProperty("end_of_simulation_time") != null) {
             	long endOfSimulationTime = Long.parseLong(properties.getProperty("end_of_simulation_time"));

@@ -13,6 +13,7 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	private double actualRuntime;
 	private int numberOfPreemptions;
 	private int numberOfBackfillingChoice;
+	private int hostId;
 
 	public PreemptableVm(int id, int userId, double cpuReq, double memReq, double submitTime, int priority, double runtime) {
 		super(id, userId, cpuReq, 1, (int) memReq, 0, 0, "default", new CloudletSchedulerTimeShared());
@@ -23,6 +24,7 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		setStartExec(NOT_EXECUTING_TIME);
 		setNumberOfPreemptions(0);
 		setNumberOfBackfillingChoice(0);
+		setHostId(-1);
 		actualRuntime = 0;
 	}
 
@@ -109,6 +111,16 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	public void setNumberOfBackfillingChoice(int numberOfBackfillingchoice) {
 		this.numberOfBackfillingChoice = numberOfBackfillingchoice;
 	}
+
+	public int getHostId(){
+		return hostId;
+	}
+
+	public void setHostId(int hostId){
+		this.hostId = hostId;
+	}
+
+
 
 	@Override
 	public boolean equals(Object o) {
