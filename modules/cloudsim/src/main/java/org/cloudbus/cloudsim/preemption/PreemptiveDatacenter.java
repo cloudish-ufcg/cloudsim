@@ -129,7 +129,8 @@ public class PreemptiveDatacenter extends Datacenter {
 		switch (ev.getTag()) {
 
 			case INITIALIZE_FROM_CHECKPOINT_EVENT:
-				initializeFromCheckpoint();
+				PreemptableVmDataStore vmDataStore = new PreemptableVmDataStore(properties);
+				initializeFromCheckpoint(vmDataStore);
 				break;
 
 			case SCHEDULE_DATACENTER_EVENTS_EVENT:
@@ -166,8 +167,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		}
 	}
 
-	private void initializeFromCheckpoint() {
-		PreemptableVmDataStore vmDataStore = new PreemptableVmDataStore(properties);
+	protected void initializeFromCheckpoint(PreemptableVmDataStore vmDataStore) {
 		List<PreemptableVm> runningVms = vmDataStore.getAllRunningVms();
 		List<PreemptableVm> waitingVms = vmDataStore.getAllWaitingVms();
 		Map<Integer, PreemptiveHost> mapOfHosts = generateMapOfHosts();
