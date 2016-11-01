@@ -1,35 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--
- 
-February 2011
-
-Build file for CloudSim.
-
-Note: 
-
-  Make sure you have installed Maven and put the location of it into
-  your path so you can access it anywhere.
-  Maven can be downloadable from http://maven.apache.org/
-      
-Usage:
- 
-  * Type 'mvn package' to compile all cloudsim source files, put them into the 
-    classes/ directory and to create a cloudsim-new.jar file in the jars/ directory.
-    
-  * Type 'mvn clean' to delete all the compiled classes and the classes/ 
-    directory itself. The generated cloudsim-new.jar is not deleted.  
-    
-Note:
-
-  * The generated package is an OSGi-bundle can be used with any OSGi-container.
-    Particularly, it has been tested with Equinox.    
-  
-Acknowledgement: 
-  Thank to Miguel Rojas from the High Performance Lab (LAD) at Pontifical Catholic 
-  University of Rio Grande do Sul (PUCRS), Porto Alegre, Brazil for providing this file.
-   
--->
+<!-- February 2011 Build file for CloudSim. Note: Make sure you have installed 
+	Maven and put the location of it into your path so you can access it anywhere. 
+	Maven can be downloadable from http://maven.apache.org/ Usage: * Type 'mvn 
+	package' to compile all cloudsim source files, put them into the classes/ 
+	directory and to create a cloudsim-new.jar file in the jars/ directory. * 
+	Type 'mvn clean' to delete all the compiled classes and the classes/ directory 
+	itself. The generated cloudsim-new.jar is not deleted. Note: * The generated 
+	package is an OSGi-bundle can be used with any OSGi-container. Particularly, 
+	it has been tested with Equinox. Acknowledgement: Thank to Miguel Rojas from 
+	the High Performance Lab (LAD) at Pontifical Catholic University of Rio Grande 
+	do Sul (PUCRS), Porto Alegre, Brazil for providing this file. -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">

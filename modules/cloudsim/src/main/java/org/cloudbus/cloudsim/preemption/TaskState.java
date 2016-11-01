@@ -47,6 +47,11 @@ public class TaskState {
 		return priority;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		return getTaskId() == ((TaskState) o).getTaskId();
+	}
+
 	public int getNumberOfPreemptions() {
 		return preemptions;
 	}

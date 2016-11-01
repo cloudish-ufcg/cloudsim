@@ -82,20 +82,4 @@ public class DatacenterInfo {
 
 	}
 
-	@Override
-	public int hashCode() {
-		int result;
-		long temp;
-		temp = Double.doubleToLongBits(time);
-		result = (int) (temp ^ (temp >>> 32));
-		result = 31 * result + vmsRunning;
-		result = 31 * result + usageByPriority0;
-		result = 31 * result + usageByPriority1;
-		result = 31 * result + usageByPriority2;
-		result = 31 * result + vmsForScheduling;
-		result = 31 * result + vmsForSchedulingP0;
-		result = 31 * result + vmsForSchedulingP1;
-		result = 31 * result + vmsForSchedulingP2;
-		return result;
-	}
 }

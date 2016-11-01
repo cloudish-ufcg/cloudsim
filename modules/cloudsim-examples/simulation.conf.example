@@ -4,6 +4,12 @@ logging=no
 # trace file info
 input_trace_database_url=jdbc:sqlite:/path/to/trace.sqlite3
 
+# trace file from checkpoint
+checkpoint_file_url=jdbc:sqlite:/path/to/checkpoint.sqlite3
+
+# whould like to initialize from checkpoint (yes or no) ?
+init_from_checkpoint = yes
+
 #simulation info
 
 #minimum time you are interested to submit vms (in microseconds)

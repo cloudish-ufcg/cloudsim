@@ -85,6 +85,7 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	}
 
 	public double getActualRuntime(double currentTime) {
+
 		if (getStartExec() != NOT_EXECUTING_TIME) {
 			return actualRuntime + (currentTime - getStartExec());
 		}
@@ -120,4 +121,15 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	}
 
 
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		PreemptableVm that = (PreemptableVm) o;
+
+		return this.getId() == that.getId();
+
+	}
 }

@@ -99,6 +99,12 @@ public class TraceDatacenterBroker extends SimEntity {
 
     @Override
     public void processEvent(SimEvent ev) {
+
+        if (ev == null) {
+            Log.printConcatLine(getName(), ".processOtherEvent(): ", "Error - an event is null.");
+            return;
+        }
+
         switch (ev.getTag()) {
             // Resource characteristics request
             case CloudSimTags.RESOURCE_CHARACTERISTICS_REQUEST:
@@ -130,7 +136,7 @@ public class TraceDatacenterBroker extends SimEntity {
         }
     }
 
-    private void storeFinishedTasks(boolean endOfSimulation) {    	
+    protected void storeFinishedTasks(boolean endOfSimulation) {
         List<TaskState> toStore = new ArrayList<TaskState>(getFinishedTasks());
         if (toStore != null && !toStore.isEmpty()
                 && taskDataStore.addTaskList(toStore)) {
@@ -153,7 +159,7 @@ public class TraceDatacenterBroker extends SimEntity {
         }
     }
 
-    private void processVmDestroyAck(SimEvent ev) {
+    protected void processVmDestroyAck(SimEvent ev) {
         PreemptableVm vm = (PreemptableVm) ev.getData();
 
         Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": VM #",
@@ -242,7 +248,7 @@ public class TraceDatacenterBroker extends SimEntity {
         }
     }
 
-    private void loadNextGoogleTasks() {
+    protected void loadNextGoogleTasks() {
         Log.printLine("Loading next google tasks. Interval index " + getIntervalIndex());
 
         List<Task> nextGoogleTasks = inputTraceDataStore
@@ -290,10 +296,6 @@ public class TraceDatacenterBroker extends SimEntity {
      * as abstract in a super class from where new brokers have to be extended.
      */
     protected void processOtherEvent(SimEvent ev) {
-        if (ev == null) {
-            Log.printConcatLine(getName(), ".processOtherEvent(): ", "Error - an event is null.");
-            return;
-        }
 
         Log.printConcatLine(getName(), ".processOtherEvent(): Error - event unknown by this DatacenterBroker.");
     }
