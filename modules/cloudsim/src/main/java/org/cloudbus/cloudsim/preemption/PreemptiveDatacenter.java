@@ -187,8 +187,6 @@ public class PreemptiveDatacenter extends Datacenter {
 				PreemptiveHost host = mapOfHosts.get(vm.getHostId());
 				getVmAllocationPolicy().allocateHostForVm(vm, host);
 
-				vm.allocatingToHost(host.getId());
-
 				double remainingTime = vm.getRuntime() - vm.getActualRuntime(simulationTimeUtil.clock());
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 						vm.getId(), " will be destroyed in ", remainingTime,
