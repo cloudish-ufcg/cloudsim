@@ -8,7 +8,6 @@ package org.cloudbus.cloudsim.preemption;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.cloudbus.cloudsim.preemption.Task;
 import org.junit.Assert;
 import org.junit.Test;
 

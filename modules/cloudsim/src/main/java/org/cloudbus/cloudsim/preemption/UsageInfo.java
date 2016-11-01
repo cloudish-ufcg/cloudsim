@@ -89,22 +89,6 @@ public class UsageInfo {
 		return priorityToNumberOfVms.equals(that.priorityToNumberOfVms);
 
 	}
-
-	@Override
-	public int hashCode() {
-		int result;
-		long temp;
-		result = hostId;
-		temp = Double.doubleToLongBits(time);
-		result = 31 * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(totalUsage);
-		result = 31 * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(availableMips);
-		result = 31 * result + (int) (temp ^ (temp >>> 32));
-		result = 31 * result + priorityToUsage.hashCode();
-		result = 31 * result + priorityToNumberOfVms.hashCode();
-		return result;
-	}
 	
 	public List<UsageEntry> getUsageEntries() {
 		List<UsageEntry> usageEntries = new LinkedList<UsageEntry>();
