@@ -161,8 +161,10 @@ public class TraceDatacenterBroker extends SimEntity {
         
         double now = CloudSim.clock();
 
-        TaskState taskState = new TaskState(vm.getId(), vm.getMips(), vm.getSubmitTime(), now,
-                vm.getRuntime(), vm.getPriority(), vm.getNumberOfPreemptions(), vm.getNumberOfBackfillingChoice());
+		TaskState taskState = new TaskState(vm.getId(), vm.getMips(),
+				vm.getSubmitTime(), now, vm.getRuntime(), vm.getPriority(),
+				vm.getNumberOfPreemptions(), vm.getNumberOfBackfillingChoice(),
+				vm.getNumberOfMigrations());
         finishedTasks.add(taskState);
         setConcludedTasks(getConcludedTasks() + 1);
     }
