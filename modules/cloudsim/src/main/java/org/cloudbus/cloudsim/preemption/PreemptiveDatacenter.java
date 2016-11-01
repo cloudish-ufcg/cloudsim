@@ -15,6 +15,7 @@ import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
+import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
@@ -167,21 +168,31 @@ public class PreemptiveDatacenter extends Datacenter {
 		}
 	}
 
-	protected void initializeFromCheckpoint(PreemptableVmDataStore vmDataStore) {
+    protected void initializeFromCheckpoint(PreemptableVmDataStore vmDataStore) {
+        Log.printLine(simulationTimeUtil.clock() + ": Initializing datacenter from checkpoint.");
+        System.out.println(simulationTimeUtil.clock() + ": Initializing datacenter from checkpoint.");
 		List<PreemptableVm> runningVms = vmDataStore.getAllRunningVms();
 		List<PreemptableVm> waitingVms = vmDataStore.getAllWaitingVms();
 		Map<Integer, PreemptiveHost> mapOfHosts = generateMapOfHosts();
 
 		if (waitingVms != null && runningVms != null){
+			Log.printLine(CloudSim.clock() + ": There are " + runningVms.size()
+					+ " runningVms and " + waitingVms.size()
+					+ " waitingVms on checkpoint.");
+
 			getVmsForScheduling().addAll(waitingVms);
 
 			for (PreemptableVm vm: runningVms){
+				vm.setStartExec(simulationTimeUtil.clock());
 				PreemptiveHost host = mapOfHosts.get(vm.getHostId());
-				host.vmCreate(vm);
+				getVmAllocationPolicy().allocateHostForVm(vm, host);
 
 				double remainingTime = vm.getRuntime() - vm.getActualRuntime(simulationTimeUtil.clock());
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 						vm.getId(), " will be destroyed in ", remainingTime,
+						" microseconds.");
+				System.out.println(simulationTimeUtil.clock() + ": VM #" +
+						vm.getId() + " will be destroyed in " + remainingTime +
 						" microseconds.");
 				sendFirst(getId(), remainingTime, CloudSimTags.VM_DESTROY_ACK, vm);
 
@@ -277,7 +288,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		}
 
 		getVmsRunning().clear();
-		
+
 		// terminating Vms waiting
 		for (PreemptableVm vmForScheduling : getVmsForScheduling()) {
 			double now = simulationTimeUtil.clock();
