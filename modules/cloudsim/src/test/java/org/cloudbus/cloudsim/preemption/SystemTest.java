@@ -157,8 +157,15 @@ public class SystemTest {
         // asserting VM availability of P1S0
         for (int i = 0; i < numberOfVms; i++) {
             PreemptableVm vm = (PreemptableVm) vmP1S0.get(i);
-            Assert.assertEquals(0.714, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+            if (vm.getId() != 6603){
+                Assert.assertEquals(0.714, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+            }
         }
+
+        // asserting VM availability for vm id 6603 with priority 1
+        finishTime = 5.0;
+        PreemptableVm vm_id6603 = (PreemptableVm) vmP1S0.get(0);
+        Assert.assertEquals(1, vm_id6603.getRuntime() / (finishTime - vm_id6603.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
 
         // asserting VM availability of P2S0
         finishTime = 4.0;
@@ -326,14 +333,14 @@ public class SystemTest {
         processEvent(numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1);
 
         //testing new available considering the end of vms described above
-        Assert.assertEquals(1320.85, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(1321.15, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(3301.75, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(1320.85, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(1320.85, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(1321.15, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(1321.15, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
         //testing size of lists consider the ending of vms and reallocating as described before
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
-        Assert.assertEquals(2 * 6603, datacenter.getVmsRunning().size());
+        Assert.assertEquals(6603 + 6602, datacenter.getVmsRunning().size());
 
         testNumberOfPreemptionsAndBackfillingChoices(numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1);
     }
@@ -346,7 +353,7 @@ public class SystemTest {
 
         // finishing vms of priority 2, submit time 0, runtime 2 and
         // finishing vms of priority 0, submit time 1, runtime 2
-        // both are finished at time 5
+        // finishing vm id 6603 priority 1, submit time 5, runtime 5
 
         processEvent(numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1);
 
@@ -355,14 +362,14 @@ public class SystemTest {
         * after deallocate 1101 vms of P0S1 available mips are 1320.85
 		* after allocate 1 vm of vmP2S0, the available mips are 660.05
 		* */
-        Assert.assertEquals(1320.65, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(1320.95, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(3301.75, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(1320.85, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(1320.65, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(1321.15, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(1320.95, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
         //testing size of lists consider the ending of vms and reallocating as described before
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
-        Assert.assertEquals(13207, datacenter.getVmsRunning().size());
+        Assert.assertEquals(13206, datacenter.getVmsRunning().size());
 
         testNumberOfPreemptionsAndBackfillingChoices(numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1);
     }
@@ -429,8 +436,9 @@ public class SystemTest {
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
 
 
-        //allocate 6603 vms os priority 0, submit time 1, and Cpu requisition of 0.6
+        //allocate 6603 vms of priority 0, submit time 1, and Cpu requisition of 0.6
         //with total requested Cpu equals 3961.8
+        // P0_0 = allocated / P0_1 = 5502 allocated / P1_0 = 1 allocated
         for (int i = 0; i < numberOfVms; i++) {
             Mockito.when(event.getData()).thenReturn(vmP0S1.get(i));
             datacenter.processEvent(event);
@@ -439,15 +447,15 @@ public class SystemTest {
         //testing capacity of host
         //TODO discuss about imprecision on results
         //TODO results can be different because of backfilling and vms of priority 1 and 2 can not be preempted reallocated at same time
-        Assert.assertEquals(0.55, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(0.25, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(0.55, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(0.55, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(0.55, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(0.25, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(0.25, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
         //testing size of lists
         //TODO results can be different because of backfilling and vms of priority 1 and 2 can not be preempted reallocated at same time
-        Assert.assertEquals(14307, datacenter.getVmsForScheduling().size()); //14305
-        Assert.assertEquals(12105, datacenter.getVmsRunning().size()); //12107
+        Assert.assertEquals(14306, datacenter.getVmsForScheduling().size()); //14305
+        Assert.assertEquals(12106, datacenter.getVmsRunning().size()); //12107
 
 
         testNumberOfPreemptionsAndBackfillingChoicesTimeLessThan3(numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1);
@@ -539,8 +547,8 @@ public class SystemTest {
             PreemptableVm actualVMP01 = (PreemptableVm) vmP0S1.get(i);
 
             if (actualVMP10.getId() == 6603) {
-                Assert.assertEquals(actualVMP10.getNumberOfPreemptions(), 1);
-                Assert.assertEquals(actualVMP10.getNumberOfBackfillingChoice(), 1);
+                Assert.assertEquals(actualVMP10.getNumberOfPreemptions(), 0);
+                Assert.assertEquals(actualVMP10.getNumberOfBackfillingChoice(), 0);
             } else {
                 Assert.assertEquals(actualVMP10.getNumberOfPreemptions(), 1);
                 Assert.assertEquals(actualVMP10.getNumberOfBackfillingChoice(), 0);
@@ -564,6 +572,7 @@ public class SystemTest {
 
     // asserting that all vms with priority 1 and 2 were preempted once
     private void testNumberOfPreemptionsAndBackfillingChoicesTimeLessThan3(int numberOfVms, List<Vm> vmP0S0, List<Vm> vmP1S0, List<Vm> vmP2S0, List<Vm> vmP0S1) {
+
         for (int i = 0; i < numberOfVms; i++) {
 
             PreemptableVm actualVMP00 = (PreemptableVm) vmP0S0.get(i);
@@ -571,8 +580,12 @@ public class SystemTest {
             PreemptableVm actualVMP20 = (PreemptableVm) vmP2S0.get(i);
             PreemptableVm actualVMP01 = (PreemptableVm) vmP0S1.get(i);
 
+            if (actualVMP10.getId() == vmP1S0.get(0).getId()){
+                Assert.assertEquals(actualVMP10.getNumberOfPreemptions(), 0);
+            } else {
+                Assert.assertEquals(actualVMP10.getNumberOfPreemptions(), 1);
+            }
 
-            Assert.assertEquals(actualVMP10.getNumberOfPreemptions(), 1);
             Assert.assertEquals(actualVMP10.getNumberOfBackfillingChoice(), 0);
 
             Assert.assertEquals(actualVMP00.getNumberOfPreemptions(), 0);
