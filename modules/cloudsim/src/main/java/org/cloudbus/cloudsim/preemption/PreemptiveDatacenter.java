@@ -130,10 +130,17 @@ public class PreemptiveDatacenter extends Datacenter {
 	
 	@Override
 	protected void processOtherEvent(SimEvent ev) {
+
+		if (ev == null) {
+			Log.printConcatLine(getName(), ".processOtherEvent(): Error - an event is null.");
+			return;
+		}
+
 		switch (ev.getTag()) {
 
 			case INITIALIZE_FROM_CHECKPOINT_EVENT:
-				initializeFromCheckpoint();
+				PreemptableVmDataStore vmDataStore = new PreemptableVmDataStore(properties);
+				initializeFromCheckpoint(vmDataStore);
 				break;
 
 			case SCHEDULE_DATACENTER_EVENTS_EVENT:
@@ -157,9 +164,9 @@ public class PreemptiveDatacenter extends Datacenter {
 				break;
 				
 			case CloudSimTags.END_OF_SIMULATION:
+				collectDatacenterInfo(true);
 				terminateSimulation();
 				storeHostUtilization(true);
-				collectDatacenterInfo(true);
 				storeDatacenterInfo(true);
 				break;
 	
@@ -170,10 +177,9 @@ public class PreemptiveDatacenter extends Datacenter {
 		}
 	}
 
-	private void initializeFromCheckpoint() {
-		Log.printLine(simulationTimeUtil.clock() + ": Initializing datacenter from checkpoint.");
-		System.out.println(simulationTimeUtil.clock() + ": Initializing datacenter from checkpoint.");
-		PreemptableVmDataStore vmDataStore = new PreemptableVmDataStore(properties);
+    protected void initializeFromCheckpoint(PreemptableVmDataStore vmDataStore) {
+        Log.printLine(simulationTimeUtil.clock() + ": Initializing datacenter from checkpoint.");
+        System.out.println(simulationTimeUtil.clock() + ": Initializing datacenter from checkpoint.");
 		List<PreemptableVm> runningVms = vmDataStore.getAllRunningVms();
 		List<PreemptableVm> waitingVms = vmDataStore.getAllWaitingVms();
 		Map<Integer, PreemptiveHost> mapOfHosts = generateMapOfHosts();
@@ -194,7 +200,7 @@ public class PreemptiveDatacenter extends Datacenter {
 				}
 				
 				vm.allocatingToHost(host.getId());
-				
+
 				double remainingTime = vm.getRuntime() - vm.getActualRuntime(simulationTimeUtil.clock());
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 						vm.getId(), " will be destroyed in ", remainingTime,
@@ -294,7 +300,9 @@ public class PreemptiveDatacenter extends Datacenter {
 			
 			brokerIds.add(vmRunning.getUserId());
 		}
-		
+
+		getVmsRunning().clear();
+
 		// terminating Vms waiting
 		for (PreemptableVm vmForScheduling : getVmsForScheduling()) {
 			double now = simulationTimeUtil.clock();
@@ -304,6 +312,8 @@ public class PreemptiveDatacenter extends Datacenter {
 			
 			brokerIds.add(vmForScheduling.getUserId());
 		}
+
+		getVmsForScheduling().clear();
 
 		// sending end of simulation event to broker
 		Log.printConcatLine(simulationTimeUtil.clock(),
@@ -353,7 +363,7 @@ public class PreemptiveDatacenter extends Datacenter {
 						+ vm.getPriority());
 			}
 		}
-		
+
 		getDatacenterInfo().add(
 				new DatacenterInfo(simulationTimeUtil.clock(), vmsRunning,
 						vmsRunningP0, vmsRunningP1, vmsRunningP2,
@@ -482,6 +492,8 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	protected void sendFirst(int entityId, double delay, int cloudSimTag, Object data) {
 		if (entityId < 0) {
+			Log.printConcatLine(getName(), ".send(): Error - "
+					+ "invalid entity id ", entityId);
 			return;
 		}
 
@@ -493,12 +505,6 @@ public class PreemptiveDatacenter extends Datacenter {
 		if (Double.isInfinite(delay)) {
 			throw new IllegalArgumentException(
 					"The specified delay is infinite value");
-		}
-
-		if (entityId < 0) {
-			Log.printConcatLine(getName(), ".send(): Error - "
-					+ "invalid entity id ", entityId);
-			return;
 		}
 
 		int srcId = getId();
@@ -690,5 +696,9 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	public void setCheckpointIntervalSize(double checkpointIntervalSize) {
 		this.checkpointIntervalSize = checkpointIntervalSize;
+	}
+
+	public void setHostUsageDataStore(HostUsageDataStore hostUsageDataStore) {
+		this.hostUsageDataStore = hostUsageDataStore;
 	}
 }
