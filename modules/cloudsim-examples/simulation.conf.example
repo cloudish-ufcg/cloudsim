@@ -36,3 +36,17 @@ utilization_database_url=jdbc:sqlite:/path/to/utilization.sqlite3
 #datacenter_storing_interval_size=
 #datacenter_collect_info_interval_size=
 #datacenter_database_url=jdbc:sqlite:/path/to/datacenter.sqlite3
+
+# checkpoint info
+#make_checkpoint=yes
+# interval size in minutes
+#checkpoint_interval_size=
+#checkpoint_dir=/path/to/directory/
+
+#init from checkpoint info
+#init_from_checkpoint=yes
+
+#time when the events should start from
+#init_from_time=1800000000
+#checkpoint data url to set the initial environment
+#checkpoint_file_url=jdbc:sqlite:/path/to/database

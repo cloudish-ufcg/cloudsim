@@ -8,9 +8,11 @@
 package org.cloudbus.cloudsim.preemption;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
@@ -22,6 +24,7 @@ import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
+import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
@@ -45,6 +48,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	public static final int COLLECT_DATACENTER_INFO_EVENT = DATACENTER_BASE + 3;
 	public static final int STORE_DATACENTER_INFO_EVENT = DATACENTER_BASE + 4;
 	public static final int MAKE_DATACENTER_CHECKPOINT_EVENT = DATACENTER_BASE + 5;
+	public static final int INITIALIZE_FROM_CHECKPOINT_EVENT = DATACENTER_BASE + 6;
 	
 	// default interval sizes 
     public static final int DEFAULT_UTILIZATION_STORING_INTERVAL_SIZE = 1440; // onde day in minutes
@@ -127,6 +131,11 @@ public class PreemptiveDatacenter extends Datacenter {
 	@Override
 	protected void processOtherEvent(SimEvent ev) {
 		switch (ev.getTag()) {
+
+			case INITIALIZE_FROM_CHECKPOINT_EVENT:
+				initializeFromCheckpoint();
+				break;
+
 			case SCHEDULE_DATACENTER_EVENTS_EVENT:
 				scheduleDatacenterEvents();
 				break;
@@ -160,7 +169,58 @@ public class PreemptiveDatacenter extends Datacenter {
 				break;
 		}
 	}
-	
+
+	private void initializeFromCheckpoint() {
+		Log.printLine(simulationTimeUtil.clock() + ": Initializing datacenter from checkpoint.");
+		System.out.println(simulationTimeUtil.clock() + ": Initializing datacenter from checkpoint.");
+		PreemptableVmDataStore vmDataStore = new PreemptableVmDataStore(properties);
+		List<PreemptableVm> runningVms = vmDataStore.getAllRunningVms();
+		List<PreemptableVm> waitingVms = vmDataStore.getAllWaitingVms();
+		Map<Integer, PreemptiveHost> mapOfHosts = generateMapOfHosts();
+
+		if (waitingVms != null && runningVms != null){
+			Log.printLine(CloudSim.clock() + ": There are " + runningVms.size()
+					+ " runningVms and " + waitingVms.size()
+					+ " waitingVms on checkpoint.");
+			
+			getVmsForScheduling().addAll(waitingVms);
+
+			for (PreemptableVm vm: runningVms){
+				vm.setStartExec(simulationTimeUtil.clock());
+				PreemptiveHost host = mapOfHosts.get(vm.getHostId());
+				getVmAllocationPolicy().allocateHostForVm(vm, host);
+				
+				double remainingTime = vm.getRuntime() - vm.getActualRuntime(simulationTimeUtil.clock());
+				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
+						vm.getId(), " will be destroyed in ", remainingTime,
+						" microseconds.");
+				System.out.println(simulationTimeUtil.clock() + ": VM #" +
+						vm.getId() + " will be destroyed in " + remainingTime +
+						" microseconds.");
+				sendFirst(getId(), remainingTime, CloudSimTags.VM_DESTROY_ACK, vm);
+
+				host.updateUsage(simulationTimeUtil.clock());
+
+				getVmsRunning().add(vm);
+
+			}
+		}
+		sendNow(getId(), SCHEDULE_DATACENTER_EVENTS_EVENT);
+
+	}
+
+	private Map<Integer, PreemptiveHost> generateMapOfHosts(){
+		List<PreemptiveHost> hostList = getHostList();
+		Map<Integer, PreemptiveHost> mapOfHosts = new HashMap<>();
+
+		for (PreemptiveHost host: hostList){
+			mapOfHosts.put(host.getId(), host);
+		}
+
+		return mapOfHosts;
+
+	}
+
 
 	private void makeCheckpoint() {
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Building datacenter checkpoint.");

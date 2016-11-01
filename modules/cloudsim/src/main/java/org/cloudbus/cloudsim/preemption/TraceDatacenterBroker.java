@@ -17,7 +17,6 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.core.CloudSim;
@@ -180,20 +179,66 @@ public class TraceDatacenterBroker extends SimEntity {
         getDatacenterCharacteristicsList().put(characteristics.getId(), characteristics);
 
         if (getDatacenterCharacteristicsList().size() == getDatacenterIdsList().size()) {
-            loadNextGoogleTasks();
             
-            // creating the first task store event
-            send(getId(), SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
-            
-            // scheduling datacenter events
-            sendNow(getDatacenterId(), PreemptiveDatacenter.SCHEDULE_DATACENTER_EVENTS_EVENT);
-            
-            // creating end of simulation event
-            if (properties.getProperty("end_of_simulation_time") != null) {
-            	long endOfSimulationTime = Long.parseLong(properties.getProperty("end_of_simulation_time"));
-            	
-            	send(getDatacenterId(), endOfSimulationTime, CloudSimTags.END_OF_SIMULATION);
-            }
+        	// initialize from checkpoint
+			boolean initFromCheckpoint = (properties
+					.getProperty("init_from_checkpoint") != null && properties
+					.getProperty("init_from_checkpoint").equals("yes")) ? true : false;        	
+
+        	if (initFromCheckpoint) {
+                Log.printLine(CloudSim.clock() + ": Initializing execution from checkpoint.");
+                System.out.println(CloudSim.clock() + ": Initializing execution from checkpoint.");
+
+        		//check time from when the events will be created
+				if (properties.getProperty("init_from_time") == null
+						|| Double.parseDouble(properties
+								.getProperty("init_from_time")) < 0) {
+					throw new IllegalArgumentException(
+							"init_from_time property must be a not negative double for initializating from checkpoint.");
+				}
+				
+				double startTime = Double.parseDouble(properties
+								.getProperty("init_from_time"));
+				
+		        Log.printLine(CloudSim.clock() + ": The datacenter will be initialize from time: " + startTime);
+				
+				// creating the first task store event
+				send(getId(), startTime + SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize()),
+						STORE_FINISHED_TASKS_EVENT);
+				
+				// scheduling datacenter events
+        		send(getDatacenterId(), startTime, PreemptiveDatacenter.INITIALIZE_FROM_CHECKPOINT_EVENT);
+        		
+        		//schedule next loadGoogleTask event
+        	    send(getId(), startTime, LOAD_NEXT_TASKS_EVENT);
+        	    
+        	    /*
+        	     *  TODO setting next id based on last VM already read (on checkpoint and results beafore mininterested time)
+        	     *  set intervalInde  accordingly  
+        	     */
+        	    
+				int intervalIndex = (int) ((startTime - inputTraceDataStore
+						.getMinInterestedTime()) / SimulationTimeUtil
+						.getTimeInMicro(getTaskLoadingIntervalSize()));        	    
+        	    inputTraceDataStore.setNextTaskId(50000000);
+        	    setIntervalIndex(intervalIndex);
+        	    
+        	} else {
+        		loadNextGoogleTasks();
+        		
+        		// creating the first task store event
+        		send(getId(), SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
+        		
+        		// scheduling datacenter events
+        		sendNow(getDatacenterId(), PreemptiveDatacenter.SCHEDULE_DATACENTER_EVENTS_EVENT);
+        	}        	
+
+        	// creating end of simulation event
+        	if (properties.getProperty("end_of_simulation_time") != null) {
+        		long endOfSimulationTime = Long.parseLong(properties.getProperty("end_of_simulation_time"));
+        		
+        		send(getDatacenterId(), endOfSimulationTime, CloudSimTags.END_OF_SIMULATION);
+        	}
         }
     }
 

@@ -131,8 +131,7 @@ public class TaskDataStore extends DataStore {
 	public List<TaskState> getAllTasks() {
 		Statement statement = null;
 		Connection conn = null;
-		List<TaskState> taskStates = new ArrayList<TaskState>();
-		
+	
 		try {
 			conn = getConnection();
 			statement = conn.createStatement();
@@ -140,14 +139,39 @@ public class TaskDataStore extends DataStore {
 			statement.execute(SELECT_ALL_TASKS_SQL);
 			ResultSet rs = statement.getResultSet();
 
-			while (rs.next()) {
-				taskStates.add(new TaskState(rs.getInt("taskId"), rs
-						.getDouble("cpuReq"), rs.getDouble("submitTime"), rs
-						.getDouble("finishTime"), rs.getDouble("runtime"), rs
-						.getInt("priority"), rs.getInt("preemptions"), rs
-						.getInt("backfillingChoices")));
-			}
-			return taskStates;
+			return generateTaskList(rs);
+		} catch (SQLException e) {
+			Log.print(e);
+			Log.printLine("Couldn't get tasks from DB.");
+			return null;
+		}
+	}
+
+	private List<TaskState> generateTaskList(ResultSet rs) throws SQLException {
+		List<TaskState> taskStates = new ArrayList<TaskState>();
+		while (rs.next()) {
+			taskStates.add(new TaskState(rs.getInt("taskId"), rs
+					.getDouble("cpuReq"), rs.getDouble("submitTime"), rs
+					.getDouble("finishTime"), rs.getDouble("runtime"), rs
+					.getInt("priority"), rs.getInt("preemptions"), rs
+					.getInt("backfillingChoices")));
+		}
+		return taskStates;
+	}
+	
+	public List<TaskState> getTasksFinishedBefore(double interestedTime) {
+		Statement statement = null;
+		Connection conn = null;
+	
+		try {
+			conn = getConnection();
+			statement = conn.createStatement();
+
+			statement.execute("SELECT * FROM " + GOOGLE_TASK_TABLE_NAME
+					+ " WHERE finishTime <= '" + interestedTime + "'");
+			ResultSet rs = statement.getResultSet();
+
+			return generateTaskList(rs);
 		} catch (SQLException e) {
 			Log.print(e);
 			Log.printLine("Couldn't get tasks from DB.");
