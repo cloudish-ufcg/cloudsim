@@ -6,6 +6,8 @@ import org.cloudbus.cloudsim.Vm;
 public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 
 	public static final int NOT_EXECUTING_TIME = -1;
+	public static final int INVALID_HOST = -1;
+
 	private int priority;
 	private double submitTime;
 	private double runtime;
@@ -13,10 +15,13 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	private double actualRuntime;
 	private int numberOfPreemptions;
 	private int numberOfBackfillingChoice;
-	private int hostId;
+	private int numberOfMigrations;
+	private int lastHostId;
 
-	public PreemptableVm(int id, int userId, double cpuReq, double memReq, double submitTime, int priority, double runtime) {
-		super(id, userId, cpuReq, 1, (int) memReq, 0, 0, "default", new CloudletSchedulerTimeShared());
+	public PreemptableVm(int id, int userId, double cpuReq, double memReq,
+			double submitTime, int priority, double runtime) {
+		super(id, userId, cpuReq, 1, (int) memReq, 0, 0, "default",
+				new CloudletSchedulerTimeShared());
 
 		setSubmitTime(submitTime);
 		setPriority(priority);
@@ -24,7 +29,8 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		setStartExec(NOT_EXECUTING_TIME);
 		setNumberOfPreemptions(0);
 		setNumberOfBackfillingChoice(0);
-		setHostId(-1);
+		setNumberOfMigrations(0);
+		setLastHostId(INVALID_HOST);
 		actualRuntime = 0;
 	}
 
@@ -112,15 +118,28 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		this.numberOfBackfillingChoice = numberOfBackfillingchoice;
 	}
 
-	public int getHostId(){
-		return hostId;
+	public int getLastHostId() {
+		return lastHostId;
 	}
 
-	public void setHostId(int hostId){
-		this.hostId = hostId;
+	public void setLastHostId(int hostId) {
+		this.lastHostId = hostId;
 	}
 
+	public int getNumberOfMigrations() {
+		return numberOfMigrations;
+	}
 
+	public void setNumberOfMigrations(int numberOfMigrations) {
+		this.numberOfMigrations = numberOfMigrations;
+	}
+
+	public void allocatingToHost(int hostId) {
+		if (getLastHostId() != INVALID_HOST && hostId != getLastHostId()) {
+			setNumberOfMigrations(getNumberOfMigrations() + 1);
+		}
+		setLastHostId(hostId);
+	}
 
 	@Override
 	public boolean equals(Object o) {
