@@ -10,9 +10,10 @@ public class TaskState {
 	private int priority;
 	private int preemptions;
 	private int backfillingChoices;
+	private int migrations;
 
 	public TaskState(int taskId, double cpuReq, double submitTime,
-			double finishTime, double runtime, int priority, int preemptions, int backfillingChoices) {
+			double finishTime, double runtime, int priority, int preemptions, int backfillingChoices, int migrations) {
 		this.taskId = taskId;
 		this.cpuReq = cpuReq;
 		this.submitTime = submitTime;
@@ -21,6 +22,7 @@ public class TaskState {
 		this.priority = priority;
 		this.preemptions = preemptions;
 		this.backfillingChoices = backfillingChoices;
+		this.migrations = migrations;
 	}
 
 	public int getTaskId() {
@@ -58,5 +60,9 @@ public class TaskState {
 
 	public int getNumberOfBackfillingChoices() {
 		return backfillingChoices;
+	}
+
+	public int getNumberOfMigrations() {
+		return migrations;
 	}
 }

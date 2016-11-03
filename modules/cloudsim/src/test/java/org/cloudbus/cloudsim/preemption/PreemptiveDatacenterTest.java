@@ -1,9 +1,21 @@
 package org.cloudbus.cloudsim.preemption;
 
-import java.util.*;
-import java.io.File;
+import static org.mockito.internal.verification.VerificationModeFactory.times;
 
-import org.cloudbus.cloudsim.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
+import java.util.SortedSet;
+
+import org.cloudbus.cloudsim.DatacenterCharacteristics;
+import org.cloudbus.cloudsim.Host;
+import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.Pe;
+import org.cloudbus.cloudsim.Storage;
+import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
@@ -11,17 +23,13 @@ import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.HostUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.PreemptableVmDataStore;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.HostSelectionPolicy;
-import org.cloudbus.cloudsim.preemption.policies.vmallocation.Preemptable;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-
-import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 public class PreemptiveDatacenterTest {
 
@@ -118,9 +126,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(1, datacenter.getVmsRunning().size());
         Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
 
-        // checking number of preemptions and backfilling
+        // checking number of preemptions, backfilling and migrations
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
     }
 
     @Test
@@ -142,6 +151,7 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
 
         PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 1.0, 0, priority, runtime);
 
@@ -156,11 +166,13 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
         Assert.assertEquals(vm1, datacenter.getVmsRunning().last());
 
-        // checking number of preemptions and backfilling
+        // checking number of preemptions, backfilling and migrations
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
 
     }
 
@@ -180,9 +192,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(1, datacenter.getVmsRunning().size());
         Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
 
-        // checking number of preemptions and backfilling
+        // checking number of preemptions, backfilling and migrations
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
 
         PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 1.0, 0, priority, runtime);
 
@@ -197,7 +210,7 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
         Assert.assertEquals(vm1, datacenter.getVmsRunning().last());
 
-        // checking number of preemptions and backfilling
+        // checking number of preemptions, backfilling and migrations
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
@@ -221,13 +234,16 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
         Assert.assertEquals(vm1, datacenter.getVmsRunning().last());
 
-        // checking number of preemptions and backfilling
+        // checking number of preemptions, backfilling and migrations
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
     }
 
 
@@ -243,12 +259,13 @@ public class PreemptiveDatacenterTest {
         Mockito.when(event.getData()).thenReturn(vm0);
         datacenter.processEvent(event);
 
-        //checking
+        // checking number of preemptions, backfilling and migrations
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
         Assert.assertEquals(1, datacenter.getVmsRunning().size());
         Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
 
         //Destroy Vm0
         Mockito.when(timeUtil.clock()).thenReturn(runtime);
@@ -260,10 +277,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
         Assert.assertTrue(datacenter.getVmsRunning().isEmpty());
 
-        // checking number of preemptions and backfilling
+        // checking number of preemptions, backfilling and migrations
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
-
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
     }
 
     @Test
@@ -282,9 +299,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(1, datacenter.getVmsRunning().size());
         Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
 
-        // checking number of preemptions and backfilling
+        // checking number of preemptions, backfilling and migrations
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
 
         PreemptableVm vm1 = new PreemptableVm(1, 1, 5.1, 1.0, 0, priority, runtime + 0.1);
 
@@ -299,11 +317,13 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
         Assert.assertEquals(vm1, datacenter.getVmsRunning().last());
 
-        // checking number of preemptions and backfilling
+        // checking number of preemptions, backfilling and migrations
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
 
         //destroying vm0
         Mockito.when(timeUtil.clock()).thenReturn(runtime);
@@ -317,11 +337,13 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(1, datacenter.getVmsRunning().size());
         Assert.assertEquals(vm1, datacenter.getVmsRunning().first());
 
-        // checking number of preemptions and backfilling
+        // checking number of preemptions, backfilling and migrations
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
     }
 
     @Test
@@ -341,9 +363,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(1, datacenter.getVmsRunning().size());
         Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
 
-        // checking number of preemptions and backfilling
+        // checking number of preemptions, backfilling and migrations
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
 
         PreemptableVm vm1 = new PreemptableVm(1, 1, 4.9, 1.0, 0, priority, runtime);
 
@@ -358,11 +381,13 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
         Assert.assertEquals(vm1, datacenter.getVmsRunning().last());
 
-        // checking number of preemptions and backfilling
+        // checking number of preemptions, backfilling and migrations
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
 
         PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 1.0, 0, priority, runtime);
 
@@ -382,12 +407,15 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
         Assert.assertEquals(vm1, datacenter.getVmsRunning().last());
 
-        // checking number of preemptions and backfilling
+        // checking number of preemptions, backfilling and migrations
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
 
         //destroying vm0
@@ -403,7 +431,7 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm1, datacenter.getVmsRunning().first());
         Assert.assertEquals(vm2, datacenter.getVmsRunning().last());
 
-        // checking number of preemptions and backfilling
+        // checking number of preemptions, backfilling and migrations
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
@@ -431,6 +459,7 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
 
         PreemptableVm vm1 = new PreemptableVm(1, 1, 4.9, 1.0, 0, priority, runtime);
 
@@ -448,8 +477,10 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
 
         PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 1.0, 0, priority, runtime);
 
@@ -491,13 +522,16 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
-
+        Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
         //destroying vm0
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
@@ -518,12 +552,16 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
     }
 
     @Test
@@ -581,12 +619,16 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);       
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
         // allocating vm2 with priority 2
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -604,12 +646,16 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
         // allocating vm1 with priority 1 to preempt vm2
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -627,12 +673,16 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
         // allocating vm0 with priority 0 to preempt vm1
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -653,12 +703,16 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
         // finishing vm0 to reallocate vm1
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.5);
@@ -677,12 +731,16 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm1, datacenter.getVmsRunning().last());
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
         // finishing vm1 to reallocate vm2
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
@@ -700,12 +758,16 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm2, datacenter.getVmsRunning().last());
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
         // finishing vm2
         Mockito.when(timeUtil.clock()).thenReturn(runtime + 0.1);
@@ -723,12 +785,16 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3, datacenter.getVmsRunning().first());
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
         // finishing vm3 to return to initial state
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
@@ -742,12 +808,16 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
     }
 
     @Test
@@ -797,8 +867,10 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0P0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0P0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0P0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1P1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1P1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1P1.getNumberOfMigrations(), 0);
 
         // allocating vm priority 2
         PreemptableVm vm2P2 = new PreemptableVm(2, 1, 2, 1.0, 0, 2, runtime);
@@ -824,10 +896,13 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0P0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0P0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0P0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1P1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1P1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1P1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2P2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2P2.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm2P2.getNumberOfMigrations(), 0);
 
         // allocating vm priority 0
         PreemptableVm vm3P0 = new PreemptableVm(3, 1, 3, 1.0, 0, 0, runtime);
@@ -854,12 +929,16 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0P0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0P0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0P0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1P1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1P1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1P1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2P2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2P2.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm2P2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3P0.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm3P0.getNumberOfMigrations(), 0);
 
         // destroying vm0P0
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
@@ -884,12 +963,16 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0P0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0P0.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm0P0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1P1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1P1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1P1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2P2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2P2.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm2P2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3P0.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm3P0.getNumberOfMigrations(), 0);
     }
 
     @Test
@@ -1180,8 +1263,10 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0P0.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm0P0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1P1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1P1.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm1P1.getNumberOfMigrations(), 0);
 
         PreemptableVm vm2P2 = new PreemptableVm(2, 1, 3, 1.0, 0, 2, runtime);
 
@@ -1207,10 +1292,13 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0P0.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm0P0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1P1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1P1.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm1P1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2P2.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm2P2.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm2P2.getNumberOfMigrations(), 0);
 
         // allocation one more VM with priority 0
         PreemptableVm vm3P0 = new PreemptableVm(3, 1, 6, 1.0, 0, 0, runtime);
@@ -1242,12 +1330,16 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0P0.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm0P0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1P1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1P1.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm1P1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2P2.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm2P2.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm2P2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3P0.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm3P0.getNumberOfMigrations(), 0);
 
         // destroying vm0P0
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
@@ -1272,12 +1364,16 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0P0.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm0P0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1P1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1P1.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm1P1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2P2.getNumberOfPreemptions(), 1);
         Assert.assertEquals(vm2P2.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm2P2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3P0.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm3P0.getNumberOfMigrations(), 0);
 
         // destroying vm0P1
         Mockito.when(timeUtil.clock()).thenReturn(runtime);
@@ -1301,12 +1397,16 @@ public class PreemptiveDatacenterTest {
         // checking number of preemptions and backfilling
         Assert.assertEquals(vm0P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0P0.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm0P0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1P1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1P1.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm1P1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2P2.getNumberOfPreemptions(), 1);
         Assert.assertEquals(vm2P2.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm2P2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3P0.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm3P0.getNumberOfMigrations(), 0);
     }
 
     @Test
@@ -1337,14 +1437,19 @@ public class PreemptiveDatacenterTest {
         // asserting that any Vm was preempted or was chose to backfilling
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm4.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm4.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm4.getNumberOfMigrations(), 0);
 
 
         // destroying Vm0. So, Vm3 and Vm4 will be allocated, because we have 5 mips free
@@ -1356,14 +1461,19 @@ public class PreemptiveDatacenterTest {
         // asserting that Vm3 and Vm4 were chose by backfilling
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 1);
+        Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm4.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm4.getNumberOfBackfillingChoice(), 1);
+        Assert.assertEquals(vm4.getNumberOfMigrations(), 0);
 
         // destroying Vm1. So, Vm4 will be preempted to allocate Vm2
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.2);
@@ -1375,14 +1485,19 @@ public class PreemptiveDatacenterTest {
         // asserting that Vm3 and Vm4 were chose by backfilling, and Vm4 was preempted once
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 1);
+        Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
         Assert.assertEquals(vm4.getNumberOfPreemptions(), 1);
         Assert.assertEquals(vm4.getNumberOfBackfillingChoice(), 1);
+        Assert.assertEquals(vm4.getNumberOfMigrations(), 0);
     }
 
     @Test
@@ -2034,9 +2149,9 @@ public class PreemptiveDatacenterTest {
         PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
         PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
 
-        vm1.setHostId(host.getId());
-        vm3.setHostId(host.getId());
-        vm5.setHostId(host.getId());
+        vm1.setLastHostId(host.getId());
+        vm3.setLastHostId(host.getId());
+        vm5.setLastHostId(host.getId());
 
         List<PreemptableVm> runningVms = new ArrayList<>();
         List<PreemptableVm> waitingVms = new ArrayList<>();
@@ -2092,9 +2207,9 @@ public class PreemptiveDatacenterTest {
         PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
         PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
 
-        vm1.setHostId(host.getId());
-        vm3.setHostId(host.getId());
-        vm5.setHostId(host.getId());
+        vm1.setLastHostId(host.getId());
+        vm3.setLastHostId(host.getId());
+        vm5.setLastHostId(host.getId());
 
         PreemptableVm vm7 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
         PreemptableVm vm8 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
@@ -2103,9 +2218,9 @@ public class PreemptiveDatacenterTest {
         PreemptableVm vm11 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
         PreemptableVm vm12 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
 
-        vm7.setHostId(host2.getId());
-        vm9.setHostId(host2.getId());
-        vm11.setHostId(host2.getId());
+        vm7.setLastHostId(host2.getId());
+        vm9.setLastHostId(host2.getId());
+        vm11.setLastHostId(host2.getId());
 
         List<PreemptableVm> runningVms = new ArrayList<>();
         List<PreemptableVm> waitingVms = new ArrayList<>();
@@ -2172,9 +2287,9 @@ public class PreemptiveDatacenterTest {
         PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
         PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
 
-        vm1.setHostId(host2.getId());
-        vm3.setHostId(host2.getId());
-        vm5.setHostId(host2.getId());
+        vm1.setLastHostId(host2.getId());
+        vm3.setLastHostId(host2.getId());
+        vm5.setLastHostId(host2.getId());
 
         List<PreemptableVm> runningVms = new ArrayList<>();
         List<PreemptableVm> waitingVms = new ArrayList<>();
@@ -2199,5 +2314,69 @@ public class PreemptiveDatacenterTest {
 
         Mockito.verify(host2, times(3)).updateUsage(0d);
     }
+    
+	@Test
+	public void testGetMigrationsOfVm() {
+		List<Pe> peList1 = new ArrayList<Pe>();
+		peList1.add(new Pe(0, new PeProvisionerSimple(5)));
+		
+		PreemptiveHost host2 = new PreemptiveHost(2, peList1,
+				new VmSchedulerMipsBased(peList1), 3);
+		
+		datacenter.getHostList().add(host2);
 
+		int priority = 0;
+		double runtime = 2;
+		double subtime = 1;
+		int vmId = 0;
+
+		PreemptableVm vm1 = new PreemptableVm(vmId++, 0, 5, 0, subtime,
+				priority + 2, runtime);
+
+		// allocating first vm
+        datacenter.allocateHostForVm(false, vm1, host, false);
+
+        // checking
+        Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
+        Assert.assertEquals(1, datacenter.getVmsRunning().size());
+        Assert.assertEquals(vm1, datacenter.getVmsRunning().first());
+        Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
+
+        PreemptableVm vm2 = new PreemptableVm(vmId++, 0, 6, 0, subtime,
+				priority + 1, runtime);
+
+        // allocating 
+        datacenter.allocateHostForVm(false, vm2, host, false);
+        
+        // checking
+        Assert.assertEquals(1, datacenter.getVmsForScheduling().size());
+        Assert.assertEquals(1, datacenter.getVmsRunning().size());
+        Assert.assertEquals(vm2, datacenter.getVmsRunning().first());
+        Assert.assertEquals(vm1, datacenter.getVmsForScheduling().first());
+        Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm1.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
+        
+        Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
+
+		// reallocating 
+        datacenter.allocateHostForVm(false, vm1, host2, false);
+        
+        // checking
+        Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
+        Assert.assertEquals(2, datacenter.getVmsRunning().size());
+        Assert.assertEquals(vm2, datacenter.getVmsRunning().first());
+        Assert.assertEquals(vm1, datacenter.getVmsRunning().last());
+        Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm1.getNumberOfPreemptions(), 1);
+        Assert.assertEquals(vm1.getNumberOfMigrations(), 1);
+        
+        Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
+        Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);		
+	}
 }
