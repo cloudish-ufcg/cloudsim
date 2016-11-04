@@ -2,6 +2,7 @@ package org.cloudbus.cloudsim.preemption.policies.hostselection;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -10,12 +11,11 @@ import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
-import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -43,7 +43,8 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
     public SortedSet<PreemptiveHost> hostList;
     public WorstFitMipsBasedHostSelectionPolicy selectionPolicy;
 
-
+    Properties properties;
+   
     @Before
     public void setUp() {
         // creating object under test
@@ -57,22 +58,25 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         int mips = 1000;
         peList.add(new Pe(0, new PeProvisionerSimple(mips))); // need to store Pe id and MIPS Rating
 
-        host1 = new PreemptiveHost(1, peList, new VmSchedulerMipsBased(peList), 1);
+        properties = new Properties();
+		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+        
+        host1 = new PreemptiveHost(1, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
         hostList.add(host1);
 
-        host2 = new PreemptiveHost(2, peList, new VmSchedulerMipsBased(peList), 1);
+        host2 = new PreemptiveHost(2, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
         hostList.add(host2);
 
-        host3 = new PreemptiveHost(3, peList, new VmSchedulerMipsBased(peList), 1);
+        host3 = new PreemptiveHost(3, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
         hostList.add(host3);
 
-        host4 = new PreemptiveHost(4, peList, new VmSchedulerMipsBased(peList), 1);
+        host4 = new PreemptiveHost(4, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
         hostList.add(host4);
 
-        host5 = new PreemptiveHost(5, peList, new VmSchedulerMipsBased(peList), 1);
+        host5 = new PreemptiveHost(5, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
         hostList.add(host5);
 
-        host6 = new PreemptiveHost(6, peList, new VmSchedulerMipsBased(peList), 1);
+        host6 = new PreemptiveHost(6, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
         hostList.add(host6);
 
         // creating Vm's
@@ -190,10 +194,10 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         int mips = 1000;
         peList.add(new Pe(0, new PeProvisionerSimple(mips))); 
 
-        PreemptiveHost host1 = new PreemptiveHost(1, peList, new VmSchedulerMipsBased(peList), 3);
+        PreemptiveHost host1 = new PreemptiveHost(1, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
         hosts.add(host1);
 
-        PreemptiveHost host2 = new PreemptiveHost(2, peList, new VmSchedulerMipsBased(peList), 3);
+        PreemptiveHost host2 = new PreemptiveHost(2, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
         hosts.add(host2);
         
         // creating a VM with priority 0
@@ -239,7 +243,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         double mips = 62.501;
         peList.add(new Pe(0, new PeProvisionerSimple(mips))); // need to store Pe id and MIPS Rating
 
-        host1 = new PreemptiveHost(1, peList, new VmSchedulerMipsBased(peList), 1);
+        host1 = new PreemptiveHost(1, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
         hostList.add(host1);
 
 
@@ -248,7 +252,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         double mips2 = 62.5;
         peList2.add(new Pe(1, new PeProvisionerSimple(mips2))); // need to store Pe id and MIPS Rating
 
-        host2 = new PreemptiveHost(2, peList2, new VmSchedulerMipsBased(peList2), 1);
+        host2 = new PreemptiveHost(2, peList2, new VmSchedulerMipsBased(peList2),new FCFSBasedPreemptionPolicy(properties));
         hostList.add(host2);
 
         // create host3 with capacity 62.49
@@ -256,7 +260,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         double mips3 = 62.49;
         peList3.add(new Pe(2, new PeProvisionerSimple(mips3))); // need to store Pe id and MIPS Rating
 
-        host3 = new PreemptiveHost(3, peList3, new VmSchedulerMipsBased(peList3), 1);
+        host3 = new PreemptiveHost(3, peList3, new VmSchedulerMipsBased(peList3), new FCFSBasedPreemptionPolicy(properties));
         hostList.add(host3);
 
         // test if is possible allocate vm62 (with 62.5 mips required) at host1 (its capacity is 62.501)

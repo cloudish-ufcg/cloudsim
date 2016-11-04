@@ -1,5 +1,17 @@
 package org.cloudbus.cloudsim.preemption;
 
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
+
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
@@ -7,17 +19,17 @@ import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
-import org.cloudbus.cloudsim.preemption.datastore.DataStore;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.mockito.Mockito;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.sql.*;
-import java.util.*;
 
 
 /**
@@ -176,13 +188,15 @@ public class TraceDatacenterBrokerTest {
 
         List<PreemptiveHost> hostList = new ArrayList<PreemptiveHost>();
 
+        properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		
         for (int hostId = 0; hostId < numberOfHosts; hostId++) {
             List<Pe> peList1 = new ArrayList<Pe>();
 
             peList1.add(new Pe(0, new PeProvisionerSimple(mipsPerHost)));
 
             PreemptiveHost host = new PreemptiveHost(hostId, peList1,
-                    new VmSchedulerMipsBased(peList1), 3);
+                    new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
 
             hostList.add(host);
         }
