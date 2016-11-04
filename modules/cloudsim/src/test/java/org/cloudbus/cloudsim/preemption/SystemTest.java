@@ -604,61 +604,54 @@ public class SystemTest {
 
         double ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY = 0.01;
 
-//        double finishTime = 8.0;
-//        // asserting VM availability of P0S0
-//        for (int i = 0; i < numberOfVms; i++) {
-//            PreemptableVm vm = (PreemptableVm) vmP0S0.get(i);
-//            Assert.assertEquals(1, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
-//        }
-//
-//        finishTime = 7.0;
-//        // asserting VM availability of P1S0
-//        for (int i = 0; i < numberOfVms; i++) {
-//            PreemptableVm vm = (PreemptableVm) vmP1S0.get(i);
-//            if (vm.getId() != 6603){
-//                Assert.assertEquals(0.714, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
-//            }
-//        }
-//
-//        // asserting VM availability for vm id 6603 with priority 1
-//        finishTime = 5.0;
-//        PreemptableVm vm_id6603 = (PreemptableVm) vmP1S0.get(0);
-//        Assert.assertEquals(1, vm_id6603.getRuntime() / (finishTime - vm_id6603.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
-//
-//        // asserting VM availability of P2S0
-//        finishTime = 4.0;
-//        for (int i = 0; i < 3301; i++) {
-//            PreemptableVm vm = (PreemptableVm) vmP2S0.get(i);
-//            Assert.assertEquals(0.5, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
-//        }
-//
-//
-//        finishTime = 5.0;
-//        for (int i = 3301; i < 6602; i++) {
-//            PreemptableVm vm = (PreemptableVm) vmP2S0.get(i);
-//            Assert.assertEquals(0.4, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
-//        }
-//
-//        finishTime = 6.0;
-//        for (int i = 6602; i < numberOfVms; i++) {
-//            PreemptableVm vm = (PreemptableVm) vmP2S0.get(i);
-//            Assert.assertEquals(0.33, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
-//        }
-//
-//        finishTime = 3.0;
-//        // asserting VM availability of P0S1
-//        for (int i = 0; i < 5502; i++) {
-//            PreemptableVm vm = (PreemptableVm) vmP0S1.get(i);
-//            Assert.assertEquals(1, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
-//        }
-//
-//
-//        finishTime = 5.0;
-//        // asserting VM availability of P0S1
-//        for (int i = 5502; i < numberOfVms; i++) {
-//            PreemptableVm vm = (PreemptableVm) vmP0S1.get(i);
-//            Assert.assertEquals(0.5, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
-//        }
+        double finishTime = 8.0;
+        // asserting VM availability of P0S0
+        for (int i = 0; i < numberOfVms; i++) {
+            PreemptableVm vm = (PreemptableVm) vmP0S0.get(i);
+            Assert.assertEquals(1, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+        }
+
+        finishTime = 7.0;
+        // asserting VM availability of P1S0
+        for (int i = 0; i < numberOfVms; i++) {
+            PreemptableVm vm = (PreemptableVm) vmP1S0.get(i);
+            Assert.assertEquals(0.714, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+        }
+
+        // asserting VM availability of P2S0
+        finishTime = 4.0;
+        for (int i = 0; i < 3299; i++) {
+            PreemptableVm vm = (PreemptableVm) vmP2S0.get(i);
+            Assert.assertEquals(0.5, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+        }
+
+
+        finishTime = 5.0;
+        for (int i = 3299; i < 6598; i++) {
+            PreemptableVm vm = (PreemptableVm) vmP2S0.get(i);
+            Assert.assertEquals(0.4, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+        }
+
+        finishTime = 6.0;
+        for (int i = 6598; i < numberOfVms; i++) {
+            PreemptableVm vm = (PreemptableVm) vmP2S0.get(i);
+            Assert.assertEquals(0.33, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+        }
+
+        finishTime = 3.0;
+        // asserting VM availability of P0S1
+        for (int i = 0; i < 5502; i++) {
+            PreemptableVm vm = (PreemptableVm) vmP0S1.get(i);
+            Assert.assertEquals(1, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+        }
+
+
+        finishTime = 5.0;
+        // asserting VM availability of P0S1
+        for (int i = 5502; i < numberOfVms; i++) {
+            PreemptableVm vm = (PreemptableVm) vmP0S1.get(i);
+            Assert.assertEquals(0.5, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+        }
     }
 
     private void executingSimulationMultipleHostsRuntime8(int numberOfVms, List<Vm> vmP0S0, List<Vm> vmP1S0, List<Vm> vmP2S0, List<Vm> vmP0S1) {
