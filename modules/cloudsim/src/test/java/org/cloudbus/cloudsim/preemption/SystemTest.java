@@ -7,8 +7,6 @@ import org.cloudbus.cloudsim.*;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
-import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
-import org.cloudbus.cloudsim.preemption.datastore.HostUsageDataStore;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.HostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
@@ -27,6 +25,7 @@ public class SystemTest {
 
     private static final double ACCEPTABLE_DIFFERENCE = 0.000001;
     private double hostCapacity;
+    private Properties properties;
 
     private PreemptiveDatacenter datacenter;
     private SimEvent event;
@@ -35,13 +34,17 @@ public class SystemTest {
     private HostSelectionPolicy hostSelector;
     private PreemptableVmAllocationPolicy preemptableVmAllocationPolicy;
     private DatacenterCharacteristics characteristics;
-    private String datacenterFile;
-    private String datacenterUrl;
+
+    private int NUMBER_OF_VMS;
     private List<Vm> vmP0S0;
     private List<Vm> vmP1S0;
     private List<Vm> vmP2S0;
     private List<Vm> vmP0S1;
-    private int NUMBER_OF_VMS;
+
+    private String datacenterOutputFile;
+    private String datacenterInputFile;
+    private String datacenterInputUrl;
+    private String datacenterOutputUrl;
 
     @SuppressWarnings("unchecked")
     @Before
@@ -92,20 +95,29 @@ public class SystemTest {
 
         preemptableVmAllocationPolicy = new PreemptableVmAllocationPolicy(googleHostList, hostSelector);
 
-        datacenterFile = "outputUtilizationTest.sqlite3";
-        datacenterUrl = "jdbc:sqlite:" + datacenterFile;
-        Properties properties = Mockito.mock(Properties.class);
-        Mockito.when(properties.getProperty(HostUsageDataStore.DATABASE_URL_PROP)).thenReturn(datacenterUrl);
-        Mockito.when(properties.getProperty(DatacenterUsageDataStore.DATABASE_URL_PROP)).thenReturn(datacenterUrl);
-        Mockito.when(properties.getProperty("make_checkpoint")).thenReturn("yes");
-        Mockito.when(properties.getProperty("checkpoint_interval_size")).thenReturn("3");
-        Mockito.when(properties.getProperty("collect_datacenter_summary_info")).thenReturn("yes");
-        Mockito.when(properties.getProperty("datacenter_storing_interval_size")).thenReturn("5");
-        Mockito.when(properties.getProperty("datacenter_collect_info_interval_size")).thenReturn("5");
+        datacenterInputFile = "/local/alessandro.fook/workspace/cloudsim/simulated_trace_data.sqlite3";
+        datacenterInputUrl = "jdbc:sqlite:" + datacenterInputFile;
 
-        datacenter = new PreemptiveDatacenter("datacenter",
-                characteristics, preemptableVmAllocationPolicy,
-                new LinkedList<>(), 0, properties);
+        datacenterOutputFile = "outputUtilizationTest.sqlite3";
+        datacenterOutputUrl = "jdbc:sqlite:" + datacenterOutputFile;
+
+        properties = Mockito.mock(Properties.class);
+        Mockito.when(properties.getProperty("logging")).thenReturn("no");
+        Mockito.when(properties.getProperty("input_trace_database_url")).thenReturn(datacenterInputUrl);
+        Mockito.when(properties.getProperty("loading_interval_size")).thenReturn("5");
+        Mockito.when(properties.getProperty("storing_interval_size")).thenReturn("4");
+        Mockito.when(properties.getProperty("output_tasks_database_url")).thenReturn(datacenterOutputUrl);
+        Mockito.when(properties.getProperty("utilization_database_url")).thenReturn(datacenterOutputUrl);
+        Mockito.when(properties.getProperty("utilization_storing_interval_size")).thenReturn("8");
+        Mockito.when(properties.getProperty("datacenter_database_url")).thenReturn(datacenterOutputUrl);
+        Mockito.when(properties.getProperty("collect_datacenter_summary_info")).thenReturn("yes");
+        Mockito.when(properties.getProperty("datacenter_storing_interval_size")).thenReturn("1440");
+        Mockito.when(properties.getProperty("datacenter_collect_info_interval_size")).thenReturn("4");
+        Mockito.when(properties.getProperty("make_checkpoint")).thenReturn("no");
+        Mockito.when(properties.getProperty("checkpoint_interval_size")).thenReturn("1440");
+        Mockito.when(properties.getProperty("checkpoint_dir")).thenReturn(datacenterOutputUrl);
+
+        datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy, new LinkedList<>(), 0, properties);
 
         datacenter.setSimulationTimeUtil(timeUtil);
 
@@ -115,8 +127,56 @@ public class SystemTest {
 
     @After
     public void tearDown() {
-        new File(datacenterFile).delete();
+        new File(datacenterOutputFile).delete();
     }
+
+    @Test
+    public void testSystemSingleHostWithTrace() {
+
+        Mockito.when(properties.getProperty("number_of_hosts")).thenReturn("1");
+        Mockito.when(properties.getProperty("total_cpu_capacity")).thenReturn("6603.25");
+
+        // First step: Initialize the CloudSim package. It should be called
+        // before creating any entities.
+        int num_user = 1; // number of grid users
+        Calendar calendar = Calendar.getInstance();
+        boolean trace_flag = false; // mean trace events
+
+        // Initialize the CloudSim library
+        CloudSim.init(num_user, calendar, trace_flag);
+
+        PreemptiveDatacenter datacenter0 = createGoogleDatacenter("cloud-0", properties);
+        TraceDatacenterBroker broker = createGoogleTraceBroker("Google_Broker_0", properties);
+
+        CloudSim.startSimulation();
+        List<TaskState> listOfStoredTasks = broker.getStoredTasks();
+        verifyResultsSingleHost(listOfStoredTasks);
+    }
+
+    @Test
+    public void testSystemMultipleHostsWithTrace() {
+
+        Mockito.when(properties.getProperty("number_of_hosts")).thenReturn("3");
+        Mockito.when(properties.getProperty("total_cpu_capacity")).thenReturn("6603.25");
+
+        // First step: Initialize the CloudSim package. It should be called
+        // before creating any entities.
+        int num_user = 1; // number of grid users
+        Calendar calendar = Calendar.getInstance();
+        boolean trace_flag = false; // mean trace events
+
+        // Initialize the CloudSim library
+        CloudSim.init(num_user, calendar, trace_flag);
+
+        PreemptiveDatacenter datacenter0 = createGoogleDatacenter("cloud-0", properties);
+        TraceDatacenterBroker broker = createGoogleTraceBroker("Google_Broker_0", properties);
+
+        CloudSim.startSimulation();
+        List<TaskState> listOfStoredTasks = broker.getStoredTasks();
+
+
+    }
+
 
     @Test
     //testing the operation of the system for a single host
@@ -452,7 +512,7 @@ public class SystemTest {
         Assert.assertEquals(host2.getId(), datacenter.getHostList().get(1).getId());
         Assert.assertEquals(host3.getId(), datacenter.getHostList().get(2).getId());
 
-        for (int i = 0; i < 3; i++){
+        for (int i = 0; i < 3; i++) {
             Assert.assertEquals(hostCapacity, datacenter.getHostList().get(i).getAvailableMips(), ACCEPTABLE_DIFFERENCE);
         }
 
@@ -485,9 +545,9 @@ public class SystemTest {
 
     private void executingSimulationMultipleHostsRuntime8() {
 
-        PreemptiveHost host1 = (PreemptiveHost)datacenter.getHostList().get(0);
-        PreemptiveHost host2 = (PreemptiveHost)datacenter.getHostList().get(1);
-        PreemptiveHost host3 = (PreemptiveHost)datacenter.getHostList().get(2);
+        PreemptiveHost host1 = (PreemptiveHost) datacenter.getHostList().get(0);
+        PreemptiveHost host2 = (PreemptiveHost) datacenter.getHostList().get(1);
+        PreemptiveHost host3 = (PreemptiveHost) datacenter.getHostList().get(2);
 
         double capacityTotal = host1.getTotalMips();
 
@@ -524,9 +584,9 @@ public class SystemTest {
 
     private void executingSimulationMultipleHostsRuntime7() {
 
-        PreemptiveHost host1 = (PreemptiveHost)datacenter.getHostList().get(0);
-        PreemptiveHost host2 = (PreemptiveHost)datacenter.getHostList().get(1);
-        PreemptiveHost host3 = (PreemptiveHost)datacenter.getHostList().get(2);
+        PreemptiveHost host1 = (PreemptiveHost) datacenter.getHostList().get(0);
+        PreemptiveHost host2 = (PreemptiveHost) datacenter.getHostList().get(1);
+        PreemptiveHost host3 = (PreemptiveHost) datacenter.getHostList().get(2);
 
         double capacityTotal = host1.getTotalMips();
 
@@ -563,9 +623,9 @@ public class SystemTest {
 
     private void executingSimulationMultipleHostsRuntime6() {
 
-        PreemptiveHost host1 = (PreemptiveHost)datacenter.getHostList().get(0);
-        PreemptiveHost host2 = (PreemptiveHost)datacenter.getHostList().get(1);
-        PreemptiveHost host3 = (PreemptiveHost)datacenter.getHostList().get(2);
+        PreemptiveHost host1 = (PreemptiveHost) datacenter.getHostList().get(0);
+        PreemptiveHost host2 = (PreemptiveHost) datacenter.getHostList().get(1);
+        PreemptiveHost host3 = (PreemptiveHost) datacenter.getHostList().get(2);
 
         double capacityTotal = host1.getTotalMips();
 
@@ -602,9 +662,9 @@ public class SystemTest {
 
     private void executingSimulationMultipleHostsRuntime5() {
 
-        PreemptiveHost host1 = (PreemptiveHost)datacenter.getHostList().get(0);
-        PreemptiveHost host2 = (PreemptiveHost)datacenter.getHostList().get(1);
-        PreemptiveHost host3 = (PreemptiveHost)datacenter.getHostList().get(2);
+        PreemptiveHost host1 = (PreemptiveHost) datacenter.getHostList().get(0);
+        PreemptiveHost host2 = (PreemptiveHost) datacenter.getHostList().get(1);
+        PreemptiveHost host3 = (PreemptiveHost) datacenter.getHostList().get(2);
 
         double capacityTotal = host1.getTotalMips();
 
@@ -641,9 +701,9 @@ public class SystemTest {
 
     private void executingSimulationMultipleHostsRuntime4() {
 
-        PreemptiveHost host1 = (PreemptiveHost)datacenter.getHostList().get(0);
-        PreemptiveHost host2 = (PreemptiveHost)datacenter.getHostList().get(1);
-        PreemptiveHost host3 = (PreemptiveHost)datacenter.getHostList().get(2);
+        PreemptiveHost host1 = (PreemptiveHost) datacenter.getHostList().get(0);
+        PreemptiveHost host2 = (PreemptiveHost) datacenter.getHostList().get(1);
+        PreemptiveHost host3 = (PreemptiveHost) datacenter.getHostList().get(2);
 
         double capacityTotal = host1.getTotalMips();
 
@@ -680,9 +740,9 @@ public class SystemTest {
 
     private void executingSimulationMultipleHostsRuntime3() {
 
-        PreemptiveHost host1 = (PreemptiveHost)datacenter.getHostList().get(0);
-        PreemptiveHost host2 = (PreemptiveHost)datacenter.getHostList().get(1);
-        PreemptiveHost host3 = (PreemptiveHost)datacenter.getHostList().get(2);
+        PreemptiveHost host1 = (PreemptiveHost) datacenter.getHostList().get(0);
+        PreemptiveHost host2 = (PreemptiveHost) datacenter.getHostList().get(1);
+        PreemptiveHost host3 = (PreemptiveHost) datacenter.getHostList().get(2);
 
         double capacityTotal = host1.getTotalMips();
 
@@ -719,9 +779,9 @@ public class SystemTest {
 
     private void executingSimulationMultipleHostsRuntime2() {
 
-        PreemptiveHost host1 = (PreemptiveHost)datacenter.getHostList().get(0);
-        PreemptiveHost host2 = (PreemptiveHost)datacenter.getHostList().get(1);
-        PreemptiveHost host3 = (PreemptiveHost)datacenter.getHostList().get(2);
+        PreemptiveHost host1 = (PreemptiveHost) datacenter.getHostList().get(0);
+        PreemptiveHost host2 = (PreemptiveHost) datacenter.getHostList().get(1);
+        PreemptiveHost host3 = (PreemptiveHost) datacenter.getHostList().get(2);
 
         // passing time to 1 and allocate all vms of submit time equals 1 and priority 0
         Mockito.when(timeUtil.clock()).thenReturn(2.0);
@@ -756,9 +816,9 @@ public class SystemTest {
 
     private void executingSimulationMultipleHostRuntime1() {
 
-        PreemptiveHost host1 = (PreemptiveHost)datacenter.getHostList().get(0);
-        PreemptiveHost host2 = (PreemptiveHost)datacenter.getHostList().get(1);
-        PreemptiveHost host3 = (PreemptiveHost)datacenter.getHostList().get(2);
+        PreemptiveHost host1 = (PreemptiveHost) datacenter.getHostList().get(0);
+        PreemptiveHost host2 = (PreemptiveHost) datacenter.getHostList().get(1);
+        PreemptiveHost host3 = (PreemptiveHost) datacenter.getHostList().get(2);
 
         // passing time to 1 and allocate all vms of submit time equals 1 and priority 0
         Mockito.when(timeUtil.clock()).thenReturn(1.0);
@@ -799,9 +859,9 @@ public class SystemTest {
 
     private void executingSimulationMultipleHostsRuntime0() {
 
-        PreemptiveHost host1 = (PreemptiveHost)datacenter.getHostList().get(0);
-        PreemptiveHost host2 = (PreemptiveHost)datacenter.getHostList().get(1);
-        PreemptiveHost host3 = (PreemptiveHost)datacenter.getHostList().get(2);
+        PreemptiveHost host1 = (PreemptiveHost) datacenter.getHostList().get(0);
+        PreemptiveHost host2 = (PreemptiveHost) datacenter.getHostList().get(1);
+        PreemptiveHost host3 = (PreemptiveHost) datacenter.getHostList().get(2);
 
         // start time on 0 and mock the hostSelector to return desired host
         Mockito.when(timeUtil.clock()).thenReturn(0d);
@@ -860,7 +920,7 @@ public class SystemTest {
 
         //testing size of lists
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
-        Assert.assertEquals(NUMBER_OF_VMS*2, datacenter.getVmsRunning().size());
+        Assert.assertEquals(NUMBER_OF_VMS * 2, datacenter.getVmsRunning().size());
 
         //allocate 6603 vms of priority 2, submit time 0, and Cpu requisition of 0.2
         //with total requested Cpu equals 1320.6
@@ -888,7 +948,7 @@ public class SystemTest {
 
         //testing size of lists
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
-        Assert.assertEquals(NUMBER_OF_VMS*3, datacenter.getVmsRunning().size());
+        Assert.assertEquals(NUMBER_OF_VMS * 3, datacenter.getVmsRunning().size());
 
         // testing number of preemptions and number of backfilling choices for all vms
         for (int i = 0; i < NUMBER_OF_VMS; i++) {
@@ -1026,7 +1086,7 @@ public class SystemTest {
             PreemptableVm actualVMP20 = (PreemptableVm) vmP2S0.get(i);
             PreemptableVm actualVMP01 = (PreemptableVm) vmP0S1.get(i);
 
-            if (actualVMP10.getId() == vmP1S0.get(0).getId()){
+            if (actualVMP10.getId() == vmP1S0.get(0).getId()) {
                 Assert.assertEquals(actualVMP10.getNumberOfPreemptions(), 0);
             } else {
                 Assert.assertEquals(actualVMP10.getNumberOfPreemptions(), 1);
@@ -1059,7 +1119,7 @@ public class SystemTest {
         // asserting VM availability of P1S0
         for (int i = 0; i < NUMBER_OF_VMS; i++) {
             PreemptableVm vm = (PreemptableVm) vmP1S0.get(i);
-            if (vm.getId() != 6603){
+            if (vm.getId() != 6603) {
                 Assert.assertEquals(0.714, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
             }
         }
@@ -1177,6 +1237,133 @@ public class SystemTest {
         for (int i = 5502; i < NUMBER_OF_VMS; i++) {
             PreemptableVm vm = (PreemptableVm) vmP0S1.get(i);
             Assert.assertEquals(0.5, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
+        }
+    }
+
+    private static PreemptiveDatacenter createGoogleDatacenter(String name,
+                                                               Properties properties) {
+
+        int numberOfHosts = Integer.parseInt(properties
+                .getProperty("number_of_hosts"));
+        double totalMipsCapacity = Double.parseDouble(properties
+                .getProperty("total_cpu_capacity"));
+        double mipsPerHost = totalMipsCapacity / numberOfHosts;
+
+        Log.printLine("Creating a datacenter with " + totalMipsCapacity
+                + " total capacity and " + numberOfHosts
+                + " hosts, each one with " + mipsPerHost + " mips.");
+
+        List<PreemptiveHost> hostList = new ArrayList<PreemptiveHost>();
+
+        for (int hostId = 0; hostId < numberOfHosts; hostId++) {
+            List<Pe> peList1 = new ArrayList<Pe>();
+
+            peList1.add(new Pe(0, new PeProvisionerSimple(mipsPerHost)));
+
+            PreemptiveHost host = new PreemptiveHost(hostId, peList1,
+                    new VmSchedulerMipsBased(peList1), 3);
+
+            hostList.add(host);
+        }
+
+        String arch = "x86"; // system architecture
+        String os = "Linux"; // operating system
+        String vmm = "Xen";
+        double time_zone = 10.0; // time zone this resource located
+        double cost = 3.0; // the cost of using processing in this resource
+        double costPerMem = 0.05; // the cost of using memory in this resource
+        double costPerStorage = 0.1; // the cost of using storage in this
+        // resource
+        double costPerBw = 0.1; // the cost of using bw in this resource
+
+        // we are not adding SAN devices by now
+        LinkedList<Storage> storageList = new LinkedList<Storage>();
+
+        DatacenterCharacteristics characteristics = new DatacenterCharacteristics(
+                arch, os, vmm, hostList, time_zone, cost, costPerMem,
+                costPerStorage, costPerBw);
+
+        PreemptiveDatacenter datacenter = null;
+        try {
+//
+            datacenter = new PreemptiveDatacenter(name, characteristics,
+                    new PreemptableVmAllocationPolicy(hostList,
+                            new WorstFitMipsBasedHostSelectionPolicy()),
+                    storageList, 0, properties);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return datacenter;
+    }
+
+    private static TraceDatacenterBroker createGoogleTraceBroker(String name,
+                                                                 Properties properties) {
+
+        TraceDatacenterBroker broker = null;
+        try {
+            broker = new TraceDatacenterBroker(name, properties);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        return broker;
+    }
+
+    //testing statistics of vms after run the simulation
+    private static void verifyResultsSingleHost(List<TaskState> listOfTasks) {
+
+        for (TaskState task : listOfTasks) {
+
+            double avail = task.getRuntime() / (task.getFinishTime() - task.getSubmitTime());
+
+            if (task.getPriority() == 0) {
+
+                Assert.assertEquals(task.getNumberOfPreemptions(), 0);
+
+                if (task.getTaskId() < 6604 || task.getTaskId() < 25312) {
+                    Assert.assertEquals(1, avail, ACCEPTABLE_DIFFERENCE);
+
+                } else {
+                    Assert.assertEquals(0.5, avail, ACCEPTABLE_DIFFERENCE);
+                }
+
+
+            } else if (task.getPriority() == 1) {
+
+                if (task.getTaskId() == 6604) { // the only vm that stay in the host in runtime 1
+                    Assert.assertEquals(0, task.getNumberOfPreemptions());
+                    Assert.assertEquals(1, avail, ACCEPTABLE_DIFFERENCE);
+
+                } else {
+
+                    Assert.assertEquals(1, task.getNumberOfPreemptions());
+                    Assert.assertEquals(0.714285, avail, ACCEPTABLE_DIFFERENCE);
+                }
+
+            } else {
+
+                if (task.getTaskId() < 16508) { // the group of vms that return to running in time 3
+                    Assert.assertEquals(0.5, avail, ACCEPTABLE_DIFFERENCE);
+
+                } else if (task.getTaskId() < 19809) { // the group of vms that return to running in time 4
+                    Assert.assertEquals(0.4, avail, ACCEPTABLE_DIFFERENCE);
+
+                } else { // the group of vms that return to running in time 5
+                    Assert.assertEquals(0.333333, avail, ACCEPTABLE_DIFFERENCE);
+                }
+
+                Assert.assertEquals(task.getNumberOfPreemptions(), 1);
+            }
+            if (task.getTaskId() == 13207) { // the only vms that are chosen from backfilling in time 3
+
+                Assert.assertEquals(1, task.getNumberOfBackfillingChoices());
+            }
+
+            else {
+
+                Assert.assertEquals(0, task.getNumberOfBackfillingChoices());
+            }
         }
     }
 }
