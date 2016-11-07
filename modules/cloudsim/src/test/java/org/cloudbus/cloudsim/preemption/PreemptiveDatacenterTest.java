@@ -584,8 +584,6 @@ public class PreemptiveDatacenterTest {
         PreemptableVm vm3 = new PreemptableVm(3, 1, 9.9999998, 1.0, 0, priority - 1,
                 runtime);
 
-        SimEvent destroyVm = Mockito.mock(SimEvent.class);
-
         Mockito.when(
                 hostSelector.select(preemptableVmAllocationPolicy
                         .getPriorityToSortedHost().get(priority), vm0))
@@ -1865,7 +1863,8 @@ public class PreemptiveDatacenterTest {
         testNumberOfPreemptionsAndBackfillingChoicesTimeLessThan3(numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1);
     }
 
-    private void executingSimularionRuntime0(double ACCEPTABLE_DIFFERENCE, double hostCpuCapacity, int numberOfVms, List<Vm> vmP0S0, List<Vm> vmP1S0, List<Vm> vmP2S0) {
+    @SuppressWarnings("unchecked")
+	private void executingSimularionRuntime0(double ACCEPTABLE_DIFFERENCE, double hostCpuCapacity, int numberOfVms, List<Vm> vmP0S0, List<Vm> vmP1S0, List<Vm> vmP2S0) {
         // start time on 0 and mock the hostSelector to return desired host
         Mockito.when(timeUtil.clock()).thenReturn(0d);
         Mockito.when(hostSelector.select(Mockito.any(SortedSet.class), Mockito.any(Vm.class))).thenReturn(host);

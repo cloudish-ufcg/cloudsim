@@ -23,14 +23,22 @@ public abstract class PreemptionPolicy {
 	public abstract Vm nextVmForPreempting();
 	
 	public void allocating(PreemptableVm vm) {
+		if (vm == null) {
+			return;
+		}
+		
 		getPriorityToVms().get(vm.getPriority()).add(vm);
 		double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority()); 
-		getPriorityToInUseMips().put( vm.getPriority(),
+		getPriorityToInUseMips().put(vm.getPriority(),
 				DecimalUtil.format(priorityCurrentUse + vm.getMips(), DECIMAL_ACCURACY));
 		
 	}
 	
 	public void deallocating(PreemptableVm vm) {
+		if (vm == null) {
+			return;
+		}
+		
 		getPriorityToVms().get(vm.getPriority()).remove(vm);
 		double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority()); 
 		

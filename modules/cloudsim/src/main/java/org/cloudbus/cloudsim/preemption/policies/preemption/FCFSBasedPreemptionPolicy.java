@@ -5,8 +5,6 @@ import java.util.TreeSet;
 
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
-import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
-import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
 
 public class FCFSBasedPreemptionPolicy extends PreemptionPolicy {
 
@@ -31,6 +29,9 @@ public class FCFSBasedPreemptionPolicy extends PreemptionPolicy {
 
 	@Override
 	public boolean isSuitableFor(PreemptableVm vm) {
+		if (vm == null) {
+			return false;
+		}
 		double availableMips = getAvailableMipsByPriority(vm.getPriority()) ;
 		return (availableMips >= vm.getMips());
 	}

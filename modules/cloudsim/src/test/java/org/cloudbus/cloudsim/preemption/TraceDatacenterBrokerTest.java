@@ -117,8 +117,6 @@ public class TraceDatacenterBrokerTest {
         event = Mockito.mock(SimEvent.class);
         System.out.println("Starting CloudSimExample Google Trace ...");
 
-        long now = System.currentTimeMillis();
-
         try {
             properties = createProperties();
 
@@ -257,7 +255,7 @@ public class TraceDatacenterBrokerTest {
     @Test
     public void testLoadNextTaskEvents() {
 
-        Mockito.when(event.getTag()).thenReturn(broker.LOAD_NEXT_TASKS_EVENT);
+        Mockito.when(event.getTag()).thenReturn(TraceDatacenterBroker.LOAD_NEXT_TASKS_EVENT);
         broker.processEvent(event);
         Assert.assertEquals(50, broker.getSubmittedTasks());
 
@@ -314,7 +312,7 @@ public class TraceDatacenterBrokerTest {
 
         Assert.assertArrayEquals(taskStates.toArray(), broker.getFinishedTasks().toArray());
 
-        Mockito.when(event.getTag()).thenReturn(broker.STORE_FINISHED_TASKS_EVENT);
+        Mockito.when(event.getTag()).thenReturn(TraceDatacenterBroker.STORE_FINISHED_TASKS_EVENT);
         broker.processEvent(event);
 
         Assert.assertEquals(50, broker.getConcludedTasks());
