@@ -50,9 +50,9 @@ public class TaskDataStoreTest {
         runtime = 0.001;
         finishingTime = 0.001;
 
-        task1 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority - 1, 0, 0);
-        task2 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority, 0, 0);
-        task3 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority + 1, 0, 0);
+        task1 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority - 1, 0, 0, 0);
+        task2 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority, 0, 0, 0);
+        task3 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority + 1, 0, 0, 0);
     }
 
     @After
@@ -98,7 +98,7 @@ public class TaskDataStoreTest {
         int taskId = 0;
 
         for (int i = 0; i < 50; i++) {
-            task1 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority - 1, 0, 0);
+            task1 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority - 1, 0, 0, 0);
             taskStates.add(task1);
         }
 
@@ -108,7 +108,7 @@ public class TaskDataStoreTest {
         List<TaskState> taskStates2 = new ArrayList<>();
 
         for (int i = 0; i < 50; i++) {
-            task1 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority - 1, 0, 0);
+            task1 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority - 1, 0, 0, 0);
             taskStates.add(task1);
             taskStates2.add(task1);
         }

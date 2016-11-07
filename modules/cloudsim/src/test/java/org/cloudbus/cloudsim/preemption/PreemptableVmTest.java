@@ -360,4 +360,88 @@ public class PreemptableVmTest {
 		Assert.assertEquals(vm6, sortedVms.first());
 		Assert.assertEquals(vm5, sortedVms.last());
 	}
+	
+	@Test
+	public void testGetNumberOfMigrations() {
+		int submitTime = 10;
+		int priority = 0;
+		
+		// creating a vm
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, submitTime, priority, 0);		
+		
+		Assert.assertEquals(0, vm1.getNumberOfMigrations());
+		
+		// first host allocation
+		vm1.allocatingToHost(0);		
+		Assert.assertEquals(0, vm1.getNumberOfMigrations());
+		
+		// allocating in other host
+		vm1.allocatingToHost(1);		
+		Assert.assertEquals(1, vm1.getNumberOfMigrations());
+	}
+
+	@Test
+	public void testGetNumberOfMigrations2() {
+		int submitTime = 10;
+		int priority = 0;
+		
+		// creating a vm
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, submitTime, priority, 0);		
+		
+		Assert.assertEquals(0, vm1.getNumberOfMigrations());
+		
+		// first host allocation
+		vm1.allocatingToHost(0);		
+		Assert.assertEquals(0, vm1.getNumberOfMigrations());
+		
+		// allocating in the same host
+		vm1.allocatingToHost(0);		
+		Assert.assertEquals(0, vm1.getNumberOfMigrations());
+	}
+	
+	@Test
+	public void testGetNumberOfMigrationsAfterPreemption() {
+		int submitTime = 10;
+		int priority = 0;
+		
+		// creating a vm
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, submitTime, priority, 0);		
+		
+		Assert.assertEquals(0, vm1.getNumberOfMigrations());
+		
+		// first host allocation
+		vm1.allocatingToHost(0);		
+		Assert.assertEquals(0, vm1.getNumberOfMigrations());
+		
+		vm1.preempt(10);
+		
+		Assert.assertEquals(0, vm1.getNumberOfMigrations());
+		
+		// allocating in the same host
+		vm1.allocatingToHost(0);		
+		Assert.assertEquals(0, vm1.getNumberOfMigrations());
+	}
+	
+	@Test
+	public void testGetNumberOfMigrationsAfterPreemption2() {
+		int submitTime = 10;
+		int priority = 0;
+		
+		// creating a vm
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, submitTime, priority, 0);		
+		
+		Assert.assertEquals(0, vm1.getNumberOfMigrations());
+		
+		// first host allocation
+		vm1.allocatingToHost(0);		
+		Assert.assertEquals(0, vm1.getNumberOfMigrations());
+		
+		vm1.preempt(10);
+		
+		Assert.assertEquals(0, vm1.getNumberOfMigrations());
+		
+		// allocating in the same host
+		vm1.allocatingToHost(1);		
+		Assert.assertEquals(1, vm1.getNumberOfMigrations());
+	}
 }
