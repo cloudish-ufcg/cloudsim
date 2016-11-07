@@ -95,7 +95,7 @@ public class SystemTest {
 
         preemptableVmAllocationPolicy = new PreemptableVmAllocationPolicy(googleHostList, hostSelector);
 
-        datacenterInputFile = "/local/alessandro.fook/workspace/cloudsim/simulated_trace_data.sqlite3";
+        datacenterInputFile = "new_trace_test.sqlite3";
         datacenterInputUrl = "jdbc:sqlite:" + datacenterInputFile;
 
         datacenterOutputFile = "outputUtilizationTest.sqlite3";
@@ -154,13 +154,10 @@ public class SystemTest {
     }
 
     @Test
-    public void testSystemMultipleHostsWithTrace() {
-
+    public void testSystemMultipleHostWithTrace(){
         Mockito.when(properties.getProperty("number_of_hosts")).thenReturn("3");
-        Mockito.when(properties.getProperty("total_cpu_capacity")).thenReturn("6603.25");
+        Mockito.when(properties.getProperty("total_cpu_capacity")).thenReturn("6603");
 
-        // First step: Initialize the CloudSim package. It should be called
-        // before creating any entities.
         int num_user = 1; // number of grid users
         Calendar calendar = Calendar.getInstance();
         boolean trace_flag = false; // mean trace events
@@ -174,6 +171,7 @@ public class SystemTest {
         CloudSim.startSimulation();
         List<TaskState> listOfStoredTasks = broker.getStoredTasks();
 
+        verifyResultsMultipleHosts(listOfStoredTasks);
 
     }
 
@@ -1365,5 +1363,48 @@ public class SystemTest {
                 Assert.assertEquals(0, task.getNumberOfBackfillingChoices());
             }
         }
+    }
+
+    private static void verifyResultsMultipleHosts(List<TaskState> listOfStoredTasks) {
+        for (TaskState task : listOfStoredTasks) {
+
+            double avail = task.getRuntime() / (task.getFinishTime() - task.getSubmitTime());
+
+            if (task.getPriority() == 0) {
+
+                Assert.assertEquals(task.getNumberOfPreemptions(), 0);
+
+                if (task.getTaskId() < 6604 || task.getTaskId() < 25312) {
+                    Assert.assertEquals(1, avail, ACCEPTABLE_DIFFERENCE);
+
+                } else {
+                    Assert.assertEquals(0.5, avail, ACCEPTABLE_DIFFERENCE);
+                }
+
+
+            } else if (task.getPriority() == 1) {
+
+                    Assert.assertEquals(1, task.getNumberOfPreemptions());
+                    Assert.assertEquals(0.714285, avail, ACCEPTABLE_DIFFERENCE);
+
+            } else { // priority 2
+                // 3299 vms with priority 2 had availability = 0.5, 3299 had avail = 0.4 and 5 had avail = 0.33
+                if (task.getTaskId() < 16506) { // the group of vms that return to running in time 3
+                    Assert.assertEquals(0.5, avail, ACCEPTABLE_DIFFERENCE);
+
+                } else if (task.getTaskId() < 19805) { // the group of vms that return to running in time 4
+                    Assert.assertEquals(0.4, avail, ACCEPTABLE_DIFFERENCE);
+
+                } else { // the group of vms that return to running in time 5
+                    Assert.assertEquals(0.333333, avail, ACCEPTABLE_DIFFERENCE);
+                }
+
+                Assert.assertEquals(task.getNumberOfPreemptions(), 1);
+            }
+
+
+            Assert.assertEquals(0, task.getNumberOfBackfillingChoices());
+        }
+
     }
 }
