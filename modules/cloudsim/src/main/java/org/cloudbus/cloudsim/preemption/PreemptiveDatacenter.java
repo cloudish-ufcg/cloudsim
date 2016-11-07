@@ -184,8 +184,15 @@ public class PreemptiveDatacenter extends Datacenter {
 
 			for (PreemptableVm vm: runningVms){
 				vm.setStartExec(simulationTimeUtil.clock());
-				PreemptiveHost host = mapOfHosts.get(vm.getHostId());
-				getVmAllocationPolicy().allocateHostForVm(vm, host);
+				PreemptiveHost host = mapOfHosts.get(vm.getLastHostId());
+				if (!getVmAllocationPolicy().allocateHostForVm(vm, host)) {
+					throw new SimulationException(
+							"Error allocating VM to a specific host "
+									+ host.getId()
+									+ " while initializing from a checkpoint file.");
+				}
+
+				vm.allocatingToHost(host.getId());
 
 				double remainingTime = vm.getRuntime() - vm.getActualRuntime(simulationTimeUtil.clock());
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
@@ -448,6 +455,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		if (result) {
 			getVmsRunning().add(vm);
 			vm.setStartExec(simulationTimeUtil.clock());
+			vm.allocatingToHost(host.getId());
 			
 			if (isBackfilling) {
 				vm.setNumberOfBackfillingChoice(vm.getNumberOfBackfillingChoice() + 1);				

@@ -51,6 +51,7 @@ public class PreemptableVmDataStore extends DataStore {
 							+ "actualRuntime REAL, "
 							+ "preemptions INTEGER, "
 							+ "backfillingChoice INTEGER, "
+							+ "migrations INTEGER, "
 							+ "hostId INTEGER, "
 							+ "running INTEGER, "
 							+ "PRIMARY KEY (vmId)"
@@ -70,7 +71,7 @@ public class PreemptableVmDataStore extends DataStore {
 	}
 
 	private static final String INSERT_DATACENTER_INFO_SQL = "INSERT INTO " + VMS_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	
 	public boolean addWaitingVms(SortedSet<PreemptableVm> waitingVms) {
 		if (waitingVms == null) {
@@ -121,13 +122,14 @@ public class PreemptableVmDataStore extends DataStore {
 				insertMemberStatement.setDouble(9, vm.getActualRuntime(time));
 				insertMemberStatement.setInt(10, vm.getNumberOfPreemptions());
 				insertMemberStatement.setInt(11, vm.getNumberOfBackfillingChoice());
+				insertMemberStatement.setInt(12, vm.getNumberOfMigrations());
 				
 				if (running) {
-					insertMemberStatement.setInt(12, vm.getHost().getId()); //vm is waiting and doesn't have host
-					insertMemberStatement.setInt(13, RUNNING);
+					insertMemberStatement.setInt(13, vm.getHost().getId()); //vm is waiting and doesn't have host
+					insertMemberStatement.setInt(14, RUNNING);
 				} else {
-					insertMemberStatement.setInt(12, -1); //vm is waiting and doesn't have host
-					insertMemberStatement.setInt(13, WAITING);
+					insertMemberStatement.setInt(13, vm.getLastHostId()); //vm is waiting and doesn't have host
+					insertMemberStatement.setInt(14, WAITING);
 				}
 				insertMemberStatement.addBatch();
 			}
@@ -191,9 +193,13 @@ public class PreemptableVmDataStore extends DataStore {
 						rs.getInt("userId"), rs.getDouble("cpuReq"),
 						rs.getDouble("memReq"), rs.getDouble("submitTime"),
 						rs.getInt("priority"), rs.getDouble("runtime"));
-//				vm.setStartExec(time);
+				
 				vm.setActualRuntime(rs.getDouble("actualRuntime"));
-				vm.setHostId(rs.getInt("hostId"));
+				vm.setLastHostId(rs.getInt("hostId"));
+				vm.setNumberOfPreemptions(rs.getInt("preemptions"));
+				vm.setNumberOfBackfillingChoice(rs.getInt("backfillingChoice"));
+				vm.setNumberOfMigrations(rs.getInt("migrations"));
+				
 				runningVms.add(vm);
 			}
 			return runningVms;
@@ -225,8 +231,13 @@ public class PreemptableVmDataStore extends DataStore {
 						rs.getInt("userId"), rs.getDouble("cpuReq"),
 						rs.getDouble("memReq"), rs.getDouble("submitTime"),
 						rs.getInt("priority"), rs.getDouble("runtime"));
+				
 				vm.setActualRuntime(rs.getDouble("actualRuntime"));
-				vm.setHostId(rs.getInt("hostId"));
+				vm.setLastHostId(rs.getInt("hostId"));
+				vm.setNumberOfPreemptions(rs.getInt("preemptions"));
+				vm.setNumberOfBackfillingChoice(rs.getInt("backfillingChoice"));
+				vm.setNumberOfMigrations(rs.getInt("migrations"));
+				
 				waitingVms.add(vm);
 			}
 			return waitingVms;

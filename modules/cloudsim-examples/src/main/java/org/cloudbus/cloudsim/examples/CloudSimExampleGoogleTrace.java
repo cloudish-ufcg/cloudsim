@@ -295,7 +295,7 @@ public class CloudSimExampleGoogleTrace {
         System.out.println();
         System.out.println("========== OUTPUT ==========");
         System.out.println("Cloudlet ID" + indent + "VM ID" + indent + indent
-                + "Time" + indent + "Finish Time" + indent + indent + "Priority" + indent + indent + "Availability");
+                + "Time" + indent + "Finish Time" + indent + indent + "Priority" + indent + indent + "Availability" + indent + indent + "Preemptions" + indent + indent + "Migrations");
 
         DecimalFormat dft = new DecimalFormat("###.####");
         double totalVm0Availability = 0;
@@ -304,6 +304,8 @@ public class CloudSimExampleGoogleTrace {
         int count1 = 0;
         double totalVm2Availability = 0;
         int count2 = 0;
+        int totalPreemptions = 0;
+        int totalMigrations = 0;
 
         for (int i = 0; i < size; i++) {
             googleTask = newList.get(i);
@@ -327,11 +329,17 @@ public class CloudSimExampleGoogleTrace {
                 count2++;
             }
 
-            System.out.println(indent + indent + indent + googleTask.getTaskId()
-                    + indent + indent + indent + googleTask.getRuntime()
-                    + indent + indent + indent + googleTask.getFinishTime() + indent
-                    + indent + indent + googleTask.getPriority() + indent
-                    + indent + indent + dft.format(vmAvailabilty));
+            totalPreemptions += googleTask.getNumberOfPreemptions();
+            totalMigrations += googleTask.getNumberOfMigrations();
+            
+			System.out.println(indent + indent + indent
+					+ googleTask.getTaskId() + indent + indent + indent
+					+ googleTask.getRuntime() + indent + indent + indent
+					+ googleTask.getFinishTime() + indent + indent + indent
+					+ googleTask.getPriority() + indent + indent + indent
+					+ dft.format(vmAvailabilty) + indent + indent
+					+ googleTask.getNumberOfPreemptions() + indent + indent
+					+ googleTask.getNumberOfMigrations());
 //				System.out.println(indent + indent + googleTask.getResourceId()
 //						+ indent + indent + indent + googleTask.getTaskId()
 //						+ indent + indent + indent + googleTask.getRuntime()
@@ -349,6 +357,9 @@ public class CloudSimExampleGoogleTrace {
         System.out.println("========== MEAN VM AVAILABILITY (priority 2) is " + dft.format((totalVm2Availability / count2)) + " =========");
 
         System.out.println("========== MEAN VM AVAILABILITY is " + dft.format(((totalVm0Availability + totalVm1Availability + totalVm2Availability) / size)) + " =========");
+        
+        System.out.println("Total of Preemptions: " + totalPreemptions);
+        System.out.println("Total of Migrations: " + totalMigrations);
 
     }
 }

@@ -348,7 +348,7 @@ public class TraceDatacenterBrokerTest {
 
         for (int i = 0; i < 50; i++) {
             double now = CloudSim.clock();
-            TaskState taskState = new TaskState(id++, cpuReq, submitTime, now, runTime, priority, 0, 0);
+            TaskState taskState = new TaskState(id++, cpuReq, submitTime, now, runTime, priority, 0, 0, 0);
             taskStates.add(taskState);
         }
     }
