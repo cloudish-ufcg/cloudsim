@@ -1514,12 +1514,11 @@ public class PreemptiveDatacenterTest {
 
         //setting host on data center with capacity of google trace
         double hostCpuCapacity = 6603.25;
-        int numberOfPriorities = 3;
         List<Pe> peList1 = new ArrayList<Pe>();
         peList1.add(new Pe(0, new PeProvisionerSimple(hostCpuCapacity)));
 
         host = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
-                peList1), numberOfPriorities);
+                peList1), new FCFSBasedPreemptionPolicy(properties));
         datacenter.getHostList().remove(0);
         datacenter.getHostList().add(host);
         datacenter.getVmAllocationPolicy().setSimulationTimeUtil(timeUtil);
@@ -2042,7 +2041,7 @@ public class PreemptiveDatacenterTest {
         peList1.add(new Pe(0, new PeProvisionerSimple(10)));
 
         PreemptiveHost host2 = new PreemptiveHost(2, peList1, new VmSchedulerMipsBased(
-                peList1), 3);
+                peList1), new FCFSBasedPreemptionPolicy(properties));
 
         hostList.add(host);
         hostList.add(host2);
@@ -2194,7 +2193,8 @@ public class PreemptiveDatacenterTest {
         List<Pe> peList1 = new ArrayList<Pe>();
         peList1.add(new Pe(0, new PeProvisionerSimple(10)));
 
-        PreemptiveHost host2 = new PreemptiveHost(2, peList1, new VmSchedulerMipsBased(peList1), 3);
+        PreemptiveHost host2 = new PreemptiveHost(2, peList1, new VmSchedulerMipsBased(peList1),
+                                                    new FCFSBasedPreemptionPolicy(properties));
 
         datacenter.getHostList().add(host2);
 
@@ -2326,7 +2326,7 @@ public class PreemptiveDatacenterTest {
 		peList1.add(new Pe(0, new PeProvisionerSimple(5)));
 		
 		PreemptiveHost host2 = new PreemptiveHost(2, peList1,
-				new VmSchedulerMipsBased(peList1), 3);
+				new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
 		
 		datacenter.getHostList().add(host2);
 

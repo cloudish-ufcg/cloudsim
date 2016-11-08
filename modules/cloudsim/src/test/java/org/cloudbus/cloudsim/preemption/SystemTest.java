@@ -9,6 +9,7 @@ import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.HostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.After;
@@ -61,30 +62,6 @@ public class SystemTest {
         // Initialize the CloudSim library
         CloudSim.init(num_user, calendar, trace_flag);
 
-        List<Host> hostList = new ArrayList<Host>();
-        List<Pe> peList1 = new ArrayList<Pe>();
-        hostCapacity = 6603.25;
-        peList1.add(new Pe(0, new PeProvisionerSimple(hostCapacity)));
-
-        host = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
-                peList1), 3);
-        hostList.add(host);
-
-        // mocking
-        characteristics = Mockito.mock(DatacenterCharacteristics.class);
-        Mockito.when(characteristics.getHostList()).thenReturn(hostList);
-
-        Mockito.when(characteristics.getNumberOfPes()).thenReturn(1);
-
-        timeUtil = Mockito.mock(SimulationTimeUtil.class);
-        Mockito.when(timeUtil.clock()).thenReturn(0d);
-
-        hostSelector = new WorstFitMipsBasedHostSelectionPolicy();
-
-        List<PreemptiveHost> googleHostList = new ArrayList<PreemptiveHost>();
-        for (Host host : hostList) {
-            googleHostList.add((PreemptiveHost) host);
-        }
 
         // inicializating the lists of vms
         NUMBER_OF_VMS = 6603;
@@ -93,8 +70,7 @@ public class SystemTest {
         vmP2S0 = new ArrayList<>(NUMBER_OF_VMS);
         vmP0S1 = new ArrayList<>(NUMBER_OF_VMS);
 
-        preemptableVmAllocationPolicy = new PreemptableVmAllocationPolicy(googleHostList, hostSelector);
-
+        // mocking properties to config simulation
         datacenterInputFile = "new_trace_test.sqlite3";
         datacenterInputUrl = "jdbc:sqlite:" + datacenterInputFile;
 
@@ -102,6 +78,7 @@ public class SystemTest {
         datacenterOutputUrl = "jdbc:sqlite:" + datacenterOutputFile;
 
         properties = Mockito.mock(Properties.class);
+        Mockito.when(properties.getProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP)).thenReturn("3");
         Mockito.when(properties.getProperty("logging")).thenReturn("no");
         Mockito.when(properties.getProperty("input_trace_database_url")).thenReturn(datacenterInputUrl);
         Mockito.when(properties.getProperty("loading_interval_size")).thenReturn("5");
@@ -117,7 +94,38 @@ public class SystemTest {
         Mockito.when(properties.getProperty("checkpoint_interval_size")).thenReturn("1440");
         Mockito.when(properties.getProperty("checkpoint_dir")).thenReturn(datacenterOutputUrl);
 
-        datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy, new LinkedList<>(), 0, properties);
+        // creating host
+        List<Pe> peList1 = new ArrayList<Pe>();
+        hostCapacity = 6603.25;
+        peList1.add(new Pe(0, new PeProvisionerSimple(hostCapacity)));
+
+        host = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
+                peList1), new FCFSBasedPreemptionPolicy(properties));
+
+        // creating list of hosts
+        List<Host> hostList = new ArrayList<Host>();
+        hostList.add(host);
+
+        // mocking the characteristics for data center
+        characteristics = Mockito.mock(DatacenterCharacteristics.class);
+        Mockito.when(characteristics.getHostList()).thenReturn(hostList);
+
+        Mockito.when(characteristics.getNumberOfPes()).thenReturn(1);
+
+        timeUtil = Mockito.mock(SimulationTimeUtil.class);
+        Mockito.when(timeUtil.clock()).thenReturn(0d);
+
+        hostSelector = new WorstFitMipsBasedHostSelectionPolicy();
+
+        List<PreemptiveHost> googleHostList = new ArrayList<PreemptiveHost>();
+        for (Host host : hostList) {
+            googleHostList.add((PreemptiveHost) host);
+        }
+        preemptableVmAllocationPolicy = new PreemptableVmAllocationPolicy(googleHostList, hostSelector);
+
+        // creating data center
+        datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
+                                                new LinkedList<>(), 0, properties);
 
         datacenter.setSimulationTimeUtil(timeUtil);
 
@@ -482,11 +490,11 @@ public class SystemTest {
         peList1.add(new Pe(0, new PeProvisionerSimple(hostCapacity)));
 
         PreemptiveHost host1 = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
-                peList1), 3);
+                peList1), new FCFSBasedPreemptionPolicy(properties));
         PreemptiveHost host2 = new PreemptiveHost(2, peList1, new VmSchedulerMipsBased(
-                peList1), 3);
+                peList1), new FCFSBasedPreemptionPolicy(properties));
         PreemptiveHost host3 = new PreemptiveHost(3, peList1, new VmSchedulerMipsBased(
-                peList1), 3);
+                peList1), new FCFSBasedPreemptionPolicy(properties));
 
         hostList.add(host1);
         hostList.add(host2);
@@ -1259,7 +1267,7 @@ public class SystemTest {
             peList1.add(new Pe(0, new PeProvisionerSimple(mipsPerHost)));
 
             PreemptiveHost host = new PreemptiveHost(hostId, peList1,
-                    new VmSchedulerMipsBased(peList1), 3);
+                    new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
 
             hostList.add(host);
         }
