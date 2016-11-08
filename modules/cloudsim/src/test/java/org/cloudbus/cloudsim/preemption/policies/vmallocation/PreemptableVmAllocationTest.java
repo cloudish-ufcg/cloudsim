@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -14,16 +15,13 @@ import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.HostSelectionPolicy;
-import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
+import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.omg.CORBA.ACTIVITY_COMPLETED;
-
-import sun.reflect.generics.tree.Tree;
 
 public class PreemptableVmAllocationTest {
 
@@ -36,18 +34,23 @@ public class PreemptableVmAllocationTest {
 	private static final int PRIORITY_2 = 2;
 	private static final int NUMBER_OF_PRIORITIES = 3;
 	private static final double ACCEPTABLE_DIFERENCE = 0.000001;
-
+	private Properties properties;
+	
 	@Before
 	public void setUp() {
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
+		
+		properties = new Properties();
+		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "1");
+		
 		host1 = new PreemptiveHost(1, peList1,
-				new VmSchedulerMipsBased(peList1), 1);
+				new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
 		
 		List<Pe> peList2 = new ArrayList<Pe>();
 		peList2.add(new Pe(0, new PeProvisionerSimple(500)));
 		host2 = new PreemptiveHost(2, peList2,
-				new VmSchedulerMipsBased(peList2), 1);
+				new VmSchedulerMipsBased(peList2), new FCFSBasedPreemptionPolicy(properties));
 		
 		List<PreemptiveHost> hosts = new ArrayList<PreemptiveHost>();
 		hosts.add(host1);
@@ -62,10 +65,6 @@ public class PreemptableVmAllocationTest {
 		hostSelector = Mockito.mock(HostSelectionPolicy.class);
 
 		preemptablePolicy = new PreemptableVmAllocationPolicy(hosts, hostSelector);
-		
-		Map<Integer, SortedSet<PreemptiveHost>> priorityToSortesHosts = new HashMap<Integer, SortedSet<PreemptiveHost>>();
-		priorityToSortesHosts.put(0, sortedHosts);
-		preemptablePolicy.setPriorityToSortedHost(priorityToSortesHosts);
 	}
 	
 	@Test
@@ -598,14 +597,17 @@ public class PreemptableVmAllocationTest {
 		List<PreemptiveHost> listaHosts = new ArrayList<PreemptiveHost>();
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100.5)));
+		
+		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, String.valueOf(NUMBER_OF_PRIORITIES));
+		
 		host1 = new PreemptiveHost(1, peList1,
-				new VmSchedulerMipsBased(peList1), NUMBER_OF_PRIORITIES);
+				new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
 
 		host2 = new PreemptiveHost(2, peList1,
-				new VmSchedulerMipsBased(peList1), NUMBER_OF_PRIORITIES);
+				new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
 
 		host3 = new PreemptiveHost(3, peList1,
-				new VmSchedulerMipsBased(peList1), NUMBER_OF_PRIORITIES);
+				new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
 		listaHosts.add(host1);
 		listaHosts.add(host2);
 		listaHosts.add(host3);

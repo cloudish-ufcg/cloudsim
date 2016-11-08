@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
-import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
@@ -35,9 +34,10 @@ import org.cloudbus.cloudsim.preemption.Task;
 import org.cloudbus.cloudsim.preemption.TaskState;
 import org.cloudbus.cloudsim.preemption.TraceDatacenterBroker;
 import org.cloudbus.cloudsim.preemption.UsageEntry;
-import org.cloudbus.cloudsim.preemption.UsageInfo;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 
@@ -212,7 +212,7 @@ public class CloudSimExampleGoogleTrace {
     }
 
     private static PreemptiveDatacenter createGoogleDatacenter(String name,
-                                                               Properties properties) {
+                                                               Properties properties) throws Exception {
 
         int numberOfHosts = Integer.parseInt(properties
                 .getProperty("number_of_hosts"));
@@ -223,16 +223,25 @@ public class CloudSimExampleGoogleTrace {
         Log.printLine("Creating a datacenter with " + totalMipsCapacity
                 + " total capacity and " + numberOfHosts
                 + " hosts, each one with " + mipsPerHost + " mips.");
-
+    	
+        
         List<PreemptiveHost> hostList = new ArrayList<PreemptiveHost>();
 
         for (int hostId = 0; hostId < numberOfHosts; hostId++) {
+        	PreemptionPolicy preemptionPolicy; 
+        	if (properties.getProperty("preemption_policy_class") != null) {
+        		preemptionPolicy = (PreemptionPolicy) createInstance("preemption_policy_class", properties);
+        	} else {
+        		Log.printLine("Creating a hosts with defatult preemption policy FCFS based .");
+        		preemptionPolicy = new FCFSBasedPreemptionPolicy(properties);
+        	}
+        	
             List<Pe> peList1 = new ArrayList<Pe>();
 
             peList1.add(new Pe(0, new PeProvisionerSimple(mipsPerHost)));
 
             PreemptiveHost host = new PreemptiveHost(hostId, peList1,
-                    new VmSchedulerMipsBased(peList1), 3);
+                    new VmSchedulerMipsBased(peList1), preemptionPolicy);
 
             hostList.add(host);
         }
@@ -362,4 +371,9 @@ public class CloudSimExampleGoogleTrace {
         System.out.println("Total of Migrations: " + totalMigrations);
 
     }
+    
+    private static Object createInstance(String propName, Properties properties) throws Exception {
+		return Class.forName(properties.getProperty(propName)).getConstructor(Properties.class)
+				.newInstance(properties);
+	}
 }
