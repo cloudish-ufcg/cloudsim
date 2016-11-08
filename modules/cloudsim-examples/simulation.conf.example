@@ -56,3 +56,7 @@ utilization_database_url=jdbc:sqlite:/path/to/utilization.sqlite3
 #init_from_time=1800000000
 #checkpoint data url to set the initial environment
 #checkpoint_file_url=jdbc:sqlite:/path/to/database
+
+#Preemption policy properties
+#preemption_policy_class=org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy
+#number_of_priorities=3
