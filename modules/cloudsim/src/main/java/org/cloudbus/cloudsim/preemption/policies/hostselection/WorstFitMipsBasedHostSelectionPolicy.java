@@ -13,7 +13,6 @@ public class WorstFitMipsBasedHostSelectionPolicy implements HostSelectionPolicy
 
 	@Override
 	public PreemptiveHost select(SortedSet<PreemptiveHost> hosts, Vm vm) {
-
 		if (hosts == null)
 			throw new IllegalArgumentException(
 					"The set of host can not be null.");
@@ -31,9 +30,9 @@ public class WorstFitMipsBasedHostSelectionPolicy implements HostSelectionPolicy
 				if (firstHost.isSuitableForVm(vm)) {
 					return firstHost;
 				}
-				
+
 //			}
 		}
-		return null;
+			return null;
 	}
 }
