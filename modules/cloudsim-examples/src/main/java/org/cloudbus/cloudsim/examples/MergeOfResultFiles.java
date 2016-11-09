@@ -4,6 +4,7 @@ import com.beust.jcommander.Parameter;
 import org.cloudbus.cloudsim.preemption.TaskState;
 import org.cloudbus.cloudsim.preemption.datastore.TaskDataStore;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -63,6 +64,10 @@ public class MergeOfResultFiles {
             dataStore = new TaskDataStore(properties);
             dataStore.addTaskList(listOfAllTasks);
 
+            List<TaskState> final_states = dataStore.getAllTasks();
+            System.out.println("Number of tasks in final output = " + final_states.size());
+            printGoogleTaskStates(final_states);
+
 
         // TODO
         } else if (parsedCommand.equals("utilization")){
@@ -74,7 +79,7 @@ public class MergeOfResultFiles {
 
     }
 
-    private static class TaskCommand {
+    private static class Command {
         @Parameter(names = "--before", description = "path of DB before time of checkpoint")
         String path_before= "";
 
@@ -88,32 +93,63 @@ public class MergeOfResultFiles {
         String path_output = "";
     }
 
-    private static class UtilizationCommand {
-        @Parameter(names = "--before", description = "path of DB before time of checkpoint")
-        String path_before= "";
+    private static class TaskCommand extends Command {
 
-        @Parameter(names = "--after", description = "path of DB after time of checkpoint")
-        String path_after = "";
-
-        @Parameter(names = "--time", description = "time of checkpoint")
-        String time = "";
-
-        @Parameter(names = "--output", description = "path where will be saved the new file")
-        String path_output = "";
     }
 
-    private static class DatacenterCommand {
-        @Parameter(names = "--before", description = "path of DB before time of checkpoint")
-        String path_before= "";
+    private static class UtilizationCommand  extends Command{
 
-        @Parameter(names = "--after", description = "path of DB after time of checkpoint")
-        String path_after = "";
+    }
 
-        @Parameter(names = "--time", description = "time of checkpoint")
-        String time = "";
+    private static class DatacenterCommand extends Command{
 
-        @Parameter(names = "--output", description = "path where will be saved the new file")
-        String path_output = "";
+    }
+
+    public static void printGoogleTaskStates(List<TaskState> newList) {
+        int size = newList.size();
+        TaskState googleTask;
+
+        DecimalFormat dft = new DecimalFormat("###.####");
+        double totalVm0Availability = 0;
+        int count0 = 0;
+        double totalVm1Availability = 0;
+        int count1 = 0;
+        double totalVm2Availability = 0;
+        int count2 = 0;
+        int totalPreemptions = 0;
+        int totalMigrations = 0;
+
+        for (int i = 0; i < size; i++) {
+            googleTask = newList.get(i);
+
+            double vmAvailabilty = googleTask.getRuntime() / (googleTask.getFinishTime() - googleTask.getSubmitTime());
+            if (googleTask.getPriority() == 0) {
+                totalVm0Availability += vmAvailabilty;
+                count0++;
+            } else if (googleTask.getPriority() == 1) {
+                totalVm1Availability += vmAvailabilty;
+                count1++;
+            } else {
+                totalVm2Availability += vmAvailabilty;
+                count2++;
+            }
+
+            totalPreemptions += googleTask.getNumberOfPreemptions();
+            totalMigrations += googleTask.getNumberOfMigrations();
+
+        }
+
+        System.out.println("total of tasks: " + (count0 + count1 + count2));
+
+        System.out.println("========== MEAN VM AVAILABILITY (priority 0) is " + dft.format((totalVm0Availability / count0)) + " =========");
+        System.out.println("========== MEAN VM AVAILABILITY (priority 1) is " + dft.format((totalVm1Availability / count1)) + " =========");
+        System.out.println("========== MEAN VM AVAILABILITY (priority 2) is " + dft.format((totalVm2Availability / count2)) + " =========");
+
+        System.out.println("========== MEAN VM AVAILABILITY is " + dft.format(((totalVm0Availability + totalVm1Availability + totalVm2Availability) / size)) + " =========");
+
+        System.out.println("Total of Preemptions: " + totalPreemptions);
+        System.out.println("Total of Migrations: " + totalMigrations);
+
     }
 
 
