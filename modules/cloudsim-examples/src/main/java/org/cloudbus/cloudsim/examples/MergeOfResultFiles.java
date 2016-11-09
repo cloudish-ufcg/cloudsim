@@ -1,7 +1,11 @@
 package org.cloudbus.cloudsim.examples;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import org.cloudbus.cloudsim.preemption.DatacenterInfo;
 import org.cloudbus.cloudsim.preemption.TaskState;
+import org.cloudbus.cloudsim.preemption.UsageEntry;
+import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
+import org.cloudbus.cloudsim.preemption.datastore.HostUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.TaskDataStore;
 
 import java.text.DecimalFormat;
@@ -13,8 +17,6 @@ import java.util.Properties;
  * Created by jvmafra on 07/11/16.
  */
 public class MergeOfResultFiles {
-
-    public static final String DATABASE_URL_PROP = "output_tasks_database_url";
 
     public static void main(String[] args) throws Exception{
         JCommander jc = new JCommander();
@@ -48,11 +50,11 @@ public class MergeOfResultFiles {
             double time = Double.parseDouble(task.time);
             Properties properties = new Properties();
 
-            properties.setProperty(DATABASE_URL_PROP, task.path_before);
+            properties.setProperty(TaskDataStore.DATABASE_URL_PROP, task.path_before);
             TaskDataStore dataStore = new TaskDataStore(properties);
             List<TaskState> tasks_before = dataStore.getTasksFinishedBefore(time);
 
-            properties.setProperty(DATABASE_URL_PROP, task.path_after);
+            properties.setProperty(TaskDataStore.DATABASE_URL_PROP, task.path_after);
             dataStore = new TaskDataStore(properties);
             List<TaskState> tasks_after = dataStore.getAllTasks();
 
@@ -60,7 +62,7 @@ public class MergeOfResultFiles {
             listOfAllTasks.addAll(tasks_before);
             listOfAllTasks.addAll(tasks_after);
 
-            properties.setProperty(DATABASE_URL_PROP, task.path_output);
+            properties.setProperty(TaskDataStore.DATABASE_URL_PROP, task.path_output);
             dataStore = new TaskDataStore(properties);
             dataStore.addTaskList(listOfAllTasks);
 
@@ -69,10 +71,45 @@ public class MergeOfResultFiles {
             printGoogleTaskStates(final_states);
 
 
-        // TODO
         } else if (parsedCommand.equals("utilization")){
+            double time = Double.parseDouble(utilization.time);
+            Properties properties = new Properties();
+
+            properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, utilization.path_before);
+            HostUsageDataStore dataStore = new HostUsageDataStore(properties);
+            List<UsageEntry> usage_before = dataStore.getUsageEntriesFinishedBefore(time);
+
+            properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, utilization.path_after);
+            dataStore = new HostUsageDataStore(properties);
+            List<UsageEntry> usage_after = dataStore.getAllUsageEntries();
+
+            List<UsageEntry> listOfAllUsageEntries = new ArrayList<>();
+            listOfAllUsageEntries.addAll(usage_before);
+            listOfAllUsageEntries.addAll(usage_after);
+
+            properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, task.path_output);
+            dataStore = new HostUsageDataStore(properties);
+            dataStore.addUsageEntries(listOfAllUsageEntries);
 
         } else if (parsedCommand.equals("datacenter")){
+            double time = Double.parseDouble(datacenter.time);
+            Properties properties = new Properties();
+
+            properties.setProperty(DatacenterUsageDataStore.DATABASE_URL_PROP, datacenter.path_before);
+            DatacenterUsageDataStore dataStore = new DatacenterUsageDataStore(properties);
+            List<DatacenterInfo> datacenter_before = dataStore.getDatacenterInfoFinishedBefore(time);
+
+            properties.setProperty(DatacenterUsageDataStore.DATABASE_URL_PROP, datacenter.path_after);
+            dataStore = new DatacenterUsageDataStore(properties);
+            List<DatacenterInfo> datacenter_after = dataStore.getAllDatacenterInfo();
+
+            List<DatacenterInfo> listOfAllDatacenterInfo = new ArrayList<>();
+            listOfAllDatacenterInfo.addAll(datacenter_before);
+            listOfAllDatacenterInfo.addAll(datacenter_after);
+
+            properties.setProperty(DatacenterUsageDataStore.DATABASE_URL_PROP, datacenter.path_output);
+            dataStore = new DatacenterUsageDataStore(properties);
+            dataStore.addDatacenterInfo(listOfAllDatacenterInfo);
 
         }
 

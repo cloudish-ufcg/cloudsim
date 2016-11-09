@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.preemption.TaskState;
 import org.cloudbus.cloudsim.preemption.UsageEntry;
 import org.cloudbus.cloudsim.preemption.UsageInfo;
 
@@ -146,5 +147,37 @@ public class HostUsageDataStore extends DataStore {
 			}
 		}
 		return false;
+	}
+
+	public List<UsageEntry> getUsageEntriesFinishedBefore(double interestedTime) {
+		Statement statement = null;
+		Connection conn = null;
+
+		try {
+			conn = getConnection();
+			statement = conn.createStatement();
+
+			statement.execute("SELECT * FROM " + UTILIZATION_TABLE_NAME
+					+ " WHERE time <= '" + interestedTime + "'");
+			ResultSet rs = statement.getResultSet();
+
+			return generateUsageEntriesList(rs);
+		} catch (SQLException e) {
+			Log.print(e);
+			Log.printLine("Couldn't get tasks from DB.");
+			return null;
+		}
+	}
+
+	private List<UsageEntry> generateUsageEntriesList(ResultSet rs) throws SQLException{
+		List<UsageEntry> usageEntries = new ArrayList<>();
+		while (rs.next()) {
+			usageEntries.add(new UsageEntry(rs.getInt("hostId"), rs
+					.getDouble("time"), rs.getDouble("usage"), rs
+					.getInt("vms"), rs.getInt("priority"), rs
+					.getDouble("availableMips")));
+		}
+
+		return usageEntries;
 	}
 }
