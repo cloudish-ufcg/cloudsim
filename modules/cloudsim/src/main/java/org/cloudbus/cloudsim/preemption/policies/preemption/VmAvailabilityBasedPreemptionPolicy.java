@@ -8,15 +8,16 @@ import java.util.TreeSet;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
+import org.cloudbus.cloudsim.preemption.util.VmAvailabilityBasedPreemptableVmComparator;
 
-public class VmAvailabilityBasedPremmptionPolicy extends PreemptionPolicy {
+public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 
 	public static final String SLO_TARGET_PREFIX_PROP = "slo_availability_target_priority_";
 	
 	private Map<Integer, Double> priorityToSLOTarget = new HashMap<Integer, Double>(); 
 	SimulationTimeUtil simulationTimeUtil = new SimulationTimeUtil();
 	
-	public VmAvailabilityBasedPremmptionPolicy(Properties properties) {
+	public VmAvailabilityBasedPreemptionPolicy(Properties properties) {
 		if (properties.getProperty(NUMBER_OF_PRIORITIES_PROP) != null) {
 			int numberOfPriorities = Integer.parseInt(properties.getProperty(NUMBER_OF_PRIORITIES_PROP));
 			if (numberOfPriorities < 1) {
@@ -31,10 +32,12 @@ public class VmAvailabilityBasedPremmptionPolicy extends PreemptionPolicy {
 			throw new IllegalArgumentException("The number of priorities and slo targets set are not in concordance.");
 		}
 		setPriorityToSLOTarget(sloAvailabilityTargets);
-				
+		
 		// initializing maps
 		for (int priority = 0; priority < getNumberOfPriorities(); priority++) {
-			getPriorityToVms().put(priority, new TreeSet<Vm>());
+			VmAvailabilityBasedPreemptableVmComparator comparator = new VmAvailabilityBasedPreemptableVmComparator(
+					sloAvailabilityTargets.get(priority));
+			getPriorityToVms().put(priority, new TreeSet<PreemptableVm>(comparator));
 			getPriorityToInUseMips().put(priority, new Double(0));
 		}
 	}
@@ -104,13 +107,18 @@ public class VmAvailabilityBasedPremmptionPolicy extends PreemptionPolicy {
 				mipsToBeAvailable += runningVm.getMips();
 			}
 		}
-		
+
 		return mipsToBeAvailable;
 	}
 
 	@Override
 	public Vm nextVmForPreempting() {
-		// TODO Auto-generated method stub
+		for (int i = getNumberOfPriorities() - 1; i >= 0; i--) {
+
+			if (!getPriorityToVms().get(i).isEmpty()) {
+				return getPriorityToVms().get(i).last();
+			}
+		}
 		return null;
 	}
 

@@ -14,7 +14,7 @@ public abstract class PreemptionPolicy {
 	public static final int DECIMAL_ACCURACY = 9;
 	
 	private Map<Integer, Double> priorityToInUseMips = new HashMap<Integer, Double>();
-	private Map<Integer, SortedSet<Vm>> priorityToVms = new HashMap<Integer, SortedSet<Vm>>();	
+	private Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new HashMap<Integer, SortedSet<PreemptableVm>>();	
 	private int numberOfPriorities = DEFAULT_NUMBER_OF_PRIORITIES;
 	private double totalMips;
 	public static final String NUMBER_OF_PRIORITIES_PROP = "number_of_priorities";
@@ -65,11 +65,11 @@ public abstract class PreemptionPolicy {
 		this.priorityToInUseMips = priorityToMipsInUse;
 	}
 
-	public Map<Integer, SortedSet<Vm>> getPriorityToVms() {
+	public Map<Integer, SortedSet<PreemptableVm>> getPriorityToVms() {
 		return priorityToVms;
 	}
 
-	public void setPriorityToVms(Map<Integer, SortedSet<Vm>> priorityToVms) {
+	public void setPriorityToVms(Map<Integer, SortedSet<PreemptableVm>> priorityToVms) {
 		this.priorityToVms = priorityToVms;
 	}
 

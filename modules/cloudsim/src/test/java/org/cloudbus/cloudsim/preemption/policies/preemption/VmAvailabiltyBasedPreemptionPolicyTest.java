@@ -14,18 +14,18 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 	private static final double ACCEPTABLE_DIFFERENCE = 0.00;
 	
 	Properties propeties;
-	VmAvailabilityBasedPremmptionPolicy policy;
+	VmAvailabilityBasedPreemptionPolicy policy;
 	SimulationTimeUtil timeUtil;
 	
 	@Before
 	public void setUp() {
 		propeties = new Properties();
 		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
-		policy = new VmAvailabilityBasedPremmptionPolicy(propeties);
+		policy = new VmAvailabilityBasedPreemptionPolicy(propeties);
 		policy.setTotalMips(10);
 		
 		timeUtil = Mockito.mock(SimulationTimeUtil.class);
@@ -33,7 +33,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 	
 	@Test
 	public void testInitialization() {
-		policy = new VmAvailabilityBasedPremmptionPolicy(propeties);
+		policy = new VmAvailabilityBasedPreemptionPolicy(propeties);
 		policy.setTotalMips(10);
 		
 		// checking
@@ -49,11 +49,11 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// setting properties
 		Properties propeties = new Properties();
 		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
-		new VmAvailabilityBasedPremmptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(propeties);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
@@ -61,10 +61,10 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// setting properties
 		Properties propeties = new Properties();
 		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
 				
-		new VmAvailabilityBasedPremmptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(propeties);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
@@ -73,7 +73,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		Properties propeties = new Properties();
 		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "0");
 				
-		new VmAvailabilityBasedPremmptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(propeties);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
@@ -82,7 +82,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		Properties propeties = new Properties();
 		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "-1");
 				
-		new VmAvailabilityBasedPremmptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(propeties);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
@@ -90,11 +90,11 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// setting properties
 		Properties propeties = new Properties();
 		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "zero", "1");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "zero", "1");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
-		new VmAvailabilityBasedPremmptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(propeties);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
@@ -102,11 +102,11 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// setting properties
 		Properties propeties = new Properties();
 		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "one");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "one");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
-		new VmAvailabilityBasedPremmptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(propeties);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
@@ -114,11 +114,11 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// setting properties
 		Properties propeties = new Properties();
 		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "-1");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "-1");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
-		new VmAvailabilityBasedPremmptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(propeties);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
@@ -126,11 +126,11 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// setting properties
 		Properties propeties = new Properties();
 		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "0.0", "1");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		propeties.setProperty(VmAvailabilityBasedPremmptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0.0", "1");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
-		new VmAvailabilityBasedPremmptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(propeties);
 	}
 		
 	@Test

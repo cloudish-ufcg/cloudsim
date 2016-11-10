@@ -125,20 +125,20 @@ public class PreemptiveHostTest {
 	public void testNextVmForPreempting() {
 		// setting environment
 		Map<Integer, Double> priorityToMipsInUse = new HashMap<Integer, Double>();
-		Map<Integer, SortedSet<Vm>> priorityToVms = new HashMap<Integer, SortedSet<Vm>>();
+		Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new HashMap<Integer, SortedSet<PreemptableVm>>();
 		double cpuReq = 1.0;
 
 		//priority 0
 		PreemptableVm vm0 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 0, 0);
 		priorityToMipsInUse.put(0, cpuReq);
-		SortedSet<Vm> priority0Vms = new TreeSet<Vm>();
+		SortedSet<PreemptableVm> priority0Vms = new TreeSet<PreemptableVm>();
 		priority0Vms.add(vm0);
 		priorityToVms.put(0, priority0Vms);
 		
 		// priority 1
 		PreemptableVm vm1 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 1, 0);
 		priorityToMipsInUse.put(1, cpuReq);
-		SortedSet<Vm> priority1Vms = new TreeSet<Vm>();
+		SortedSet<PreemptableVm> priority1Vms = new TreeSet<PreemptableVm>();
 		priority1Vms.add(vm1);
 		priorityToVms.put(1, priority1Vms);
 		
@@ -167,7 +167,7 @@ public class PreemptiveHostTest {
 		
 		// simulating removing vm1
 		priorityToMipsInUse.put(1, 0d);
-		priority1Vms = new TreeSet<Vm>();
+		priority1Vms = new TreeSet<PreemptableVm>();
 		priorityToVms.put(1, priority1Vms);
 		
 		host1.getPreemptionPolicy().setPriorityToInUseMips(priorityToMipsInUse);
@@ -601,11 +601,11 @@ public class PreemptiveHostTest {
 	public void testGetAvailableMipsByPriority2() {
 		// setting environment
 		Map<Integer, Double> priorityToMipsInUse = new HashMap<Integer, Double>();
-		Map<Integer, SortedSet<Vm>> priorityToVms = new HashMap<Integer, SortedSet<Vm>>();
+		Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new HashMap<Integer, SortedSet<PreemptableVm>>();
 		double cpuReq = 1.0;
 
-		SortedSet<Vm> priority0Vms = new TreeSet<Vm>();
-		SortedSet<Vm> priority1Vms = new TreeSet<Vm>();
+		SortedSet<PreemptableVm> priority0Vms = new TreeSet<PreemptableVm>();
+		SortedSet<PreemptableVm> priority1Vms = new TreeSet<PreemptableVm>();
 
 		for (int id = 0; id < 20; id++) {
 			if (id % 2 == 0) {

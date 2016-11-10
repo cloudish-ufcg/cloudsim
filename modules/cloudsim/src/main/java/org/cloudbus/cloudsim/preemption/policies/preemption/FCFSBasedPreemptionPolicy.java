@@ -19,7 +19,7 @@ public class FCFSBasedPreemptionPolicy extends PreemptionPolicy {
 		
 		// initializing maps
 		for (int priority = 0; priority < getNumberOfPriorities(); priority++) {
-			getPriorityToVms().put(priority, new TreeSet<Vm>());
+			getPriorityToVms().put(priority, new TreeSet<PreemptableVm>());
 			getPriorityToInUseMips().put(priority, new Double(0));
 		}
 	}
