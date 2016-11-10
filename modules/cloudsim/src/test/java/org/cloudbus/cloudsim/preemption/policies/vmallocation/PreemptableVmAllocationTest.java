@@ -16,6 +16,7 @@ import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.HostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.Assert;
@@ -42,7 +43,7 @@ public class PreemptableVmAllocationTest {
 		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
 		
 		properties = new Properties();
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "1");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "1");
 		
 		host1 = new PreemptiveHost(1, peList1,
 				new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
@@ -598,7 +599,7 @@ public class PreemptableVmAllocationTest {
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100.5)));
 		
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, String.valueOf(NUMBER_OF_PRIORITIES));
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, String.valueOf(NUMBER_OF_PRIORITIES));
 		
 		host1 = new PreemptiveHost(1, peList1,
 				new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));

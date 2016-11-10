@@ -21,7 +21,7 @@ public class FCFSBasedPreemptionPolicyTest {
 	@Before
 	public void setUp() {
 		properties = new Properties();
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
 		preemptionPolicy = new FCFSBasedPreemptionPolicy(properties);
 		preemptionPolicy.setTotalMips(10);
 		
@@ -38,14 +38,14 @@ public class FCFSBasedPreemptionPolicyTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void testInvalidInitialization() {
 		properties.setProperty(
-				FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "-1");
+				PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "-1");
 		new FCFSBasedPreemptionPolicy(properties);
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
 	public void testInvalidInitialization2() {
 		properties.setProperty(
-				FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "0");
+				PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "0");
 		new FCFSBasedPreemptionPolicy(properties);
 	}
 	
@@ -238,7 +238,7 @@ public class FCFSBasedPreemptionPolicyTest {
 	
 	@Test
 	public void testIsSuitableFor() {
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
 		preemptionPolicy = new FCFSBasedPreemptionPolicy(properties);
 		
 		double cpuReq = 1.0;
@@ -295,7 +295,7 @@ public class FCFSBasedPreemptionPolicyTest {
 		int totalVms = 20;
 		double freeCapacity = 0.5;
 
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
 		preemptionPolicy = new FCFSBasedPreemptionPolicy(properties);
 		preemptionPolicy.setTotalMips(totalVms + freeCapacity);
 		
@@ -451,7 +451,7 @@ public class FCFSBasedPreemptionPolicyTest {
 		priority1Vms.add(vm1);
 		priorityToVms.put(1, priority1Vms);
 		
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
 		preemptionPolicy = new FCFSBasedPreemptionPolicy(properties);
 		preemptionPolicy.setTotalMips(100);
 		

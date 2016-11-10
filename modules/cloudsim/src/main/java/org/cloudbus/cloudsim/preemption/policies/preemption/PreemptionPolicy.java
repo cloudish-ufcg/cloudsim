@@ -17,6 +17,7 @@ public abstract class PreemptionPolicy {
 	private Map<Integer, SortedSet<Vm>> priorityToVms = new HashMap<Integer, SortedSet<Vm>>();	
 	private int numberOfPriorities = DEFAULT_NUMBER_OF_PRIORITIES;
 	private double totalMips;
+	public static final String NUMBER_OF_PRIORITIES_PROP = "number_of_priorities";
 		
 	public abstract boolean isSuitableFor(PreemptableVm vm);
 	

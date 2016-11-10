@@ -151,4 +151,11 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		return this.getId() == that.getId();
 
 	}
+
+	public double getCurrentAvailability(double currentTime) {
+		if (currentTime == getSubmitTime()) {
+			return 0;
+		}
+		return getActualRuntime(currentTime) / (currentTime - getSubmitTime());
+	}
 }

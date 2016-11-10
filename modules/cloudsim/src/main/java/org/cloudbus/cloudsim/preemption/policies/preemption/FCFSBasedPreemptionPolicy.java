@@ -8,10 +8,7 @@ import org.cloudbus.cloudsim.preemption.PreemptableVm;
 
 public class FCFSBasedPreemptionPolicy extends PreemptionPolicy {
 
-	public static final String NUMBER_OF_PRIORITIES_PROP = "number_of_priorities";
-
-	public FCFSBasedPreemptionPolicy(Properties properties) {
-		
+	public FCFSBasedPreemptionPolicy(Properties properties) {		
 		if (properties.getProperty(NUMBER_OF_PRIORITIES_PROP) != null) {
 			int numberOfPriorities = Integer.parseInt(properties.getProperty(NUMBER_OF_PRIORITIES_PROP));
 			if (numberOfPriorities < 1) {
