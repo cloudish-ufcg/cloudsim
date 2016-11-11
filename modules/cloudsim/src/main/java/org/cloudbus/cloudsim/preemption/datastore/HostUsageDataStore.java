@@ -158,7 +158,7 @@ public class HostUsageDataStore extends DataStore {
 			statement = conn.createStatement();
 
 			statement.execute("SELECT * FROM " + UTILIZATION_TABLE_NAME
-					+ " WHERE time <= '" + interestedTime + "'");
+					+ " WHERE time < '" + interestedTime + "'");
 			ResultSet rs = statement.getResultSet();
 
 			return generateUsageEntriesList(rs);

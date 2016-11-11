@@ -21,13 +21,13 @@ public class MergeOfResultFiles {
     public static void main(String[] args) throws Exception{
         JCommander jc = new JCommander();
 
-        TaskCommand task = new TaskCommand();
+        Command task = new Command();
         jc.addCommand("task", task);
 
-        UtilizationCommand utilization = new UtilizationCommand();
+        Command utilization = new Command();
         jc.addCommand("utilization", utilization);
 
-        DatacenterCommand datacenter = new DatacenterCommand();
+        Command datacenter = new Command();
         jc.addCommand("datacenter", datacenter);
 
 
@@ -87,7 +87,7 @@ public class MergeOfResultFiles {
             listOfAllUsageEntries.addAll(usage_before);
             listOfAllUsageEntries.addAll(usage_after);
 
-            properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, task.path_output);
+            properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, utilization.path_output);
             dataStore = new HostUsageDataStore(properties);
             dataStore.addUsageEntries(listOfAllUsageEntries);
 
@@ -128,18 +128,6 @@ public class MergeOfResultFiles {
 
         @Parameter(names = "--output", description = "path where will be saved the new file")
         String path_output = "";
-    }
-
-    private static class TaskCommand extends Command {
-
-    }
-
-    private static class UtilizationCommand  extends Command{
-
-    }
-
-    private static class DatacenterCommand extends Command{
-
     }
 
     public static void printGoogleTaskStates(List<TaskState> newList) {
