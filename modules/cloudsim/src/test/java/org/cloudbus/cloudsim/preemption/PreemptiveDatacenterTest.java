@@ -30,6 +30,7 @@ import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -1504,6 +1505,7 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm4.getNumberOfMigrations(), 0);
     }
 
+    @Ignore
     @Test
     public void testVmDestroyWithPreempt2() {
 

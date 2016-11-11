@@ -454,6 +454,8 @@ public class PreemptiveDatacenter extends Datacenter {
 		
 		if (result) {
 			getVmsRunning().add(vm);
+			
+			//TODO we can move these calls to into vmCreate method in Host
 			vm.setStartExec(simulationTimeUtil.clock());
 			vm.allocatingToHost(host.getId());
 			
@@ -529,7 +531,7 @@ public class PreemptiveDatacenter extends Datacenter {
 							+ " right now.");
 			
 			PreemptableVm vmToPreempt = (PreemptableVm) host.nextVmForPreempting();
-			if (vmToPreempt != null && vmToPreempt.getPriority() > vm.getPriority()) {
+			if (vmToPreempt != null && vmToPreempt.getPriority() >= vm.getPriority()) {
 				Log.printConcatLine(simulationTimeUtil.clock(),
 						": Preempting VM #" + vmToPreempt.getId()
 								+ " (priority " + vmToPreempt.getPriority()

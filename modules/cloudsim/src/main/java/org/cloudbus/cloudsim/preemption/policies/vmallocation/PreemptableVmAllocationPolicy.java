@@ -8,6 +8,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.cloudbus.cloudsim.Host;
+import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
@@ -60,10 +61,21 @@ public class PreemptableVmAllocationPolicy extends VmAllocationPolicy implements
 
 	@Override
 	public boolean preempt(PreemptableVm vm) {
+		Log.printConcatLine(simulationTimeUtil.clock(),
+				": Preempting VM #", vm.getId(), " in VMAllocationPolicy.");
+		
 		Host host = getVmTable().remove(vm.getUid());
+		
 		if (host == null) {
+			Log.printConcatLine(simulationTimeUtil.clock(),
+					": VM #", vm.getId(), " is not present in VMTable.");
+			
 			return false;
 		}
+		
+		Log.printConcatLine(simulationTimeUtil.clock(),
+				": VM #", vm.getId(), " is allocated in Host #", host.getId());
+
 		vm.preempt(simulationTimeUtil.clock());
 		// just to update the sorted set
 		removePriorityHost(host);

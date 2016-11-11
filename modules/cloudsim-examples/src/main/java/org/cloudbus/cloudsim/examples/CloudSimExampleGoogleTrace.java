@@ -230,6 +230,7 @@ public class CloudSimExampleGoogleTrace {
         for (int hostId = 0; hostId < numberOfHosts; hostId++) {
         	PreemptionPolicy preemptionPolicy; 
         	if (properties.getProperty("preemption_policy_class") != null) {
+        		Log.printLine("Creating a hosts with preemption policy " + properties.getProperty("preemption_policy_class"));
         		preemptionPolicy = (PreemptionPolicy) createInstance("preemption_policy_class", properties);
         	} else {
         		Log.printLine("Creating a hosts with defatult preemption policy FCFS based .");
@@ -313,6 +314,11 @@ public class CloudSimExampleGoogleTrace {
         int count1 = 0;
         double totalVm2Availability = 0;
         int count2 = 0;
+        
+        double fulfillmentP0 = 0;
+        double fulfillmentP1 = 0;
+        double fulfillmentP2 = 0;
+        
         int totalPreemptions = 0;
         int totalMigrations = 0;
 
@@ -330,12 +336,21 @@ public class CloudSimExampleGoogleTrace {
             if (googleTask.getPriority() == 0) {
                 totalVm0Availability += vmAvailabilty;
                 count0++;
+                if (vmAvailabilty >= 1) {
+                	fulfillmentP0++;
+                }
             } else if (googleTask.getPriority() == 1) {
                 totalVm1Availability += vmAvailabilty;
                 count1++;
+                if (vmAvailabilty >= 0.9) {
+                	fulfillmentP1++;
+                }
             } else {
                 totalVm2Availability += vmAvailabilty;
                 count2++;
+                if (vmAvailabilty >= 0.5) {
+                	fulfillmentP2++;
+                }
             }
 
             totalPreemptions += googleTask.getNumberOfPreemptions();
@@ -369,6 +384,17 @@ public class CloudSimExampleGoogleTrace {
         
         System.out.println("Total of Preemptions: " + totalPreemptions);
         System.out.println("Total of Migrations: " + totalMigrations);
+        
+        System.out.println("violatingP0: " + fulfillmentP0);
+        System.out.println("totalP0: " + count0);
+        System.out.println("violatingP1: " + fulfillmentP1);
+        System.out.println("totalP1: " + count1);
+        System.out.println("violatingP2: " + fulfillmentP2);
+        System.out.println("totalP2: " + count2);
+        
+        System.out.println("========== % Fulfillment SLO (priority 0) is " + dft.format((fulfillmentP0 / count0)) + " =========");
+        System.out.println("========== % Fulfillment SLO (priority 1) is " + dft.format((fulfillmentP1 / count1)) + " =========");
+        System.out.println("========== % Fulfillment SLO (priority 2) is " + dft.format((fulfillmentP2 / count2)) + " =========");
 
     }
     

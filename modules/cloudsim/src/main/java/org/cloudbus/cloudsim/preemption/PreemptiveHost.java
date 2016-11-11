@@ -82,6 +82,8 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 		boolean result = super.vmCreate(vm);
 		
 		if (result) {
+			// TODO add a comment here
+			preemptableVm.setStartExec(CloudSim.clock());
 			preemptionPolicy.allocating(preemptableVm);
 			
 			double totalUsage = getTotalUsage();
