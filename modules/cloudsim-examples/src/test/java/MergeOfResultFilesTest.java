@@ -284,7 +284,7 @@ public class MergeOfResultFilesTest {
         String outputFile =  "DatabaseTaskTestOutput.sqlite3";
         String outputURL = "jdbc:sqlite:" + outputFile;
 
-        String[] args = {"task", "--before", databaseURLBefore, "--after", databaseURLAfter, "--time", "70", "--output", outputURL};
+        String[] args = {"task", "--before", databaseURLBefore, "--after", databaseURLAfter, "--time", "69", "--output", outputURL};
 
 
         MergeOfResultFiles.executeCommand(jc, args);
@@ -320,7 +320,7 @@ public class MergeOfResultFilesTest {
         String outputFile =  "DatabaseTaskTestOutput.sqlite3";
         String outputURL = "jdbc:sqlite:" + outputFile;
 
-        String[] args = {"task", "--before", databaseURLBefore, "--after", databaseURLAfter, "--time", "70", "--output", outputURL};
+        String[] args = {"task", "--before", databaseURLBefore, "--after", databaseURLAfter, "--time", "69", "--output", outputURL};
 
 
         MergeOfResultFiles.executeCommand(jc, args);
@@ -356,7 +356,7 @@ public class MergeOfResultFilesTest {
         String outputFile =  "DatabaseTaskTestOutput.sqlite3";
         String outputURL = "jdbc:sqlite:" + outputFile;
 
-        String[] args = {"task", "--before", databaseURLBefore, "--after", databaseURLAfter, "--time", "70", "--output", outputURL};
+        String[] args = {"task", "--before", databaseURLBefore, "--after", databaseURLAfter, "--time", "69", "--output", outputURL};
 
 
         MergeOfResultFiles.executeCommand(jc, args);
@@ -503,7 +503,7 @@ public class MergeOfResultFilesTest {
         String outputFile =  "DatabaseDatacenterTestOutput.sqlite3";
         String outputURL = "jdbc:sqlite:" + outputFile;
 
-        String[] args = {"datacenter", "--before", databaseURLBefore, "--after", databaseURLAfter, "--time", "80", "--output", outputURL};
+        String[] args = {"datacenter", "--before", databaseURLBefore, "--after", databaseURLAfter, "--time", "75", "--output", outputURL};
 
 
         MergeOfResultFiles.executeCommand(jc, args);
@@ -540,7 +540,7 @@ public class MergeOfResultFilesTest {
         String outputFile =  "DatabaseDatacenterTestOutput.sqlite3";
         String outputURL = "jdbc:sqlite:" + outputFile;
 
-        String[] args = {"datacenter", "--before", databaseURLBefore, "--after", databaseURLAfter, "--time", "80", "--output", outputURL};
+        String[] args = {"datacenter", "--before", databaseURLBefore, "--after", databaseURLAfter, "--time", "75", "--output", outputURL};
 
 
         MergeOfResultFiles.executeCommand(jc, args);
@@ -577,7 +577,7 @@ public class MergeOfResultFilesTest {
         String outputFile =  "DatabaseDatacenterTestOutput.sqlite3";
         String outputURL = "jdbc:sqlite:" + outputFile;
 
-        String[] args = {"datacenter", "--before", databaseURLBefore, "--after", databaseURLAfter, "--time", "80", "--output", outputURL};
+        String[] args = {"datacenter", "--before", databaseURLBefore, "--after", databaseURLAfter, "--time", "75", "--output", outputURL};
 
 
         MergeOfResultFiles.executeCommand(jc, args);

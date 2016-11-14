@@ -171,7 +171,7 @@ public class TaskDataStore extends DataStore {
 			statement = conn.createStatement();
 
 			statement.execute("SELECT * FROM " + GOOGLE_TASK_TABLE_NAME
-					+ " WHERE finishTime < '" + interestedTime + "'");
+					+ " WHERE finishTime <= '" + interestedTime + "'");
 			ResultSet rs = statement.getResultSet();
 
 			return generateTaskList(rs);

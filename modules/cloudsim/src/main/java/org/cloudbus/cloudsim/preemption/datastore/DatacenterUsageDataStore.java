@@ -164,7 +164,7 @@ public class DatacenterUsageDataStore extends DataStore {
 			statement = conn.createStatement();
 
 			statement.execute("SELECT * FROM " + DATACENTER_TABLE_NAME
-					+ " WHERE time < '" + interestedTime + "'");
+					+ " WHERE time <= '" + interestedTime + "'");
 			ResultSet rs = statement.getResultSet();
 
 			return generateDatacenterInfoList(rs);
