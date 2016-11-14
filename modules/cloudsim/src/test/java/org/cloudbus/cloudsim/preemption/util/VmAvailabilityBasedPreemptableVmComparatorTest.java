@@ -241,10 +241,7 @@ public class VmAvailabilityBasedPreemptableVmComparatorTest {
 		sortedSet.add(vm3);
 		sortedSet.add(vm0);
 		sortedSet.add(vm2);
-		
-		System.out.println(sortedSet);
-		System.out.println("----------------------------------");
-		System.out.println(sortedSet.contains(vm3));
+
 		// checking sort
 		Assert.assertEquals(5, sortedSet.size());
 		Assert.assertEquals(vm0, sortedSet.first());
