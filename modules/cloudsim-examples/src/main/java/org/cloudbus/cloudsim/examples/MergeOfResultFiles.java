@@ -18,9 +18,16 @@ import java.util.Properties;
  */
 public class MergeOfResultFiles {
 
+
     public static void main(String[] args) throws Exception{
         JCommander jc = new JCommander();
 
+        executeCommand(jc, args);
+
+
+    }
+
+    public static void executeCommand(JCommander jc, String[] args) {
         Command task = new Command();
         jc.addCommand("task", task);
 
@@ -38,7 +45,6 @@ public class MergeOfResultFiles {
             jc.usage();
             return;
         }
-
         String parsedCommand = jc.getParsedCommand();
 
         if (parsedCommand == null) {
@@ -68,7 +74,6 @@ public class MergeOfResultFiles {
 
             List<TaskState> final_states = dataStore.getAllTasks();
             System.out.println("Number of tasks in final output = " + final_states.size());
-            printGoogleTaskStates(final_states);
 
 
         } else if (parsedCommand.equals("utilization")){
@@ -112,8 +117,6 @@ public class MergeOfResultFiles {
             dataStore.addDatacenterInfo(listOfAllDatacenterInfo);
 
         }
-
-
     }
 
     private static class Command {
