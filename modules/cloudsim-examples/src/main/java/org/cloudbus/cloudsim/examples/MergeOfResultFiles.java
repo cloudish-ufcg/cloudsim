@@ -8,10 +8,7 @@ import org.cloudbus.cloudsim.preemption.DatacenterInfo;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.TaskState;
 import org.cloudbus.cloudsim.preemption.UsageEntry;
-import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
-import org.cloudbus.cloudsim.preemption.datastore.HostUsageDataStore;
-import org.cloudbus.cloudsim.preemption.datastore.PreemptableVmDataStore;
-import org.cloudbus.cloudsim.preemption.datastore.TaskDataStore;
+import org.cloudbus.cloudsim.preemption.datastore.*;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -21,8 +18,11 @@ import com.beust.jcommander.Parameter;
  */
 public class MergeOfResultFiles {
 
+	private static Properties properties;
+
 
     public static void main(String[] args) throws Exception{
+
         JCommander jc = new JCommander();
 
         executeCommand(jc, args);
@@ -58,9 +58,10 @@ public class MergeOfResultFiles {
             return;
         }
 
+        properties = new Properties();
+
         if (parsedCommand.equals("task")){
             double time = Double.parseDouble(task.time);
-            Properties properties = new Properties();
 
             properties.setProperty(TaskDataStore.DATABASE_URL_PROP, task.path_before);
             TaskDataStore dataStore = new TaskDataStore(properties);
@@ -75,16 +76,12 @@ public class MergeOfResultFiles {
             listOfAllTasks.addAll(tasks_after);
 
             properties.setProperty(TaskDataStore.DATABASE_URL_PROP, task.path_output);
-            dataStore = new TaskDataStore(properties);
-            dataStore.addTaskList(listOfAllTasks);
 
-            List<TaskState> final_states = dataStore.getAllTasks();
-            System.out.println("Number of tasks in final output = " + final_states.size());
+			storeTasks(listOfAllTasks);
 
 
         } else if (parsedCommand.equals("utilization")){
             double time = Double.parseDouble(utilization.time);
-            Properties properties = new Properties();
 
             properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, utilization.path_before);
             HostUsageDataStore dataStore = new HostUsageDataStore(properties);
@@ -99,12 +96,11 @@ public class MergeOfResultFiles {
             listOfAllUsageEntries.addAll(usage_after);
 
             properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, utilization.path_output);
-            dataStore = new HostUsageDataStore(properties);
-            dataStore.addUsageEntries(listOfAllUsageEntries);
+
+			storeUsageEntries(listOfAllUsageEntries);
 
         } else if (parsedCommand.equals("datacenter")){
             double time = Double.parseDouble(datacenter.time);
-            Properties properties = new Properties();
 
             properties.setProperty(DatacenterUsageDataStore.DATABASE_URL_PROP, datacenter.path_before);
             DatacenterUsageDataStore dataStore = new DatacenterUsageDataStore(properties);
@@ -119,12 +115,12 @@ public class MergeOfResultFiles {
             listOfAllDatacenterInfo.addAll(datacenter_after);
 
             properties.setProperty(DatacenterUsageDataStore.DATABASE_URL_PROP, datacenter.path_output);
-            dataStore = new DatacenterUsageDataStore(properties);
-            dataStore.addDatacenterInfo(listOfAllDatacenterInfo);
+
+			storeDatacenterInfo(listOfAllDatacenterInfo);
+
 
 		} else if (parsedCommand.equals("conclude")) {
 			double time = Double.parseDouble(conclude.time);
-			Properties properties = new Properties();
 
 			properties.setProperty(TaskDataStore.DATABASE_URL_PROP,
 					conclude.path_before);
@@ -186,20 +182,8 @@ public class MergeOfResultFiles {
 			properties.setProperty(TaskDataStore.DATABASE_URL_PROP,
 					conclude.path_output);
 
-			dataStore = new TaskDataStore(properties);
-
 			// dataStore.addTaskList(listOfAllTasks);
-			int count = 0;
-			int subListSize = (int) Math.round(listOfAllTasks.size() * 0.05);
-			for (int i = 0; i < listOfAllTasks.size(); i += subListSize) {
-				System.out.println("Interval = " + count++);
-				System.out.println("Min: " + i);
-				System.out.println("Max: "
-						+ Math.min(i + subListSize, listOfAllTasks.size()));
-				List<TaskState> subList = listOfAllTasks.subList(i,
-						Math.min(i + subListSize, listOfAllTasks.size()));
-				dataStore.addTaskList(subList);
-			}
+			storeTasks(listOfAllTasks);
 
 			// for (TaskState taskState : listOfAllTasks) {
 			// listOfAllTasks.
@@ -214,6 +198,53 @@ public class MergeOfResultFiles {
 		}
 	}
 
+	private static void storeTasks(List<TaskState> listOfAllTasks) {
+		TaskDataStore dataStore = new TaskDataStore(properties);
+		int count = 0;
+		int subListSize = (int) Math.ceil(listOfAllTasks.size() * 0.02);
+		for (int i = 0; i < listOfAllTasks.size(); i += subListSize) {
+			System.out.println("Interval = " + count++);
+			System.out.println("Min: " + i);
+			System.out.println("Max: "
+					+ Math.min(i + subListSize, listOfAllTasks.size()));
+			List<TaskState> subList = listOfAllTasks.subList(i,
+					Math.min(i + subListSize, listOfAllTasks.size()));
+			dataStore.addTaskList(subList);
+		}
+	}
+
+	private static void storeUsageEntries(List<UsageEntry> listOfUsageEntries) {
+		HostUsageDataStore dataStore = new HostUsageDataStore(properties);
+		int count = 0;
+		int subListSize = (int) Math.ceil(listOfUsageEntries.size() * 0.02);
+		for (int i = 0; i < listOfUsageEntries.size(); i += subListSize) {
+			System.out.println("Interval = " + count++);
+			System.out.println("Min: " + i);
+			System.out.println("Max: "
+					+ Math.min(i + subListSize, listOfUsageEntries.size()));
+			List<UsageEntry> subList = listOfUsageEntries.subList(i,
+					Math.min(i + subListSize, listOfUsageEntries.size()));
+			dataStore.addUsageEntries(subList);
+		}
+	}
+
+	private static void storeDatacenterInfo(List<DatacenterInfo> listOfDatacenterInfo) {
+		DatacenterUsageDataStore dataStore = new DatacenterUsageDataStore(properties);
+		int count = 0;
+		int subListSize = (int) Math.ceil(listOfDatacenterInfo.size() * 0.05);
+		for (int i = 0; i < listOfDatacenterInfo.size(); i += subListSize) {
+			System.out.println("Interval = " + count++);
+			System.out.println("Min: " + i);
+			System.out.println("Max: "
+					+ Math.min(i + subListSize, listOfDatacenterInfo.size()));
+			List<DatacenterInfo> subList = listOfDatacenterInfo.subList(i,
+					Math.min(i + subListSize, listOfDatacenterInfo.size()));
+			dataStore.addDatacenterInfo(subList);
+		}
+	}
+
+
+
 	private static class Command {
 		@Parameter(names = "--before", description = "path of DB before time of checkpoint")
 		String path_before = "";
@@ -226,6 +257,10 @@ public class MergeOfResultFiles {
 
 		@Parameter(names = "--output", description = "path where will be saved the new file")
 		String path_output = "";
+	}
+
+	private static <T> void storeElements(List<T> elements, DataStore dataStore){
+
 	}
 
 	public static void printGoogleTaskStates(List<TaskState> newList) {
