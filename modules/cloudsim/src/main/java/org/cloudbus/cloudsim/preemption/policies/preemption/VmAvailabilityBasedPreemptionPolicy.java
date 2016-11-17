@@ -118,7 +118,7 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 
 			double runningDiff = runningVm.getCurrentAvailability(simulationTimeUtil.clock()) - sloTarget;
 			
-			if (runningDiff > arrivingDiff) {
+			if (runningDiff > arrivingDiff && runningDiff > 0) {
 				mipsToBeAvailable += runningVm.getMips();
 			}
 		}

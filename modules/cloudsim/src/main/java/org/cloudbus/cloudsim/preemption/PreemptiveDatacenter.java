@@ -7,7 +7,18 @@
 
 package org.cloudbus.cloudsim.preemption;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
@@ -22,6 +33,7 @@ import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.HostUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.PreemptableVmDataStore;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
+import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedVmComparator;
 
 /**
  * TODO
@@ -440,7 +452,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		allocateHostForVm(ack, vm, null, false);
 	}
 
-	protected void allocateHostForVm(boolean ack, PreemptableVm vm, PreemptiveHost host, boolean isBackfilling) {
+	protected boolean allocateHostForVm(boolean ack, PreemptableVm vm, PreemptiveHost host, boolean isBackfilling) {
 		
 		if (host == null) {			
 			host = (PreemptiveHost) getVmAllocationPolicy().selectHost(vm);	
@@ -483,6 +495,7 @@ public class PreemptiveDatacenter extends Datacenter {
 			sendFirst(getId(), remainingTime, CloudSimTags.VM_DESTROY_ACK, vm);			
 			
 		}
+		return result;
 	}
 
 	protected void sendFirst(int entityId, double delay, int cloudSimTag, Object data) {
@@ -596,13 +609,11 @@ public class PreemptiveDatacenter extends Datacenter {
 		}		
 	}
 
-	/*
-	 * TODO we need to review this code. only the available mips is not the correct way to do it
-	 */
 	private void processBackfilling(Host host) {	
-		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to allocate more VMs on host #", host.getId() + " after a detroying.");
+//		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to allocate more VMs on host #", host.getId() + " after a detroying.");
+		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to allocate the VMs in waiting queue after a VM detroying.");
 		
-		PreemptiveHost gHost = (PreemptiveHost) host;
+//		PreemptiveHost gHost = (PreemptiveHost) host;
 		boolean isBackfilling = false;
 		
 		/*
@@ -611,17 +622,40 @@ public class PreemptiveDatacenter extends Datacenter {
 		 */
 		
 		// choosing the vms to request now
-		for (PreemptableVm currentVm : new ArrayList<PreemptableVm>(getVmsForScheduling())) {
+//		for (PreemptableVm currentVm : new ArrayList<PreemptableVm>(getVmsForScheduling())) {
+//			
+//			if (host.isSuitableForVm(currentVm)) {
+//				Log.printConcatLine(simulationTimeUtil.clock(),
+//						": Trying to Allocate VM #", currentVm.getId(),
+//						" now on host #", gHost.getId());
+//				allocateHostForVm(false, currentVm, gHost, isBackfilling);
+//		} else {
+//			isBackfilling = true;
+//		}
+//			if (currentVm.isViolatingAvailabilityTarget(simulationTimeUtil.clock())) {
+		
+		ArrayList<PreemptableVm> waitingQueue = new ArrayList<PreemptableVm>(getVmsForScheduling());
+		
+		// TODO Think better about how to configure it
+		String preemptionPolicyClass = properties.getProperty("preemption_policy_class");
+		if (preemptionPolicyClass != null
+				&& "org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy"
+						.equals(preemptionPolicyClass)) {
 			
-			if (host.isSuitableForVm(currentVm)) {
-				Log.printConcatLine(simulationTimeUtil.clock(),
-						": Trying to Allocate VM #", currentVm.getId(),
-						" now on host #", gHost.getId());
-				allocateHostForVm(false, currentVm, gHost, isBackfilling);
+			Log.printConcatLine(simulationTimeUtil.clock(), ": Sorting the waiting queue based on priority + current availability.");
 
-			} else {
-				isBackfilling = true;
-			}
+			Collections.sort(waitingQueue,
+					new PriorityAndAvailabilityBasedVmComparator(
+							simulationTimeUtil));
+		}
+		
+		for (PreemptableVm currentVm : waitingQueue) {
+				if (!allocateHostForVm(false, currentVm, null, isBackfilling)) {
+					isBackfilling = true;
+				}
+//			} else {
+//				//TODO think about backfilling
+//			}
 		}
 	}
 
