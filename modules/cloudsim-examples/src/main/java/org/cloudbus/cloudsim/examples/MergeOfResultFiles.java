@@ -1,4 +1,5 @@
 package org.cloudbus.cloudsim.examples;
+import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,7 @@ import com.beust.jcommander.Parameter;
 public class MergeOfResultFiles {
 
 	private static Properties properties;
-
+	private static int INTERVAL_SIZE = 300000000;
 
     public static void main(String[] args) throws Exception{
 
@@ -30,7 +31,7 @@ public class MergeOfResultFiles {
 
     }
 
-    public static void executeCommand(JCommander jc, String[] args) {
+    public static void executeCommand(JCommander jc, String[] args) throws Exception{
         Command task = new Command();
         jc.addCommand("task", task);
 
@@ -85,11 +86,22 @@ public class MergeOfResultFiles {
 
             properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, utilization.path_before);
             HostUsageDataStore dataStore = new HostUsageDataStore(properties);
-            List<UsageEntry> usage_before = dataStore.getUsageEntriesFinishedBefore(time);
+
+			List<UsageEntry> usage_before = new ArrayList<>();
+
+			loadUsageEntries(0, time, dataStore, usage_before);
 
             properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, utilization.path_after);
             dataStore = new HostUsageDataStore(properties);
-            List<UsageEntry> usage_after = dataStore.getAllUsageEntries();
+
+            List<UsageEntry> usage_after = new ArrayList<>();
+
+			loadUsageEntries(time, dataStore.getMaxTraceTime(), dataStore, usage_after);
+
+			System.out.println("BEFORE:");
+			System.out.println(usage_before.size());
+			System.out.println("AFTER:");
+			System.out.println(usage_after.size());
 
             List<UsageEntry> listOfAllUsageEntries = new ArrayList<>();
             listOfAllUsageEntries.addAll(usage_before);
@@ -196,6 +208,16 @@ public class MergeOfResultFiles {
 			// printGoogleTaskStates(final_states);
 
 		}
+	}
+
+	private static void loadUsageEntries(double minTime, double maxTime, HostUsageDataStore dataStore, List<UsageEntry> usageEntryList) throws SQLException, ClassNotFoundException {
+		int intervalIndex = 0;
+		List<UsageEntry> loadedEntries = dataStore.getUsageEntryInterval(intervalIndex, INTERVAL_SIZE, minTime, maxTime);
+		while (loadedEntries != null){
+            usageEntryList.addAll(loadedEntries);
+            loadedEntries.clear();
+            loadedEntries = dataStore.getUsageEntryInterval(++intervalIndex, INTERVAL_SIZE, minTime, maxTime);
+        }
 	}
 
 	private static void storeTasks(List<TaskState> listOfAllTasks) {
