@@ -20,7 +20,7 @@ import com.beust.jcommander.Parameter;
 public class MergeOfResultFiles {
 
 	private static Properties properties;
-	private static int INTERVAL_SIZE = 300000000;
+	private static double INTERVAL_SIZE = 86400000000.0;
 
     public static void main(String[] args) throws Exception{
 
@@ -85,31 +85,17 @@ public class MergeOfResultFiles {
             double time = Double.parseDouble(utilization.time);
 
             properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, utilization.path_before);
-            HostUsageDataStore dataStore = new HostUsageDataStore(properties);
+            HostUsageDataStore inputDataStore = new HostUsageDataStore(properties);
 
-			List<UsageEntry> usage_before = new ArrayList<>();
+			properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, utilization.path_output);
+			HostUsageDataStore outputDataStore = new HostUsageDataStore(properties);
 
-			loadUsageEntries(0, time, dataStore, usage_before);
+			loadAndStoreUsageEntries(0, time, inputDataStore, outputDataStore);
 
             properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, utilization.path_after);
-            dataStore = new HostUsageDataStore(properties);
+			inputDataStore = new HostUsageDataStore(properties);
 
-            List<UsageEntry> usage_after = new ArrayList<>();
-
-			loadUsageEntries(time, dataStore.getMaxTraceTime(), dataStore, usage_after);
-
-			System.out.println("BEFORE:");
-			System.out.println(usage_before.size());
-			System.out.println("AFTER:");
-			System.out.println(usage_after.size());
-
-            List<UsageEntry> listOfAllUsageEntries = new ArrayList<>();
-            listOfAllUsageEntries.addAll(usage_before);
-            listOfAllUsageEntries.addAll(usage_after);
-
-            properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, utilization.path_output);
-
-			storeUsageEntries(listOfAllUsageEntries);
+			loadAndStoreUsageEntries(time, inputDataStore.getMaxTraceTime(), inputDataStore, outputDataStore);
 
         } else if (parsedCommand.equals("datacenter")){
             double time = Double.parseDouble(datacenter.time);
@@ -210,13 +196,13 @@ public class MergeOfResultFiles {
 		}
 	}
 
-	private static void loadUsageEntries(double minTime, double maxTime, HostUsageDataStore dataStore, List<UsageEntry> usageEntryList) throws SQLException, ClassNotFoundException {
+	private static void loadAndStoreUsageEntries(double minTime, double maxTime, HostUsageDataStore inputDataStore, HostUsageDataStore outputDataStore) throws SQLException, ClassNotFoundException {
 		int intervalIndex = 0;
-		List<UsageEntry> loadedEntries = dataStore.getUsageEntryInterval(intervalIndex, INTERVAL_SIZE, minTime, maxTime);
+		List<UsageEntry> loadedEntries = inputDataStore.getUsageEntryInterval(intervalIndex, INTERVAL_SIZE, minTime, maxTime);
 		while (loadedEntries != null){
-            usageEntryList.addAll(loadedEntries);
+			storeUsageEntries(loadedEntries, outputDataStore);
             loadedEntries.clear();
-            loadedEntries = dataStore.getUsageEntryInterval(++intervalIndex, INTERVAL_SIZE, minTime, maxTime);
+            loadedEntries = inputDataStore.getUsageEntryInterval(++intervalIndex, INTERVAL_SIZE, minTime, maxTime);
         }
 	}
 
@@ -235,8 +221,7 @@ public class MergeOfResultFiles {
 		}
 	}
 
-	private static void storeUsageEntries(List<UsageEntry> listOfUsageEntries) {
-		HostUsageDataStore dataStore = new HostUsageDataStore(properties);
+	private static void storeUsageEntries(List<UsageEntry> listOfUsageEntries, HostUsageDataStore outputDataStore) {
 		int count = 0;
 		int subListSize = (int) Math.ceil(listOfUsageEntries.size() * 0.02);
 		for (int i = 0; i < listOfUsageEntries.size(); i += subListSize) {
@@ -246,7 +231,7 @@ public class MergeOfResultFiles {
 					+ Math.min(i + subListSize, listOfUsageEntries.size()));
 			List<UsageEntry> subList = listOfUsageEntries.subList(i,
 					Math.min(i + subListSize, listOfUsageEntries.size()));
-			dataStore.addUsageEntries(subList);
+			outputDataStore.addUsageEntries(subList);
 		}
 	}
 
