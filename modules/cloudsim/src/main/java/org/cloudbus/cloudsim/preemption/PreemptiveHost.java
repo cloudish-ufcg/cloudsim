@@ -124,6 +124,10 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 		return preemptionPolicy.getAvailableMipsByPriority(priority);
 	}
 
+	public double getAvailableMipsByVm(PreemptableVm vm) {
+		return preemptionPolicy.getAvailableMipsByVm(vm);
+	}
+	
 	@Override
 	public double getTotalMips(){
 		return ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips();
@@ -164,4 +168,5 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 	private void setPreemptionPolicy(PreemptionPolicy preemptionPolicy) {
 		this.preemptionPolicy = preemptionPolicy;
 	}
+
 }

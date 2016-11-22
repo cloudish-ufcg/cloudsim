@@ -6,7 +6,6 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.junit.Assert;
 import org.junit.Before;
@@ -682,5 +681,107 @@ public class FCFSBasedPreemptionPolicyTest {
 		Assert.assertEquals(0, preemptionPolicy.getPriorityToVms().get(1).size());
 		Assert.assertEquals(0, preemptionPolicy.getPriorityToVms().get(2).size());
 
+	}
+	
+	@Test
+	public void testGetAvailableMipsByPriority(){
+		double memReq = 0;
+		double submitTime = 0;
+		double runtime = 0;
+		
+		PreemptableVm vm = new PreemptableVm(0, 1, 5, memReq, submitTime, 0, runtime);
+		
+		preemptionPolicy.allocating(vm);
+		
+		// checking after allocating vm with priority 0
+		Assert.assertEquals(5, preemptionPolicy.getPriorityToInUseMips().get(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(1, preemptionPolicy.getPriorityToVms().get(0).size());
+		Assert.assertEquals(vm, preemptionPolicy.getPriorityToVms().get(0).first());
+		
+		Assert.assertEquals(0, preemptionPolicy.getPriorityToInUseMips().get(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertTrue(preemptionPolicy.getPriorityToVms().get(1).isEmpty());
+		
+		Assert.assertEquals(0, preemptionPolicy.getPriorityToInUseMips().get(2), ACCEPTABLE_DIFFERENCE);
+		Assert.assertTrue(preemptionPolicy.getPriorityToVms().get(2).isEmpty());
+		
+		// checking available Mips by priority
+		Assert.assertEquals(5, preemptionPolicy.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(5, preemptionPolicy.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(5, preemptionPolicy.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+		
+		// allocating vm1
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 3, memReq, submitTime, 1, runtime);		
+		preemptionPolicy.allocating(vm1);
+		
+		// checking available Mips by priority
+		Assert.assertEquals(5, preemptionPolicy.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(2, preemptionPolicy.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(2, preemptionPolicy.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+		
+		// allocating vm2
+		PreemptableVm vm2 = new PreemptableVm(2, 1, 2, memReq, submitTime, 2, runtime);		
+		preemptionPolicy.allocating(vm2);
+		
+		// checking available Mips by priority
+		Assert.assertEquals(5, preemptionPolicy.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(2, preemptionPolicy.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0, preemptionPolicy.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+	}
+	
+	@Test
+	public void testGetAvailableMipsByVm() {
+		double memReq = 0;
+		double runtime = 10;				
+		double cpuReq = 2.55;
+		
+		PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 0, runtime);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, cpuReq, memReq, 0, 1, runtime);
+		PreemptableVm vm2 = new PreemptableVm(2, 1, cpuReq, memReq, 0, 2, runtime);
+
+		// checking current vm availability
+		Assert.assertEquals(0, vm0.getCurrentAvailability(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0, vm1.getCurrentAvailability(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0, vm2.getCurrentAvailability(0), ACCEPTABLE_DIFFERENCE);
+		
+		// allocating vms
+		preemptionPolicy.allocating(vm0);
+		vm0.setStartExec(0);
+
+		preemptionPolicy.allocating(vm1);
+		vm1.setStartExec(0);
+		
+		preemptionPolicy.allocating(vm2);
+		vm2.setStartExec(0);
+		
+		// checking after allocating VMs
+		Assert.assertEquals(cpuReq, preemptionPolicy.getPriorityToInUseMips().get(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(1, preemptionPolicy.getPriorityToVms().get(0).size());
+		Assert.assertEquals(vm0, preemptionPolicy.getPriorityToVms().get(0).first());
+		
+		Assert.assertEquals(cpuReq, preemptionPolicy.getPriorityToInUseMips().get(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(1, preemptionPolicy.getPriorityToVms().get(1).size());
+		Assert.assertEquals(vm1, preemptionPolicy.getPriorityToVms().get(1).first());
+		
+		Assert.assertEquals(cpuReq, preemptionPolicy.getPriorityToInUseMips().get(2), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(1, preemptionPolicy.getPriorityToVms().get(2).size());
+		Assert.assertEquals(vm2, preemptionPolicy.getPriorityToVms().get(2).first());
+		
+		// checking current vm availabilities
+		Assert.assertEquals(1, vm0.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(1, vm1.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(1, vm2.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
+
+		// check VM with the same priority wouldn't be preempted by new ones
+		PreemptableVm vmP0 = new PreemptableVm(4, 1, cpuReq, memReq, 5, 0, runtime);
+		Assert.assertEquals(0, vmP0.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(10 - cpuReq, preemptionPolicy.getAvailableMipsByVm(vmP0), ACCEPTABLE_DIFFERENCE);
+
+		PreemptableVm vmP1 = new PreemptableVm(5, 1, cpuReq, memReq, 5, 1, runtime);
+		Assert.assertEquals(0, vmP1.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(10 - 2 * cpuReq, preemptionPolicy.getAvailableMipsByVm(vmP1), ACCEPTABLE_DIFFERENCE);
+		
+		PreemptableVm vmP2 = new PreemptableVm(6, 1, cpuReq, memReq, 5, 2, runtime);
+		Assert.assertEquals(0, vmP2.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(10 - 3 * cpuReq, preemptionPolicy.getAvailableMipsByVm(vmP2), ACCEPTABLE_DIFFERENCE);
 	}
 }

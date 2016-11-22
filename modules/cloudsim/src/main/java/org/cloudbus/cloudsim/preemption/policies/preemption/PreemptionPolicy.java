@@ -3,10 +3,8 @@ package org.cloudbus.cloudsim.preemption.policies.preemption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
-import java.util.TreeSet;
 
 import org.cloudbus.cloudsim.Vm;
-import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
@@ -26,6 +24,8 @@ public abstract class PreemptionPolicy {
 	public abstract boolean isSuitableFor(PreemptableVm vm);
 	
 	public abstract Vm nextVmForPreempting();
+	
+	public abstract double getAvailableMipsByVm(PreemptableVm vm);
 	
 	public void allocating(PreemptableVm vm) {
 		if (vm == null) {
@@ -97,4 +97,5 @@ public abstract class PreemptionPolicy {
 		return DecimalUtil.format(getTotalMips() - inUseByNonPreemptiveVms,
 				DECIMAL_ACCURACY);
 	}
+
 }
