@@ -32,6 +32,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 public class PreemptiveDatacenterTest {
@@ -982,13 +983,17 @@ public class PreemptiveDatacenterTest {
 
     @Test
     public void testVmDestroyWithVmForSchedulingDifferentPriorities2() {
+        Log.disable();
         double runtime = 10;
+        int vmId = 0;
+        int userId = 1;
 
-        List<PreemptableVm> vmsP2 = new ArrayList<PreemptableVm>();
+        List<PreemptableVm> vmsP2 = new ArrayList<>();
 
         // creating vms priorities 2
         for (int i = 0; i < 10; i++) {
-            PreemptableVm vmP2 = new PreemptableVm(i, 1, 1.0, 1.0, 0, 2, runtime);
+
+            PreemptableVm vmP2 = new PreemptableVm(vmId++, userId, 1.0, 1.0, 0, 2, runtime);
 
             Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
             Mockito.when(event.getData()).thenReturn(vmP2);
@@ -1018,7 +1023,7 @@ public class PreemptiveDatacenterTest {
 
         // creating vms priorities 1
         for (int i = 0; i < 10; i++) {
-            PreemptableVm vmP1 = new PreemptableVm(i + 10, 1, 1.0, 1.0, 0, 1,
+            PreemptableVm vmP1 = new PreemptableVm(vmId++, userId, 1.0, 1.0, 0, 1,
                     runtime - 0.1);
 
             Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -1045,6 +1050,11 @@ public class PreemptiveDatacenterTest {
             }
         }
 
+        for (PreemptableVm vm : vmsP1) {
+            Assert.assertEquals(vm.getNumberOfPreemptions(), 0);
+            Assert.assertEquals(vm.getNumberOfBackfillingChoice(), 0);
+        }
+
         for (PreemptableVm vm : vmsP2) {
             Assert.assertEquals(vm.getNumberOfPreemptions(), 1);
             Assert.assertEquals(vm.getNumberOfBackfillingChoice(), 0);
@@ -1063,7 +1073,7 @@ public class PreemptiveDatacenterTest {
         }
         Assert.assertEquals(vmsP1.size(), datacenter.getVmsRunning().size());
 
-        PreemptableVm vmP0 = new PreemptableVm(20, 1, 5, 1.0, 0, 0, runtime - 0.1);
+        PreemptableVm vmP0 = new PreemptableVm(vmId++, userId, 5, 1.0, 0, 0, runtime - 0.1);
 
         // allocating vm priority 0
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -1074,6 +1084,7 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(15, datacenter.getVmsForScheduling().size());
         Assert.assertEquals(6, datacenter.getVmsRunning().size());
         Assert.assertEquals(vmP0, datacenter.getVmsRunning().first());
+
         for (PreemptableVm vm : datacenter.getVmsForScheduling()) {
             Assert.assertEquals(vm.getNumberOfPreemptions(), 1);
             Assert.assertEquals(vm.getNumberOfBackfillingChoice(), 0);
@@ -1110,6 +1121,11 @@ public class PreemptiveDatacenterTest {
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
         Mockito.when(event.getData()).thenReturn(vmsP1.get(0));
+        //mocking return of the selection policy to expected vm
+        Mockito.when(hostSelector.select(
+                Mockito.any(SortedSet.class), Mockito.any(PreemptableVm.class))).thenReturn(null);
+        Mockito.when(hostSelector.select(
+                preemptableVmAllocationPolicy.getPriorityToSortedHost().get(1), vmsP1.get(5))).thenReturn(host);
         datacenter.processEvent(event);
 
         // checking
@@ -1143,6 +1159,9 @@ public class PreemptiveDatacenterTest {
         // destroying vm priority 1
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
         Mockito.when(event.getData()).thenReturn(vmsP1.get(1));
+        //mocking return of the selection policy to expected vm
+        Mockito.when(hostSelector.select(
+                preemptableVmAllocationPolicy.getPriorityToSortedHost().get(1), vmsP1.get(6))).thenReturn(host);
         datacenter.processEvent(event);
 
         // checking
@@ -1178,6 +1197,20 @@ public class PreemptiveDatacenterTest {
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
         Mockito.when(event.getData()).thenReturn(vmP0);
+
+        //mocking return of the selection policy to expected vms
+        Mockito.when(hostSelector.select(
+                preemptableVmAllocationPolicy.getPriorityToSortedHost().get(1), vmsP1.get(7))).thenReturn(host);
+        Mockito.when(hostSelector.select(
+                preemptableVmAllocationPolicy.getPriorityToSortedHost().get(1), vmsP1.get(8))).thenReturn(host);
+        Mockito.when(hostSelector.select(
+                preemptableVmAllocationPolicy.getPriorityToSortedHost().get(1), vmsP1.get(9))).thenReturn(host);
+
+        Mockito.when(hostSelector.select(
+                preemptableVmAllocationPolicy.getPriorityToSortedHost().get(2), vmsP2.get(0))).thenReturn(host);
+        Mockito.when(hostSelector.select(
+                preemptableVmAllocationPolicy.getPriorityToSortedHost().get(2), vmsP2.get(1))).thenReturn(host);
+
         datacenter.processEvent(event);
 
         // checking
@@ -1221,20 +1254,27 @@ public class PreemptiveDatacenterTest {
 
     @Test
     public void testVmDestroyWithPreemptionAfter() {
+        Log.disable();
         double runtime = 10;
+        int vmId = 0;
+        int userId = 1;
+        double cpuReq = 5;
 
-        PreemptableVm vm0P0 = new PreemptableVm(0, 1, 5, 1.0, 0, 0, runtime - 0.1);
+        PreemptableVm vm0P0 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 0, runtime - 0.1);
 
         // allocating first vm
+        Assert.assertEquals(10, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
         Mockito.when(event.getData()).thenReturn(vm0P0);
         datacenter.processEvent(event);
+
 
         // checking
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
         Assert.assertEquals(1, datacenter.getVmsRunning().size());
         Assert.assertEquals(vm0P0, datacenter.getVmsRunning().first());
 
+        Assert.assertEquals(5, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(5, host.getAvailableMipsByPriority(0),
                 ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(5, host.getAvailableMipsByPriority(1),
@@ -1245,7 +1285,8 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0P0.getNumberOfBackfillingChoice(), 0);
 
-        PreemptableVm vm1P1 = new PreemptableVm(1, 1, 2, 1.0, 0, 1, runtime);
+        cpuReq = 2;
+        PreemptableVm vm1P1 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 1, runtime);
 
         // allocating second vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -1258,6 +1299,7 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0P0, datacenter.getVmsRunning().first());
         Assert.assertEquals(vm1P1, datacenter.getVmsRunning().last());
 
+        Assert.assertEquals(3, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(5, host.getAvailableMipsByPriority(0),
                 ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(3, host.getAvailableMipsByPriority(1),
@@ -1273,7 +1315,8 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm1P1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1P1.getNumberOfMigrations(), 0);
 
-        PreemptableVm vm2P2 = new PreemptableVm(2, 1, 3, 1.0, 0, 2, runtime);
+        cpuReq = 3;
+        PreemptableVm vm2P2 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 2, runtime);
 
         // allocating third vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -1287,6 +1330,7 @@ public class PreemptiveDatacenterTest {
         Assert.assertTrue(datacenter.getVmsRunning().contains(vm1P1));
         Assert.assertEquals(vm2P2, datacenter.getVmsRunning().last());
 
+        Assert.assertEquals(0, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(5, host.getAvailableMipsByPriority(0),
                 ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(3, host.getAvailableMipsByPriority(1),
@@ -1306,7 +1350,8 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm2P2.getNumberOfMigrations(), 0);
 
         // allocation one more VM with priority 0
-        PreemptableVm vm3P0 = new PreemptableVm(3, 1, 6, 1.0, 0, 0, runtime);
+        cpuReq = 6;
+        PreemptableVm vm3P0 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 0, runtime);
 
         // checking and simulating host selector
         Assert.assertFalse(host.isSuitableForVm(vm3P0));
@@ -1347,6 +1392,9 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3P0.getNumberOfMigrations(), 0);
 
         // destroying vm0P0
+        Mockito.when(
+                hostSelector.select(preemptableVmAllocationPolicy.getPriorityToSortedHost().get(0), vm3P0)).thenReturn(host);
+
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
         Mockito.when(event.getData()).thenReturn(vm0P0);
@@ -1417,16 +1465,24 @@ public class PreemptiveDatacenterTest {
     @Test
     public void testBackfilling() {
         double runtime = 10;
+        int vmId = 0;
+        int userId = 1;
 
         // creating VMs with different priorities
-        PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 1.0, 0, 0, runtime - 0.3); // 5 mips
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 1.0, 0, 0, runtime - 0.2); // 5 mips
-        PreemptableVm vm2 = new PreemptableVm(2, 1, 6, 1.0, 0, 0, runtime); // 6 mips
-        PreemptableVm vm3 = new PreemptableVm(3, 1, 4, 1.0, 0, 1, runtime); // 4 mips
-        PreemptableVm vm4 = new PreemptableVm(4, 1, 1, 1.0, 0, 2, runtime); // 1 mips
+        PreemptableVm vm0 = new PreemptableVm(vmId++, userId, 5, 1.0, 0, 0, runtime - 0.3); // 5 mips
+        PreemptableVm vm1 = new PreemptableVm(vmId++, userId, 5, 1.0, 0, 0, runtime - 0.2); // 5 mips
+        PreemptableVm vm2 = new PreemptableVm(vmId++, userId, 6, 1.0, 0, 0, runtime); // 6 mips
+        PreemptableVm vm3 = new PreemptableVm(vmId++, userId, 4, 1.0, 0, 1, runtime); // 4 mips
+        PreemptableVm vm4 = new PreemptableVm(vmId++, userId, 1, 1.0, 0, 2, runtime); // 1 mips
 
         // trying to allocate all Vms. At the first moment, just Vm0 and Vm1 will be allocated
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
+        Mockito.when(hostSelector.select(
+                Mockito.any(SortedSet.class), Mockito.any(PreemptableVm.class))).thenReturn(null);
+        Mockito.when(hostSelector.select(
+                preemptableVmAllocationPolicy.getPriorityToSortedHost().get(0), vm0)).thenReturn(host);
+        Mockito.when(hostSelector.select(
+                preemptableVmAllocationPolicy.getPriorityToSortedHost().get(0), vm1)).thenReturn(host);
 
         Mockito.when(event.getData()).thenReturn(vm0);
         datacenter.processEvent(event);
@@ -1458,6 +1514,10 @@ public class PreemptiveDatacenterTest {
 
 
         // destroying Vm0. So, Vm3 and Vm4 will be allocated, because we have 5 mips free
+        Mockito.when(hostSelector.select(
+                preemptableVmAllocationPolicy.getPriorityToSortedHost().get(1), vm3)).thenReturn(host);
+        Mockito.when(hostSelector.select(
+                preemptableVmAllocationPolicy.getPriorityToSortedHost().get(2), vm4)).thenReturn(host);
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.3);
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
         Mockito.when(event.getData()).thenReturn(vm0);
@@ -1481,11 +1541,12 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm4.getNumberOfMigrations(), 0);
 
         // destroying Vm1. So, Vm4 will be preempted to allocate Vm2
+        Mockito.when(hostSelector.select(
+                preemptableVmAllocationPolicy.getPriorityToSortedHost().get(0), vm2)).thenReturn(host);
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.2);
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
         Mockito.when(event.getData()).thenReturn(vm1);
         datacenter.processEvent(event);
-
 
         // asserting that Vm3 and Vm4 were chose by backfilling, and Vm4 was preempted once
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
