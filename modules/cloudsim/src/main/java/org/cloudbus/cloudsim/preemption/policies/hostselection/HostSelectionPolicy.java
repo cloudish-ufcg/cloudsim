@@ -14,5 +14,6 @@ import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 public interface HostSelectionPolicy {
 
 	public PreemptiveHost select(SortedSet<PreemptiveHost> hosts, Vm vm);
-	
+	public void addHost(PreemptiveHost host);
+	public void removeHost(PreemptiveHost host);
 }
