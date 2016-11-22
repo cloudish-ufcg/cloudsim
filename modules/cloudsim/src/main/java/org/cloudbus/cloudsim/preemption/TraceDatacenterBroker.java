@@ -25,6 +25,7 @@ import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.preemption.datastore.InputTraceDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.TaskDataStore;
+import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
 
 /**
  * DatacentreBroker represents a broker acting on behalf of a user.
@@ -47,6 +48,7 @@ public class TraceDatacenterBroker extends SimEntity {
     private int concludedTasks;
 
     Properties properties;
+    private Map<Integer, Double> priorityToSLOTarget;
 
     /**
      * The id's list of available datacenters.
@@ -93,6 +95,8 @@ public class TraceDatacenterBroker extends SimEntity {
         inputTraceDataStore = new InputTraceDataStore(properties);
         taskDataStore = new TaskDataStore(properties);
         
+        priorityToSLOTarget = VmAvailabilityBasedPreemptionPolicy.getSLOAvailabilityTargets(properties);
+    	
         this.properties = properties;
         
     }
@@ -319,14 +323,24 @@ public class TraceDatacenterBroker extends SimEntity {
 
     private void scheduleRequestsForVm(Task task) {
 
-        PreemptableVm vm = new PreemptableVm(task.getId(), getId(), task.getCpuReq(),
-                task.getMemReq(), task.getSubmitTime(), task.getPriority(), task.getRuntime());
+    	PreemptableVm vm;
+    	if (!getPriorityToSLOTarget().isEmpty()) {
+    		vm = new PreemptableVm(task.getId(), getId(), task.getCpuReq(),
+    				task.getMemReq(), task.getSubmitTime(), task.getPriority(), task.getRuntime(), getPriorityToSLOTarget().get(task.getPriority()));
+            Log.printLine(CloudSim.clock() + ": " + getName()
+                    + ": Trying to Create VM #" + vm.getId() + " with availability target defined to " + getPriorityToSLOTarget().get(task.getPriority()));
+    	} else {
+    		vm = new PreemptableVm(task.getId(), getId(), task.getCpuReq(),
+    				task.getMemReq(), task.getSubmitTime(), task.getPriority(), task.getRuntime());
+            Log.printLine(CloudSim.clock() + ": " + getName()
+                    + ": Trying to Create VM #" + vm.getId() + " without availability target defined.");
+    	}
 
         int datacenterId = getDatacenterId();
 
-        Log.printLine(CloudSim.clock() + ": " + getName()
-                + ": Trying to Create VM #" + vm.getId() + " in "
-                + datacenterId);
+//        Log.printLine(CloudSim.clock() + ": " + getName()
+//                + ": Trying to Create VM #" + vm.getId() + " in "
+//                + datacenterId);
 
         getCreatedTasks().remove(task);
         setSubmittedTasks(getSubmittedTasks() + 1);
@@ -457,4 +471,8 @@ public class TraceDatacenterBroker extends SimEntity {
     public int getConcludedTasks() {
         return this.concludedTasks;
     }
+
+	public Map<Integer, Double> getPriorityToSLOTarget() {
+		return priorityToSLOTarget;
+	}
 }

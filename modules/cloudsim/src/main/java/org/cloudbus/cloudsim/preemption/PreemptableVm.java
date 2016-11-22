@@ -7,6 +7,7 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 
 	public static final int NOT_EXECUTING_TIME = -1;
 	public static final int INVALID_HOST = -1;
+	public static final int NOT_DEFINED_AVAILABILITY_TARGET = -1;
 
 	private int priority;
 	private double submitTime;
@@ -17,9 +18,15 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	private int numberOfBackfillingChoice;
 	private int numberOfMigrations;
 	private int lastHostId;
+	private double availabilityTarget;
 
 	public PreemptableVm(int id, int userId, double cpuReq, double memReq,
 			double submitTime, int priority, double runtime) {
+		this(id, userId, cpuReq, memReq, submitTime, priority, runtime, NOT_DEFINED_AVAILABILITY_TARGET);
+	}
+	
+	public PreemptableVm(int id, int userId, double cpuReq, double memReq,
+			double submitTime, int priority, double runtime, double availabilityTarget) {
 		super(id, userId, cpuReq, 1, (int) memReq, 0, 0, "default",
 				new CloudletSchedulerTimeShared());
 
@@ -31,8 +38,10 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		setNumberOfBackfillingChoice(0);
 		setNumberOfMigrations(0);
 		setLastHostId(INVALID_HOST);
+		setAvailabilityTarget(availabilityTarget);
 		actualRuntime = 0;
 	}
+	
 
 	@Override
 	public int compareTo(PreemptableVm otherVm) {
@@ -88,6 +97,14 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	
 	public void setActualRuntime(double actualRuntime) {
 		this.actualRuntime = actualRuntime;
+	}
+	
+	public double getAvailabilityTarget() {
+		return availabilityTarget;
+	}
+
+	private void setAvailabilityTarget(double availabilityTarget) {
+		this.availabilityTarget = availabilityTarget;
 	}
 
 	public double getActualRuntime(double currentTime) {
@@ -169,5 +186,12 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	@Override
 	public String toString() {
 		return String.valueOf(getId());
+	}
+	
+	public boolean isViolatingAvailabilityTarget(double currentTime) {
+		if (getAvailabilityTarget() == NOT_DEFINED_AVAILABILITY_TARGET) {
+			return false;
+		}
+		return getCurrentAvailability(currentTime) < getAvailabilityTarget();
 	}
 }

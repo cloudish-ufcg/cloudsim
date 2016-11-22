@@ -8,8 +8,6 @@
 package org.cloudbus.cloudsim.preemption;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -33,7 +31,6 @@ import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.HostUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.PreemptableVmDataStore;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
-import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedVmComparator;
 
 /**
  * TODO
@@ -455,7 +452,21 @@ public class PreemptiveDatacenter extends Datacenter {
 	protected boolean allocateHostForVm(boolean ack, PreemptableVm vm, PreemptiveHost host, boolean isBackfilling) {
 		
 		if (host == null) {			
-			host = (PreemptiveHost) getVmAllocationPolicy().selectHost(vm);	
+			// TODO Think better about how to configure it
+			String preemptionPolicyClass = properties.getProperty("preemption_policy_class");
+			if (preemptionPolicyClass != null
+					&& "org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy"
+							.equals(preemptionPolicyClass)) {
+				
+				Log.printConcatLine(simulationTimeUtil.clock(), ": It must sort the hosts considering priority + current availability.");
+				host = (PreemptiveHost) getVmAllocationPolicy().selectHost(vm, true);
+				
+			} else {
+				Log.printConcatLine(simulationTimeUtil.clock(), ": It must not sort the hosts considering priority + current availability.");
+				
+				host = (PreemptiveHost) getVmAllocationPolicy().selectHost(vm, false);	
+			}
+			
 		}
 		
 		boolean result = tryingAllocateOnHost(vm, host);
@@ -610,30 +621,10 @@ public class PreemptiveDatacenter extends Datacenter {
 	}
 
 	private void processBackfilling(Host host) {	
-//		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to allocate more VMs on host #", host.getId() + " after a detroying.");
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to allocate the VMs in waiting queue after a VM detroying.");
 		
-//		PreemptiveHost gHost = (PreemptiveHost) host;
 		boolean isBackfilling = false;
-		
-		/*
-		 * TODO
-		 * We need to think in retrying to allocate VMs that were preempted while allocating new VMs.
-		 */
-		
-		// choosing the vms to request now
-//		for (PreemptableVm currentVm : new ArrayList<PreemptableVm>(getVmsForScheduling())) {
-//			
-//			if (host.isSuitableForVm(currentVm)) {
-//				Log.printConcatLine(simulationTimeUtil.clock(),
-//						": Trying to Allocate VM #", currentVm.getId(),
-//						" now on host #", gHost.getId());
-//				allocateHostForVm(false, currentVm, gHost, isBackfilling);
-//		} else {
-//			isBackfilling = true;
-//		}
-//			if (currentVm.isViolatingAvailabilityTarget(simulationTimeUtil.clock())) {
-		
+	
 		ArrayList<PreemptableVm> waitingQueue = new ArrayList<PreemptableVm>(getVmsForScheduling());
 		
 		// TODO Think better about how to configure it
@@ -644,9 +635,7 @@ public class PreemptiveDatacenter extends Datacenter {
 			
 			Log.printConcatLine(simulationTimeUtil.clock(), ": Sorting the waiting queue based on priority + current availability.");
 
-			Collections.sort(waitingQueue,
-					new PriorityAndAvailabilityBasedVmComparator(
-							simulationTimeUtil));
+		 
 		}
 		
 		for (PreemptableVm currentVm : waitingQueue) {

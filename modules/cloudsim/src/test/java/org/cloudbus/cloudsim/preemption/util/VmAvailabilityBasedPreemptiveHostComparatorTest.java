@@ -83,14 +83,16 @@ public class VmAvailabilityBasedPreemptiveHostComparatorTest {
 		double submitTime = 0;
 		
 		// availability on time 5 is 0.8
-		PreemptableVm allocatedVm0 = new PreemptableVm(0, 1, cpuReq, memReq, submitTime, 1, runtime);
+		PreemptableVm allocatedVm0 = new PreemptableVm(0, 1, cpuReq, memReq, submitTime, 1, runtime, 0.9);
 		host1.vmCreate(allocatedVm0);
 		allocatedVm0.setStartExec(1);
+		Assert.assertTrue(allocatedVm0.isViolatingAvailabilityTarget(5d));
 		
 		// availability on time 5 is 0.6 
-		PreemptableVm allocatedVm1 = new PreemptableVm(1, 1, cpuReq, memReq, submitTime, 1, runtime);
+		PreemptableVm allocatedVm1 = new PreemptableVm(1, 1, cpuReq, memReq, submitTime, 1, runtime, 0.9);
 		host2.vmCreate(allocatedVm1);
 		allocatedVm1.setStartExec(2);
+		Assert.assertTrue(allocatedVm1.isViolatingAvailabilityTarget(5d));
 				
 		// mocking time 5 
 		Mockito.when(timeUtil.clock()).thenReturn(5d);
@@ -117,14 +119,16 @@ public class VmAvailabilityBasedPreemptiveHostComparatorTest {
 		double submitTime = 0;
 		
 		// availability on time 5 is 0.8
-		PreemptableVm allocatedVm0 = new PreemptableVm(0, 1, cpuReq, memReq, submitTime, 2, runtime);
+		PreemptableVm allocatedVm0 = new PreemptableVm(0, 1, cpuReq, memReq, submitTime, 2, runtime, 0.5);
 		host1.vmCreate(allocatedVm0);
 		allocatedVm0.setStartExec(1);
+		Assert.assertFalse(allocatedVm0.isViolatingAvailabilityTarget(5d));
 		
 		// availability on time 5 is 0.6 
-		PreemptableVm allocatedVm1 = new PreemptableVm(1, 1, cpuReq, memReq, submitTime, 2, runtime);
+		PreemptableVm allocatedVm1 = new PreemptableVm(1, 1, cpuReq, memReq, submitTime, 2, runtime, 0.5);
 		host2.vmCreate(allocatedVm1);
 		allocatedVm1.setStartExec(2);
+		Assert.assertFalse(allocatedVm1.isViolatingAvailabilityTarget(5d));
 				
 		// mocking time 5 
 		Mockito.when(timeUtil.clock()).thenReturn(5d);
@@ -151,14 +155,16 @@ public class VmAvailabilityBasedPreemptiveHostComparatorTest {
 		double submitTime = 0;
 		
 		// availability on time 5 is 0.8
-		PreemptableVm allocatedVm0 = new PreemptableVm(0, 1, cpuReq, memReq, submitTime, 2, runtime);
+		PreemptableVm allocatedVm0 = new PreemptableVm(0, 1, cpuReq, memReq, submitTime, 2, runtime, 0.5);
 		host1.vmCreate(allocatedVm0);
 		allocatedVm0.setStartExec(1);
+		Assert.assertFalse(allocatedVm0.isViolatingAvailabilityTarget(5d));
 		
 		// availability on time 5 is 0.4 
-		PreemptableVm allocatedVm1 = new PreemptableVm(1, 1, cpuReq, memReq, submitTime, 2, runtime);
+		PreemptableVm allocatedVm1 = new PreemptableVm(1, 1, cpuReq, memReq, submitTime, 2, runtime, 0.5);
 		host2.vmCreate(allocatedVm1);
 		allocatedVm1.setStartExec(3);
+		Assert.assertTrue(allocatedVm1.isViolatingAvailabilityTarget(5d));
 				
 		// mocking time 5 
 		Mockito.when(timeUtil.clock()).thenReturn(5d);
@@ -207,14 +213,16 @@ public class VmAvailabilityBasedPreemptiveHostComparatorTest {
 		double submitTime = 0;
 		
 		// availability on time 5 is 0.8
-		PreemptableVm allocatedVm0 = new PreemptableVm(0, 1, cpuReq, memReq, submitTime, 2, runtime);
+		PreemptableVm allocatedVm0 = new PreemptableVm(0, 1, cpuReq, memReq, submitTime, 2, runtime, 0.5);
 		host2.vmCreate(allocatedVm0);
 		allocatedVm0.setStartExec(1);
+		Assert.assertFalse(allocatedVm0.isViolatingAvailabilityTarget(5d));
 		
 		// availability on time 5 is 0.4 
-		PreemptableVm allocatedVm1 = new PreemptableVm(1, 1, cpuReq, memReq, submitTime, 2, runtime);
+		PreemptableVm allocatedVm1 = new PreemptableVm(1, 1, cpuReq, memReq, submitTime, 2, runtime, 0.5);
 		host1.vmCreate(allocatedVm1);
 		allocatedVm1.setStartExec(3);
+		Assert.assertTrue(allocatedVm1.isViolatingAvailabilityTarget(5d));
 				
 		// mocking time 5 
 		Mockito.when(timeUtil.clock()).thenReturn(5d);

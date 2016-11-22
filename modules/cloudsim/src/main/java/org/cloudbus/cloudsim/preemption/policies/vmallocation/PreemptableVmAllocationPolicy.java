@@ -1,6 +1,7 @@
 package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.HostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
+import org.cloudbus.cloudsim.preemption.util.VmAvailabilityBasedPreemptiveHostComparator;
 
 /**
  * 
@@ -193,9 +195,38 @@ public class PreemptableVmAllocationPolicy extends VmAllocationPolicy implements
 	}
 
 	public Host selectHost(Vm vm) {
+		return selectHost(vm, false);
+//		PreemptableVm gVm = (PreemptableVm) vm;
+//		if (getPriorityToSortedHost().containsKey(gVm.getPriority())) {
+//			PreemptiveHost host = getHostSelector().select(getPriorityToSortedHost().get(gVm.getPriority()), vm);
+//			if (host != null) {
+//				return host;
+//			}
+//		}
+//		return null;
+	}
+	
+	public Host selectHost(Vm vm, boolean sortConsideringVmAvailability) {
 		PreemptableVm gVm = (PreemptableVm) vm;
+
 		if (getPriorityToSortedHost().containsKey(gVm.getPriority())) {
-			PreemptiveHost host = getHostSelector().select(getPriorityToSortedHost().get(gVm.getPriority()), vm);
+		
+			SortedSet<PreemptiveHost> sortedSet;
+			
+			if (sortConsideringVmAvailability && gVm.isViolatingAvailabilityTarget(simulationTimeUtil.clock())) {
+				Log.printConcatLine(simulationTimeUtil.clock(),
+						": Sorting hosts considering vm availability in VMAllocationPolicy.");
+				
+				VmAvailabilityBasedPreemptiveHostComparator comparator = new VmAvailabilityBasedPreemptiveHostComparator(gVm);			
+				sortedSet = new TreeSet<PreemptiveHost>(comparator);
+				sortedSet.addAll(getPriorityToSortedHost().get(gVm.getPriority()));
+				
+			} else {
+				sortedSet = getPriorityToSortedHost().get(gVm.getPriority());
+			}
+			
+//			PreemptiveHost host = getHostSelector().select(getPriorityToSortedHost().get(gVm.getPriority()), vm);
+			PreemptiveHost host = getHostSelector().select(sortedSet, vm);
 			if (host != null) {
 				return host;
 			}
