@@ -1,25 +1,47 @@
 package org.cloudbus.cloudsim.preemption.policies.hostselection;
 
 import org.cloudbus.cloudsim.Vm;
+import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
+import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
 
-import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Created by Alessandro Lia Fook Santos and João Victor Mafra on 22/11/16.
  */
 public class WorstFitPriorityBasedHostSelectionPolicy implements HostSelectionPolicy {
 
-    SortedSet<PreemptiveHost> preemptiveHosts;
+    private Map<Integer, SortedSet<PreemptiveHost>> preemptiveHosts;
+    private int numberOfPriorities;
 
     public WorstFitPriorityBasedHostSelectionPolicy(List<PreemptiveHost> hosts) {
-        preemptiveHosts = new TreeSet<>(hosts);
+
+        verifyHosts(hosts);
+
+        this.numberOfPriorities = hosts.get(0).getNumberOfPriorities();
+        this.preemptiveHosts = new HashMap<>();
+
+
+        for (int priority = 0; priority < this.numberOfPriorities; priority++) {
+            PreemptiveHostComparator comparator = new PreemptiveHostComparator(priority);
+            preemptiveHosts.put(priority, new TreeSet<>(comparator));
+            preemptiveHosts.get(priority).addAll(hosts);
+        }
+    }
+
+    private void verifyHosts(List<PreemptiveHost> hosts) {
+        if (hosts == null)
+            throw new IllegalArgumentException(
+                    "The list of host can not be null.");
+
+        else if (hosts.isEmpty())
+            throw new IllegalArgumentException(
+                    "The list of host can not be empty.");
     }
 
     @Override
-    public PreemptiveHost select(SortedSet<PreemptiveHost> hosts, Vm vm) {
+    public PreemptiveHost select(SortedSet<PreemptiveHost> hostSet, Vm vm) {
 
         verifyVm(vm);
 
@@ -28,7 +50,9 @@ public class WorstFitPriorityBasedHostSelectionPolicy implements HostSelectionPo
 		 * to smaller available capacity
 		 */
         if (!preemptiveHosts.isEmpty()) {
-            PreemptiveHost firstHost = preemptiveHosts.first();
+            PreemptableVm pVm = (PreemptableVm) vm;
+            SortedSet<PreemptiveHost> hosts = preemptiveHosts.get(pVm.getPriority());
+            PreemptiveHost firstHost = hosts.first();
 
             if (firstHost.isSuitableForVm(vm)) {
                 return firstHost;
@@ -44,11 +68,17 @@ public class WorstFitPriorityBasedHostSelectionPolicy implements HostSelectionPo
 
     @Override
     public void addHost(PreemptiveHost host) {
-        preemptiveHosts.add(host);
+
+        for (int priority = 0; priority < this.numberOfPriorities; priority++){
+            preemptiveHosts.get(priority).add(host);
+        }
     }
 
     @Override
     public void removeHost(PreemptiveHost host) {
-        preemptiveHosts.remove(host);
+
+        for (int priority = 0; priority < this.numberOfPriorities; priority++){
+            preemptiveHosts.get(priority).remove(host);
+        }
     }
 }

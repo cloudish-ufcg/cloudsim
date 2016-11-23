@@ -39,12 +39,8 @@ public class WorstFitMipsBasedHostSelectionPolicy implements HostSelectionPolicy
 	}
 
 	@Override
-	public void addHost(PreemptiveHost host) {
-
-	}
+	public void addHost(PreemptiveHost host) {	}
 
 	@Override
-	public void removeHost(PreemptiveHost host) {
-
-	}
+	public void removeHost(PreemptiveHost host) {	}
 }

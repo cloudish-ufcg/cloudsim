@@ -13,7 +13,7 @@ public class HostSelectionPolicyFactory {
 
     public static final String WORST_FIT_MIPS = "worst_fit_mips";
     public static final String WORST_FIT_PRIORITY = "worst_fit_priority";
-    public static final String VM_AVAILABILITY = "vm_availability";
+    public static final String VM_AVAILABILITY = "worst_fit_vm_availability";
 
     public static HostSelectionPolicy fabricHostSelectionPolicy (String hostSelector, List<PreemptiveHost> hosts) {
 

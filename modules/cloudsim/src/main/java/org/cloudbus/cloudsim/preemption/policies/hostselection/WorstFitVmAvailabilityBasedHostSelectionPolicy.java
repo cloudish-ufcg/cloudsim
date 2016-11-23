@@ -15,7 +15,14 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicy implements HostSelec
     List<PreemptiveHost> preemptiveHosts;
 
     public WorstFitVmAvailabilityBasedHostSelectionPolicy(List<PreemptiveHost> hosts) {
+        verifyHosts(hosts);
         preemptiveHosts = new ArrayList<>(hosts);
+    }
+
+    private void verifyHosts(List<PreemptiveHost> hosts) {
+        if (hosts == null)
+            throw new IllegalArgumentException(
+                    "The list of host can not be null.");
     }
 
     @Override
