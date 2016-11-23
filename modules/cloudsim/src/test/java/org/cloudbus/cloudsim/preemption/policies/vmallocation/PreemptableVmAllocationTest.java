@@ -15,6 +15,7 @@ import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.HostSelectionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
@@ -63,9 +64,10 @@ public class PreemptableVmAllocationTest {
 			sortedHosts.add(googleHost);
 		}		
 
-		hostSelector = Mockito.mock(HostSelectionPolicy.class);
+		hostSelector = Mockito.mock(WorstFitMipsBasedHostSelectionPolicy.class);
 
-		preemptablePolicy = new PreemptableVmAllocationPolicy(hosts, hostSelector);
+		preemptablePolicy = new PreemptableVmAllocationPolicy(hosts, "");
+		preemptablePolicy.setHostSelector(hostSelector);
 	}
 	
 	@Test
@@ -614,14 +616,15 @@ public class PreemptableVmAllocationTest {
 		listaHosts.add(host3);
 
 		// creating policy with these hosts
-		preemptablePolicy = new PreemptableVmAllocationPolicy(listaHosts, hostSelector);
+		preemptablePolicy = new PreemptableVmAllocationPolicy(listaHosts, "");
+		preemptablePolicy.setHostSelector(hostSelector);
 
 		// asserting that the HashMap has 3 elements mapping priority to a sortedList
 		Assert.assertTrue(preemptablePolicy.getPriorityToSortedHost().size() == NUMBER_OF_PRIORITIES);
 
 
 		// asserting that each priority has a sortedHostList with length = 3
-		// asserting that the hostList has the same elements as the sortedHostList in each priority
+		// asserting that the preemptiveHosts has the same elements as the sortedHostList in each priority
 		for (int i = 0; i < host1.getNumberOfPriorities(); i++){
 			Assert.assertTrue(preemptablePolicy.getPriorityToSortedHost().get(i).size() == 3);
 			Assert.assertArrayEquals(preemptablePolicy.getHostList().toArray(), preemptablePolicy.getPriorityToSortedHost().get(i).toArray());

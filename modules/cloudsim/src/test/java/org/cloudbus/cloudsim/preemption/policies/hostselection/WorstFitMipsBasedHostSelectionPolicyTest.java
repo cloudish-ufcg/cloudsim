@@ -41,44 +41,45 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
     public Vm vm62;
     public Vm vm0;
     public Vm vm1200;
-    public SortedSet<PreemptiveHost> hostList;
+    public SortedSet<PreemptiveHost> preemptiveHosts;
     public WorstFitMipsBasedHostSelectionPolicy selectionPolicy;
 
     Properties properties;
    
     @Before
     public void setUp() {
-        // creating object under test
-        selectionPolicy = new WorstFitMipsBasedHostSelectionPolicy();
 
         //creating lists of hosts
-        hostList = new TreeSet<PreemptiveHost>(new PreemptiveHostComparator(0));
-        
+        preemptiveHosts = new TreeSet<>(new PreemptiveHostComparator(0));
+
         // populating host list
         List<Pe> peList = new ArrayList<Pe>();
         int mips = 1000;
         peList.add(new Pe(0, new PeProvisionerSimple(mips))); // need to store Pe id and MIPS Rating
 
         properties = new Properties();
-		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-        
+        properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+
         host1 = new PreemptiveHost(1, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
-        hostList.add(host1);
+        preemptiveHosts.add(host1);
 
         host2 = new PreemptiveHost(2, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
-        hostList.add(host2);
+        preemptiveHosts.add(host2);
 
         host3 = new PreemptiveHost(3, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
-        hostList.add(host3);
+        preemptiveHosts.add(host3);
 
         host4 = new PreemptiveHost(4, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
-        hostList.add(host4);
+        preemptiveHosts.add(host4);
 
         host5 = new PreemptiveHost(5, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
-        hostList.add(host5);
+        preemptiveHosts.add(host5);
 
         host6 = new PreemptiveHost(6, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
-        hostList.add(host6);
+        preemptiveHosts.add(host6);
+
+        // creating object under test
+        selectionPolicy = new WorstFitMipsBasedHostSelectionPolicy();
 
         // creating Vm's
         vm1000 = new PreemptableVm(1, 1, 1000, 0, 0, 0, 0);
@@ -93,7 +94,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
     @Test(expected = IllegalArgumentException.class)
     public void testVmEqualsNull() {
     	SortedSet<PreemptiveHost> hostList2 = new TreeSet<>(new PreemptiveHostComparator(0));
-        selectionPolicy.select(hostList, null);
+        selectionPolicy.select(preemptiveHosts, null);
         selectionPolicy.select(hostList2, null);
     }
 
@@ -111,13 +112,13 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
 
     @Test
     public void testVmBiggerThanFirstHost() {
-        Assert.assertNull(selectionPolicy.select(hostList, vm1200));
+        Assert.assertNull(selectionPolicy.select(preemptiveHosts, vm1200));
     }
 
     @Test
     public void testVmMipsEqualsZero() {
-        Assert.assertEquals(host1.getId(), (selectionPolicy.select(hostList, vm0)).getId());
-        Assert.assertEquals(host1.getId(), hostList.first().getId());
+        Assert.assertEquals(host1.getId(), (selectionPolicy.select(preemptiveHosts, vm0)).getId());
+        Assert.assertEquals(host1.getId(), preemptiveHosts.first().getId());
     }
 
     @Test
@@ -142,45 +143,45 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
     @Test
     public void testAllocatingModifyingFirstHost() {
 
-        PreemptiveHost host = selectionPolicy.select(hostList, vm62);
+        PreemptiveHost host = selectionPolicy.select(preemptiveHosts, vm62);
 
         // test if the selected host is equals the first inserted
         Assert.assertEquals(host1.getId(), host.getId());
 
         //allocate Vm in the selected host
-        hostList.remove(host);
+        preemptiveHosts.remove(host);
         host.vmCreate(vm62);
-        hostList.add(host);
+        preemptiveHosts.add(host);
 
         // test if the last Host in the list is the host1 now
-        Assert.assertEquals(host.getId(), (hostList.last()).getId());
-        Assert.assertEquals(host1.getId(), (hostList.last()).getId());
+        Assert.assertEquals(host.getId(), (preemptiveHosts.last()).getId());
+        Assert.assertEquals(host1.getId(), (preemptiveHosts.last()).getId());
 
         //test if the host1 suffer mips changes
-        Assert.assertEquals((hostList.last()).getAvailableMips(), 937.5, ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals((preemptiveHosts.last()).getAvailableMips(), 937.5, ACCEPTABLE_DIFFERENCE);
 
         // test if host2 is the new selected
-        Assert.assertEquals(host2.getId(), (selectionPolicy.select(hostList, vm250)).getId());
+        Assert.assertEquals(host2.getId(), (selectionPolicy.select(preemptiveHosts, vm250)).getId());
     }
 
     @Test
     public void testAllocatingMultiplesHosts(){
 
         for (int i = 0; i < 6; i++){
-            PreemptiveHost otherHost = selectionPolicy.select(hostList, vm1000);
-            hostList.remove(otherHost);
+            PreemptiveHost otherHost = selectionPolicy.select(preemptiveHosts, vm1000);
+            preemptiveHosts.remove(otherHost);
             otherHost.vmCreate(vm1000);
-            hostList.add(otherHost);
+            preemptiveHosts.add(otherHost);
         }
 
         // once all hosts are fully occupied test allocation of vm's
-		Assert.assertNull(selectionPolicy.select(hostList, vm1000));
-		Assert.assertNull(selectionPolicy.select(hostList, vm500));
-		Assert.assertNull(selectionPolicy.select(hostList, vm250));
-		Assert.assertNull(selectionPolicy.select(hostList, vm125));
-		Assert.assertNull(selectionPolicy.select(hostList, vm62));
+		Assert.assertNull(selectionPolicy.select(preemptiveHosts, vm1000));
+		Assert.assertNull(selectionPolicy.select(preemptiveHosts, vm500));
+		Assert.assertNull(selectionPolicy.select(preemptiveHosts, vm250));
+		Assert.assertNull(selectionPolicy.select(preemptiveHosts, vm125));
+		Assert.assertNull(selectionPolicy.select(preemptiveHosts, vm62));
         
-        PreemptiveHost otherHost = selectionPolicy.select(hostList, vm0);
+        PreemptiveHost otherHost = selectionPolicy.select(preemptiveHosts, vm0);
         Assert.assertEquals(otherHost.getId(), host1.getId());
     }
 
@@ -237,7 +238,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
 
     @Test
     public void testDoubleValues(){
-        hostList.clear();
+        preemptiveHosts.clear();
 
         // create host1 with capacity 62.501
         List<Pe> peList = new ArrayList<Pe>();
@@ -245,7 +246,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         peList.add(new Pe(0, new PeProvisionerSimple(mips))); // need to store Pe id and MIPS Rating
 
         host1 = new PreemptiveHost(1, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
-        hostList.add(host1);
+        preemptiveHosts.add(host1);
 
 
         // create host2 with capacity 62.5
@@ -254,7 +255,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         peList2.add(new Pe(1, new PeProvisionerSimple(mips2))); // need to store Pe id and MIPS Rating
 
         host2 = new PreemptiveHost(2, peList2, new VmSchedulerMipsBased(peList2),new FCFSBasedPreemptionPolicy(properties));
-        hostList.add(host2);
+        preemptiveHosts.add(host2);
 
         // create host3 with capacity 62.49
         List<Pe> peList3 = new ArrayList<Pe>();
@@ -262,24 +263,24 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         peList3.add(new Pe(2, new PeProvisionerSimple(mips3))); // need to store Pe id and MIPS Rating
 
         host3 = new PreemptiveHost(3, peList3, new VmSchedulerMipsBased(peList3), new FCFSBasedPreemptionPolicy(properties));
-        hostList.add(host3);
+        preemptiveHosts.add(host3);
 
         // test if is possible allocate vm62 (with 62.5 mips required) at host1 (its capacity is 62.501)
-        Assert.assertEquals(host1, selectionPolicy.select(hostList, vm62));
-        hostList.remove(host1);
+        Assert.assertEquals(host1, selectionPolicy.select(preemptiveHosts, vm62));
+        preemptiveHosts.remove(host1);
         host1.vmCreate(vm62);
-        hostList.add(host1);
+        preemptiveHosts.add(host1);
         Assert.assertEquals(0.001, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
 
         // test if is possible allocate vm62 (with 62.5 mips required) at host2 (its capacity is 62.5)
-        Assert.assertEquals(host2, selectionPolicy.select(hostList, vm62));
-        hostList.remove(host2);
+        Assert.assertEquals(host2, selectionPolicy.select(preemptiveHosts, vm62));
+        preemptiveHosts.remove(host2);
         host2.vmCreate(vm62);
-        hostList.add(host2);
+        preemptiveHosts.add(host2);
         Assert.assertEquals(0, host2.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
 
         // test if is not possible allocate vm62 (with 62.5 mips required) at host1 (its capacity is 62.49)
-        Assert.assertNull(selectionPolicy.select(hostList, vm62));
+        Assert.assertNull(selectionPolicy.select(preemptiveHosts, vm62));
         Assert.assertEquals(62.49, host3.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
 
     }

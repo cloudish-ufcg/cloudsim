@@ -16,6 +16,7 @@ import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.policies.hostselection.HostSelectionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.hostselection.HostSelectionPolicyFactory;
 import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
 import org.cloudbus.cloudsim.preemption.util.VmAvailabilityBasedPreemptiveHostComparator;
 
@@ -37,11 +38,12 @@ public class PreemptableVmAllocationPolicy extends VmAllocationPolicy implements
 	private HostSelectionPolicy hostSelector;
 	private Map<Integer, SortedSet<PreemptiveHost>> priorityToSortedHost;
 
-	public PreemptableVmAllocationPolicy(List<PreemptiveHost> hosts, HostSelectionPolicy hostSelector) {
-		super(new ArrayList<Host>(0));
-		setHostSelector(hostSelector);
+	public PreemptableVmAllocationPolicy(List<PreemptiveHost> hosts, String hostSelector) {
+		super(new ArrayList<>(0));
+
+		this.hostSelector = HostSelectionPolicyFactory.fabricHostSelectionPolicy(hostSelector, hosts);
 		setSimulationTimeUtil(new SimulationTimeUtil());
-		priorityToSortedHost = new HashMap<Integer, SortedSet<PreemptiveHost>>();
+		priorityToSortedHost = new HashMap<>();
 		int numberOfPriorities = hosts.get(0).getNumberOfPriorities();
 
 		for (int priority = 0; priority < numberOfPriorities; priority++) {
@@ -173,7 +175,7 @@ public class PreemptableVmAllocationPolicy extends VmAllocationPolicy implements
 		return hostSelector;
 	}
 
-	protected void setHostSelector(HostSelectionPolicy hostSelector) {
+	public void setHostSelector(HostSelectionPolicy hostSelector) {
 		this.hostSelector = hostSelector;
 	}
 

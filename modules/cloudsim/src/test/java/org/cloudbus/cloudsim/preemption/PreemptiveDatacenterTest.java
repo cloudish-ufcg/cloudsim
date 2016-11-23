@@ -90,7 +90,8 @@ public class PreemptiveDatacenterTest {
             googleHostList.add((PreemptiveHost) host);
         }
 
-        preemptableVmAllocationPolicy = new PreemptableVmAllocationPolicy(googleHostList, hostSelector);
+        preemptableVmAllocationPolicy = new PreemptableVmAllocationPolicy(googleHostList, "");
+        preemptableVmAllocationPolicy.setHostSelector(hostSelector);
 
         datacenterFile = "outputUtilizationTest.sqlite3";
         datacenterUrl = "jdbc:sqlite:" + datacenterFile;

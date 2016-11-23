@@ -221,7 +221,7 @@ public class TraceDatacenterBrokerTest {
         try {
             datacenter = new PreemptiveDatacenter(name, characteristics,
                     new PreemptableVmAllocationPolicy(hostList,
-                            new WorstFitMipsBasedHostSelectionPolicy()),
+                            "worst_fit_mips"),
                     storageList, 0, properties);
         } catch (Exception e) {
             e.printStackTrace();
