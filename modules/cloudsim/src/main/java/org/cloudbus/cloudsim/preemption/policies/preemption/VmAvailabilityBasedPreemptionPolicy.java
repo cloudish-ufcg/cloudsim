@@ -30,6 +30,10 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 	 * @param simulationTimeUtil
 	 */
 	public VmAvailabilityBasedPreemptionPolicy(Properties properties, SimulationTimeUtil simulationTimeUtil) {
+		if (properties == null){
+			throw new IllegalArgumentException("Properties is null");
+		}
+
 		if (properties.getProperty(NUMBER_OF_PRIORITIES_PROP) != null) {
 			int numberOfPriorities = Integer.parseInt(properties.getProperty(NUMBER_OF_PRIORITIES_PROP));
 			if (numberOfPriorities < 1) {

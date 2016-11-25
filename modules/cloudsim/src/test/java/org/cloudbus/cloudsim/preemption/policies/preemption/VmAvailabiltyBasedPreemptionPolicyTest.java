@@ -13,19 +13,19 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 
 	private static final double ACCEPTABLE_DIFFERENCE = 0.00000001;
 	
-	Properties propeties;
+	Properties properties;
 	VmAvailabilityBasedPreemptionPolicy policy;
 	SimulationTimeUtil timeUtil;
 	
 	@Before
 	public void setUp() {
-		propeties = new Properties();
-		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		properties = new Properties();
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
-		policy = new VmAvailabilityBasedPreemptionPolicy(propeties);
+		policy = new VmAvailabilityBasedPreemptionPolicy(properties);
 		policy.setTotalMips(10);
 		
 		timeUtil = Mockito.mock(SimulationTimeUtil.class);
@@ -33,7 +33,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 	
 	@Test
 	public void testInitialization() {
-		policy = new VmAvailabilityBasedPreemptionPolicy(propeties);
+		policy = new VmAvailabilityBasedPreemptionPolicy(properties);
 		policy.setTotalMips(10);
 		
 		// checking
@@ -43,6 +43,37 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		Assert.assertEquals(0.5, policy.getPriorityToSLOTarget().get(2), ACCEPTABLE_DIFFERENCE);		
 		Assert.assertEquals(10, policy.getTotalMips(), ACCEPTABLE_DIFFERENCE);
 	}
+
+	@Test
+	public void testIllegalVmForIsSuitableFor(){
+		Assert.assertFalse(policy.isSuitableFor(null));
+	}
+
+	@Test
+	public void testIllegalVmForAllocating(){
+		policy.allocating(null);
+
+		// Initial state is the same
+		Assert.assertEquals(3, policy.getNumberOfPriorities());
+		Assert.assertEquals(1, policy.getPriorityToSLOTarget().get(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0.9, policy.getPriorityToSLOTarget().get(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0.5, policy.getPriorityToSLOTarget().get(2), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(10, policy.getTotalMips(), ACCEPTABLE_DIFFERENCE);
+	}
+
+	@Test
+	public void testIllegalVmForDeallocating(){
+		policy.deallocating(null);
+
+		// Initial state is the same
+		Assert.assertEquals(3, policy.getNumberOfPriorities());
+		Assert.assertEquals(1, policy.getPriorityToSLOTarget().get(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0.9, policy.getPriorityToSLOTarget().get(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0.5, policy.getPriorityToSLOTarget().get(2), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(10, policy.getTotalMips(), ACCEPTABLE_DIFFERENCE);
+	}
+
+
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testInvalidInitialization() {
@@ -66,71 +97,102 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 				
 		new VmAvailabilityBasedPreemptionPolicy(propeties);
 	}
+
+	@Test(expected=IllegalArgumentException.class)
+	public void testInvalidInitialization10() {
+		// setting properties
+		Properties propeties = new Properties();
+		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
+
+		new VmAvailabilityBasedPreemptionPolicy(propeties);
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+	public void testInvalidInitialization11() {
+		// setting properties
+		Properties propeties = new Properties();
+		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+
+		new VmAvailabilityBasedPreemptionPolicy(propeties);
+	}
+
+
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testInvalidInitialization3() {
 		// setting properties
-		Properties propeties = new Properties();
-		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "0");
+		Properties properties = new Properties();
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "0");
 				
-		new VmAvailabilityBasedPreemptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(properties);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testInvalidInitialization4() {
 		// setting properties
-		Properties propeties = new Properties();
-		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "-1");
+		Properties properties = new Properties();
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "-1");
 				
-		new VmAvailabilityBasedPreemptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(properties);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testInvalidInitialization5() {
 		// setting properties
-		Properties propeties = new Properties();
-		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "zero", "1");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		Properties properties = new Properties();
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "zero", "1");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
-		new VmAvailabilityBasedPreemptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(properties);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testInvalidInitialization6() {
 		// setting properties
-		Properties propeties = new Properties();
-		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "one");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		Properties properties = new Properties();
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "one");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
-		new VmAvailabilityBasedPreemptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(properties);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testInvalidInitialization7() {
 		// setting properties
-		Properties propeties = new Properties();
-		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "-1");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		Properties properties = new Properties();
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "-1");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
-		new VmAvailabilityBasedPreemptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(properties);
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void testInvalidInitialization8() {
 		// setting properties
-		Properties propeties = new Properties();
-		propeties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0.0", "1");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		propeties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		Properties properties = new Properties();
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0.0", "1");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
-		new VmAvailabilityBasedPreemptionPolicy(propeties);
+		new VmAvailabilityBasedPreemptionPolicy(properties);
+	}
+
+	@Test(expected =IllegalArgumentException.class)
+	public void testInvalidProperties(){
+		new VmAvailabilityBasedPreemptionPolicy(null);
+	}
+
+	@Test(expected =IllegalArgumentException.class)
+	public void testInvalidProperties2(){
+		VmAvailabilityBasedPreemptionPolicy.getSLOAvailabilityTargets(null);
 	}
 		
 	@Test
@@ -170,6 +232,9 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		
 		// assert first vm would be preempted by second
 		Assert.assertEquals(cpuReq, policy.calcMipsOfSamePriorityToBeAvailable(vm1), ACCEPTABLE_DIFFERENCE);
+
+		// assert first vm would be preempted by second and available for new VM is 10 (5 available + 5 mips for vm0)
+		Assert.assertEquals(cpuReq * 2, policy.getAvailableMipsByVm(vm1), ACCEPTABLE_DIFFERENCE);
 	}
 	
 	@Test
@@ -217,6 +282,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		
 		// assert two first vms would be preempted by third one
 		Assert.assertEquals(2 * cpuReq, policy.calcMipsOfSamePriorityToBeAvailable(vm2), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(2 * cpuReq, policy.getAvailableMipsByVm(vm2), ACCEPTABLE_DIFFERENCE);
 	}
 	
 	@Test
@@ -264,6 +330,8 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		
 		// assert two first vms wouldn't be preempted by third one because priority 0 SLO is 1
 		Assert.assertEquals(0, policy.calcMipsOfSamePriorityToBeAvailable(vm2), ACCEPTABLE_DIFFERENCE);
+
+		Assert.assertEquals(0, policy.getAvailableMipsByVm(vm2), ACCEPTABLE_DIFFERENCE);
 	}
 	
 	@Test
@@ -275,7 +343,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// mocking time 2
 		Mockito.when(timeUtil.clock()).thenReturn(2d);
 
-		policy = new VmAvailabilityBasedPreemptionPolicy(propeties, timeUtil);
+		policy = new VmAvailabilityBasedPreemptionPolicy(properties, timeUtil);
 		policy.setTotalMips(10);
 		
 		PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 1, runtime);
@@ -332,6 +400,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		
 		// assert two first vms would be preempted by third one
 		Assert.assertEquals(2 * cpuReq, policy.calcMipsOfSamePriorityToBeAvailable(vm2), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(2 * cpuReq, policy.getAvailableMipsByVm(vm2), ACCEPTABLE_DIFFERENCE);
 	}
 	
 	@Test
@@ -344,7 +413,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// mocking time 2
 		Mockito.when(timeUtil.clock()).thenReturn(2d);
 
-		policy = new VmAvailabilityBasedPreemptionPolicy(propeties, timeUtil);
+		policy = new VmAvailabilityBasedPreemptionPolicy(properties, timeUtil);
 		policy.setTotalMips(10);
 		
 		PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 1, runtime);
@@ -402,6 +471,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		
 		// assert two first vms would be preempted by third one
 		Assert.assertEquals(2 * cpuReq, policy.calcMipsOfSamePriorityToBeAvailable(vm2), ACCEPTABLE_DIFFERENCE);
+
 	}
 	
 	@Test
@@ -457,14 +527,17 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		PreemptableVm vmP0 = new PreemptableVm(4, 1, cpuReq, memReq, 5, 0, runtime);
 		Assert.assertEquals(0, vmP0.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(0, policy.calcMipsOfSamePriorityToBeAvailable(vmP0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(7.45, policy.getAvailableMipsByVm(vmP0), ACCEPTABLE_DIFFERENCE);
 
 		PreemptableVm vmP1 = new PreemptableVm(5, 1, cpuReq, memReq, 5, 1, runtime);
 		Assert.assertEquals(0, vmP1.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(cpuReq, policy.calcMipsOfSamePriorityToBeAvailable(vmP1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(7.45, policy.getAvailableMipsByVm(vmP1), ACCEPTABLE_DIFFERENCE);
 		
 		PreemptableVm vmP2 = new PreemptableVm(6, 1, cpuReq, memReq, 5, 2, runtime);
 		Assert.assertEquals(0, vmP2.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(cpuReq, policy.calcMipsOfSamePriorityToBeAvailable(vmP2), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(4.9, policy.getAvailableMipsByVm(vmP2), ACCEPTABLE_DIFFERENCE);
 	}
 
 	@Test
@@ -1299,7 +1372,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// Mocking time 5
 		Mockito.when(timeUtil.clock()).thenReturn(5d);
 		
-		policy = new VmAvailabilityBasedPreemptionPolicy(propeties, timeUtil);
+		policy = new VmAvailabilityBasedPreemptionPolicy(properties, timeUtil);
 		policy.setTotalMips(10);
 		
 		double memReq = 0;
