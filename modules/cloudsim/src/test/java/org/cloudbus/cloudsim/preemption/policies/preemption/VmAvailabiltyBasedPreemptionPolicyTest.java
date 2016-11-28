@@ -593,14 +593,17 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		PreemptableVm vmP0 = new PreemptableVm(4, 1, cpuReq, memReq, 5, 0, runtime);
 		Assert.assertEquals(0, vmP0.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(0, policy.calcMipsOfSamePriorityToBeAvailable(vmP0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(7.45, policy.getAvailableMipsByVm(vmP0), ACCEPTABLE_DIFFERENCE);
 
 		PreemptableVm vmP1 = new PreemptableVm(5, 1, cpuReq, memReq, 5, 1, runtime);
 		Assert.assertEquals(0, vmP1.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(cpuReq, policy.calcMipsOfSamePriorityToBeAvailable(vmP1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(7.45, policy.getAvailableMipsByVm(vmP1), ACCEPTABLE_DIFFERENCE);
 		
 		PreemptableVm vmP2 = new PreemptableVm(6, 1, cpuReq, memReq, 5, 2, runtime);
 		Assert.assertEquals(0, vmP2.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(cpuReq, policy.calcMipsOfSamePriorityToBeAvailable(vmP2), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(4.9, policy.getAvailableMipsByVm(vmP2), ACCEPTABLE_DIFFERENCE);
 	}
 	
 	@Test
@@ -705,6 +708,110 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 	}
 
 	/*
+	 * The arrivingVm doesn't violate its SLO target now, but it will violate in next time
+	 */
+	@Test
+	public void testCalcMipsOfSamePriorityToBeAvailable9() {
+		double memReq = 0;
+		double runtime = 10;
+		double cpuReq = 5;
+
+		PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 2, runtime);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, cpuReq, memReq, 0, 2, runtime);
+
+		// checking current vm availability
+		Assert.assertEquals(0, vm0.getCurrentAvailability(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0, vm1.getCurrentAvailability(0), ACCEPTABLE_DIFFERENCE);
+
+		// allocating both vms
+		policy.allocating(vm0);
+		vm0.setStartExec(0);
+
+		policy.allocating(vm1);
+		vm1.setStartExec(0);
+
+		// checking after allocating VMs with priority 0
+		Assert.assertEquals(0, policy.getPriorityToInUseMips().get(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertTrue(policy.getPriorityToVms().get(0).isEmpty());
+
+		Assert.assertEquals(0, policy.getPriorityToInUseMips().get(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertTrue(policy.getPriorityToVms().get(1).isEmpty());
+
+		Assert.assertEquals(10, policy.getPriorityToInUseMips().get(2), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(2, policy.getPriorityToVms().get(2).size());
+		Assert.assertEquals(vm0, policy.getPriorityToVms().get(2).first());
+		Assert.assertEquals(vm1, policy.getPriorityToVms().get(2).last());
+
+		// mocking time 5
+		Mockito.when(timeUtil.clock()).thenReturn(5d);
+		policy.setSimulationTimeUtil(timeUtil);
+
+		//simulating VM is running since time 2
+		PreemptableVm vm2 = new PreemptableVm(2, 1, cpuReq, memReq, 0, 2, runtime);
+		vm2.setStartExec(2.5);
+
+		// checking current vm availabilities
+		Assert.assertEquals(1, vm0.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(1, vm1.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0.5, vm2.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
+
+		// assert two first vms wouldn't be preempted by third one
+		Assert.assertEquals(2*cpuReq, policy.calcMipsOfSamePriorityToBeAvailable(vm2), ACCEPTABLE_DIFFERENCE);
+	}
+
+	/*
+	 * The arrivingVm violates its SLO target now
+	 */
+	@Test
+	public void testCalcMipsOfSamePriorityToBeAvailable10() {
+		double memReq = 0;
+		double runtime = 10;
+		double cpuReq = 5;
+
+		PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 2, runtime);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, cpuReq, memReq, 0, 2, runtime);
+
+		// checking current vm availability
+		Assert.assertEquals(0, vm0.getCurrentAvailability(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0, vm1.getCurrentAvailability(0), ACCEPTABLE_DIFFERENCE);
+
+		// allocating both vms
+		policy.allocating(vm0);
+		vm0.setStartExec(0);
+
+		policy.allocating(vm1);
+		vm1.setStartExec(0);
+
+		// checking after allocating VMs with priority 0
+		Assert.assertEquals(0, policy.getPriorityToInUseMips().get(0), ACCEPTABLE_DIFFERENCE);
+		Assert.assertTrue(policy.getPriorityToVms().get(0).isEmpty());
+
+		Assert.assertEquals(0, policy.getPriorityToInUseMips().get(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertTrue(policy.getPriorityToVms().get(1).isEmpty());
+
+		Assert.assertEquals(10, policy.getPriorityToInUseMips().get(2), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(2, policy.getPriorityToVms().get(2).size());
+		Assert.assertEquals(vm0, policy.getPriorityToVms().get(2).first());
+		Assert.assertEquals(vm1, policy.getPriorityToVms().get(2).last());
+
+		// mocking time 5
+		Mockito.when(timeUtil.clock()).thenReturn(5d);
+		policy.setSimulationTimeUtil(timeUtil);
+
+		//simulating VM is running since time 2
+		PreemptableVm vm2 = new PreemptableVm(2, 1, cpuReq, memReq, 0, 2, runtime);
+		vm2.setStartExec(2.501);
+
+		// checking current vm availabilities
+		Assert.assertEquals(1, vm0.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(1, vm1.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(0.4998, vm2.getCurrentAvailability(5), ACCEPTABLE_DIFFERENCE);
+
+		// assert two first vms wouldn't be preempted by third one
+		Assert.assertEquals(2*cpuReq, policy.calcMipsOfSamePriorityToBeAvailable(vm2), ACCEPTABLE_DIFFERENCE);
+	}
+
+	/*
 	 * There are availableMips independent of vm priority
 	 */
 	@Test
@@ -783,6 +890,12 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		Assert.assertEquals(cpuReq, policy.getPriorityToInUseMips().get(2), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(1, policy.getPriorityToVms().get(2).size());
 		Assert.assertEquals(vmP2, policy.getPriorityToVms().get(2).first());
+
+		// vm with priority 2
+		Assert.assertTrue(policy.isSuitableFor(new PreemptableVm(1, 1, 5, memReq, submitTime, 2, runtime)));
+		Assert.assertTrue(policy.isSuitableFor(new PreemptableVm(1, 1, 4.9, memReq, submitTime, 2, runtime)));
+
+		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 5.1, memReq, submitTime, 2, runtime)));
 		
 		// vm with priority 1
 		Assert.assertTrue(policy.isSuitableFor(new PreemptableVm(1, 1, 5, memReq, submitTime, 1, runtime)));
@@ -973,8 +1086,10 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		Assert.assertTrue(policy.isSuitableFor(new PreemptableVm(1, 1, 4, memReq, time, 0, runtime)));
 		Assert.assertTrue(policy.isSuitableFor(new PreemptableVm(1, 1, 4.9, memReq, time, 0, runtime)));
 		Assert.assertTrue(policy.isSuitableFor(new PreemptableVm(1, 1, 5, memReq, time, 0, runtime)));
+
 		
 		// slo target for priority 0 is 1 that's because yhe other vm with priority 0 won't be preempted
+		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 5.0001, memReq, time, 0, runtime)));
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 5.1, memReq, time, 0, runtime)));
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 7.4, memReq, time, 0, runtime)));
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 7.5, memReq, time, 0, runtime)));		
@@ -983,8 +1098,9 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 10, memReq, time, 0, runtime)));
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 10.1, memReq, time, 0, runtime)));
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 11, memReq, time, 0, runtime)));
+
 		
-		// vm with priority 1
+		// vm with priority 1. It's possible to preempt one vm with priority 1, because its SLO is > 90 %. So, available mips = 5
 		Assert.assertTrue(policy.isSuitableFor(new PreemptableVm(1, 1, 1, memReq, time, 1, runtime)));
 		Assert.assertTrue(policy.isSuitableFor(new PreemptableVm(1, 1, 2.4, memReq, time, 1, runtime)));	
 		Assert.assertTrue(policy.isSuitableFor(new PreemptableVm(1, 1, 2.5, memReq, time, 1, runtime)));
@@ -1002,7 +1118,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 10.1, memReq, time, 1, runtime)));
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 11, memReq, time, 1, runtime)));
 
-		// vm with priority 2
+		// vm with priority 2.  It's possible to preempt one vm with priority 2, because its SLO is > 50 %. So, available mips = 2.5
 		Assert.assertTrue(policy.isSuitableFor(new PreemptableVm(1, 1, 1, memReq, time, 2, runtime)));
 		Assert.assertTrue(policy.isSuitableFor(new PreemptableVm(1, 1, 2.4, memReq, time, 2, runtime)));	
 		Assert.assertTrue(policy.isSuitableFor(new PreemptableVm(1, 1, 2.5, memReq, time, 2, runtime)));
@@ -1115,6 +1231,8 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 11, memReq, time, 1, runtime)));
 
 		// vm with priority 2
+		Assert.assertTrue(policy.isSuitableFor(new PreemptableVm(1, 1, 0, memReq, time, 2, runtime)));
+		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 0.0000000001, memReq, time, 2, runtime)));
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 1, memReq, time, 2, runtime)));
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 2.4, memReq, time, 2, runtime)));	
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 2.5, memReq, time, 2, runtime)));
@@ -1130,6 +1248,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 10, memReq, time, 2, runtime)));
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 10.1, memReq, time, 2, runtime)));
 		Assert.assertFalse(policy.isSuitableFor(new PreemptableVm(1, 1, 11, memReq, time, 2, runtime)));
+
 	}
 	
 	/*
@@ -1243,9 +1362,12 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		arrivingVM.setStartExec(2);
 		Assert.assertFalse(policy.isSuitableFor(arrivingVM));
 
-		// new VMs with priority 2 are violating the SLO target (0.6 > 0.5),
-		// then preemptions happen because priorities and SLO targets
-		// vm with priority 2
+		// new VMs with priority 2 aren't violating the SLO target (0.6 > 0.5),
+		// neither vm will be preempted, so available for vms with priority 2 is 0
+		arrivingVM = new PreemptableVm(1, 1, 0.0000001, memReq, submitTime, 2, runtime);
+		arrivingVM.setStartExec(2);
+		Assert.assertFalse(policy.isSuitableFor(arrivingVM));
+
 		arrivingVM = new PreemptableVm(1, 1, 2.5, memReq, submitTime, 2, runtime);
 		arrivingVM.setStartExec(2);
 		Assert.assertFalse(policy.isSuitableFor(arrivingVM));
@@ -1431,6 +1553,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		Assert.assertEquals(3, policy.getPriorityToVms().get(2).size());
 		Assert.assertEquals(vm2P2, policy.getPriorityToVms().get(2).first());
 		Assert.assertEquals(vm0P2, policy.getPriorityToVms().get(2).last());
+
 		
 		//checking availableMipsByPriority
 		Assert.assertEquals(7, policy.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
