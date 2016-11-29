@@ -117,8 +117,6 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		new VmAvailabilityBasedPreemptionPolicy(propeties);
 	}
 
-
-	
 	@Test(expected=IllegalArgumentException.class)
 	public void testInvalidInitialization3() {
 		// setting properties
@@ -185,6 +183,18 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		new VmAvailabilityBasedPreemptionPolicy(properties);
 	}
 
+	@Test(expected=IllegalArgumentException.class)
+	public void testInvalidInitialization9() {
+		// setting properties
+		Properties properties = new Properties();
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "-1", "1");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+
+		new VmAvailabilityBasedPreemptionPolicy(properties);
+	}
+
 	@Test(expected =IllegalArgumentException.class)
 	public void testInvalidProperties(){
 		new VmAvailabilityBasedPreemptionPolicy(null);
@@ -194,7 +204,8 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 	public void testInvalidProperties2(){
 		VmAvailabilityBasedPreemptionPolicy.getSLOAvailabilityTargets(null);
 	}
-		
+
+
 	@Test
 	public void testCalcMipsOfSamePriorityToBeAvailable() {
 		double memReq = 0;
@@ -429,7 +440,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		Assert.assertEquals(0, policy.getPriorityToInUseMips().get(0), ACCEPTABLE_DIFFERENCE);
 		Assert.assertTrue(policy.getPriorityToVms().get(0).isEmpty());
 		
-		Assert.assertEquals(4.55, policy.getPriorityToInUseMips().get(1), ACCEPTABLE_DIFFERENCE);
+		Assert.assertEquals(cpuReq, policy.getPriorityToInUseMips().get(1), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(1, policy.getPriorityToVms().get(1).size());
 		Assert.assertEquals(vm0, policy.getPriorityToVms().get(1).first());
 		

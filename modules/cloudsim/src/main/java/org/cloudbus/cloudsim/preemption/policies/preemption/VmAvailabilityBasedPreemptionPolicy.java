@@ -73,15 +73,14 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 				try {
 					int priority = Integer.parseInt(key.replace(
 							SLO_TARGET_PREFIX_PROP, ""));
+					checkPriority(priority);
+
 					double sloTarget = Double.parseDouble(properties
 							.getProperty(key));
-					
-					if (sloTarget < 0) {
-						throw new IllegalArgumentException(
-								"The SLO availability target must be a positive double.");
-					}
-					
+					checkSloTarget(sloTarget);
+
 					sloTargets.put(priority, sloTarget);
+
 				} catch (Exception e) {
 					throw new IllegalArgumentException(
 							"The SLO availability target is not properly set for each priority");
@@ -89,6 +88,20 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 			}
 		}
 		return sloTargets;
+	}
+
+	private static void checkSloTarget(double sloTarget) {
+		if (sloTarget < 0) {
+			throw new IllegalArgumentException(
+					"The SLO availability target must be a positive double.");
+		}
+	}
+
+	private static void checkPriority(int priority) {
+		if (priority < 0) {
+            throw new IllegalArgumentException(
+                    "The priority must be a positive integer.");
+        }
 	}
 
 	@Override
@@ -160,7 +173,6 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 		double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority()); 
 		getPriorityToInUseMips().put(vm.getPriority(),
 				DecimalUtil.format(priorityCurrentUse + vm.getMips(), DECIMAL_ACCURACY));
-		
 	}
 	
 	@Override

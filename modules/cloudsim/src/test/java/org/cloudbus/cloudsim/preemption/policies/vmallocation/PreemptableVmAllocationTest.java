@@ -83,7 +83,7 @@ public class PreemptableVmAllocationTest {
 		Assert.assertEquals(1, host1.getVmList().size());
 		Assert.assertEquals(1, preemptablePolicy.getVmTable().size());
 
-		//asserting that vm1 is allocated on host1 looking at VmTable
+		//asserting that vm1 is allocated on hostFCFS1 looking at VmTable
 		Assert.assertEquals(host1, preemptablePolicy.getVmTable().get(vm1.getUid()));
 	}
 
@@ -624,7 +624,7 @@ public class PreemptableVmAllocationTest {
 
 
 		// asserting that each priority has a sortedHostList with length = 3
-		// asserting that the preemptiveHosts has the same elements as the sortedHostList in each priority
+		// asserting that the hostsFCFS has the same elements as the sortedHostList in each priority
 		for (int i = 0; i < host1.getNumberOfPriorities(); i++){
 			Assert.assertTrue(preemptablePolicy.getPriorityToSortedHost().get(i).size() == 3);
 			Assert.assertArrayEquals(preemptablePolicy.getHostList().toArray(), preemptablePolicy.getPriorityToSortedHost().get(i).toArray());
@@ -706,13 +706,13 @@ public class PreemptableVmAllocationTest {
 		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
 		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
 
-		// testing if the sortedHost for priority1 is the same, changing only the available mips for this priority at host3
+		// testing if the sortedHost for priority1 is the same, changing only the available mips for this priority at hostFCFS3
 		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_1).toArray(), expectedListPriority1.toArray());
 		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_1), 50.3, ACCEPTABLE_DIFERENCE);
 		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_1), 100.5, ACCEPTABLE_DIFERENCE);
 		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_1), 96.3, ACCEPTABLE_DIFERENCE);
 
-		// testing if the sortedHost for priority2 is the same, changing only the available mips for this priority at host3
+		// testing if the sortedHost for priority2 is the same, changing only the available mips for this priority at hostFCFS3
 		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_2).toArray(), expectedListPriority2.toArray());
 		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_2), 50.3, ACCEPTABLE_DIFERENCE);
 		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_2), 50.2, ACCEPTABLE_DIFERENCE);

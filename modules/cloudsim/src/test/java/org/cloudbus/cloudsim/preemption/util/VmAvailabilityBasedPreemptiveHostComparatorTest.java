@@ -70,7 +70,7 @@ public class VmAvailabilityBasedPreemptiveHostComparatorTest {
 		
 		VmAvailabilityBasedPreemptiveHostComparator comparator = new VmAvailabilityBasedPreemptiveHostComparator(vm0);
 		
-		// host1 is smaller because of id
+		// hostFCFS1 is smaller because of id
 		Assert.assertEquals(-1, comparator.compare(host1, host2));
 		Assert.assertEquals(1, comparator.compare(host2, host1));
 	}
@@ -106,7 +106,7 @@ public class VmAvailabilityBasedPreemptiveHostComparatorTest {
 		Assert.assertEquals(5,  host1.getAvailableMipsByVm(newVm), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(5,  host2.getAvailableMipsByVm(newVm), ACCEPTABLE_DIFFERENCE);
 		
-		// host1 is smaller because of id because new priority 1 vm will not preempt both because they are violating SLO
+		// hostFCFS1 is smaller because of id because new priority 1 vm will not preempt both because they are violating SLO
 		Assert.assertEquals(-1, comparator.compare(host1, host2));
 		Assert.assertEquals(1, comparator.compare(host2, host1));
 	}
@@ -142,7 +142,7 @@ public class VmAvailabilityBasedPreemptiveHostComparatorTest {
 		Assert.assertEquals(10,  host1.getAvailableMipsByVm(newVm), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(10,  host2.getAvailableMipsByVm(newVm), ACCEPTABLE_DIFFERENCE);
 		
-		// host1 is smaller because of id and new priority 2 vm can preempt both because they aren't violating SLO
+		// hostFCFS1 is smaller because of id and new priority 2 vm can preempt both because they aren't violating SLO
 		Assert.assertEquals(-1, comparator.compare(host1, host2));
 		Assert.assertEquals(1, comparator.compare(host2, host1));
 	}
@@ -178,7 +178,7 @@ public class VmAvailabilityBasedPreemptiveHostComparatorTest {
 		Assert.assertEquals(10,  host1.getAvailableMipsByVm(newVm), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(5,  host2.getAvailableMipsByVm(newVm), ACCEPTABLE_DIFFERENCE);
 		
-		// host1 is smaller because has more availableMips for the new vm
+		// hostFCFS1 is smaller because has more availableMips for the new vm
 		Assert.assertEquals(-1, comparator.compare(host1, host2));
 		Assert.assertEquals(1, comparator.compare(host2, host1));
 		
@@ -189,7 +189,7 @@ public class VmAvailabilityBasedPreemptiveHostComparatorTest {
 		Assert.assertEquals(10,  host1.getAvailableMipsByVm(newVmP0), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(10,  host2.getAvailableMipsByVm(newVmP0), ACCEPTABLE_DIFFERENCE);
 		
-		// host1 is smaller because of id, the available mips are the same for vm with priority 0
+		// hostFCFS1 is smaller because of id, the available mips are the same for vm with priority 0
 		Assert.assertEquals(-1, comparator.compare(host1, host2));
 		Assert.assertEquals(1, comparator.compare(host2, host1));
 		
@@ -200,7 +200,7 @@ public class VmAvailabilityBasedPreemptiveHostComparatorTest {
 		Assert.assertEquals(10,  host1.getAvailableMipsByVm(newVmP1), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(10,  host2.getAvailableMipsByVm(newVmP1), ACCEPTABLE_DIFFERENCE);
 		
-		// host1 is smaller because of id, the available mips are the same for vm with priority 1
+		// hostFCFS1 is smaller because of id, the available mips are the same for vm with priority 1
 		Assert.assertEquals(-1, comparator.compare(host1, host2));
 		Assert.assertEquals(1, comparator.compare(host2, host1));
 	}
@@ -236,7 +236,7 @@ public class VmAvailabilityBasedPreemptiveHostComparatorTest {
 		Assert.assertEquals(5,  host1.getAvailableMipsByVm(newVm), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(10,  host2.getAvailableMipsByVm(newVm), ACCEPTABLE_DIFFERENCE);
 		
-		// host2 is smaller because has more availableMips for the new vm
+		// hostFCFS2 is smaller because has more availableMips for the new vm
 		Assert.assertEquals(1, comparator.compare(host1, host2));
 		Assert.assertEquals(-1, comparator.compare(host2, host1));
 		
@@ -247,7 +247,7 @@ public class VmAvailabilityBasedPreemptiveHostComparatorTest {
 		Assert.assertEquals(10,  host1.getAvailableMipsByVm(newVmP0), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(10,  host2.getAvailableMipsByVm(newVmP0), ACCEPTABLE_DIFFERENCE);
 		
-		// host1 is smaller because of id, the available mips are the same for vm with priority 0
+		// hostFCFS1 is smaller because of id, the available mips are the same for vm with priority 0
 		Assert.assertEquals(-1, comparator.compare(host1, host2));
 		Assert.assertEquals(1, comparator.compare(host2, host1));
 		
@@ -258,7 +258,7 @@ public class VmAvailabilityBasedPreemptiveHostComparatorTest {
 		Assert.assertEquals(10,  host1.getAvailableMipsByVm(newVmP1), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(10,  host2.getAvailableMipsByVm(newVmP1), ACCEPTABLE_DIFFERENCE);
 		
-		// host1 is smaller because of id, the available mips are the same for vm with priority 1
+		// hostFCFS1 is smaller because of id, the available mips are the same for vm with priority 1
 		Assert.assertEquals(-1, comparator.compare(host1, host2));
 		Assert.assertEquals(1, comparator.compare(host2, host1));
 	}

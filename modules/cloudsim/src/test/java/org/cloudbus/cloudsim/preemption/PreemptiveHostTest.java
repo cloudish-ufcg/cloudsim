@@ -690,7 +690,7 @@ public class PreemptiveHostTest {
 		// vm1 with mips required = 1
 		PreemptableVm vm1 = new PreemptableVm(0, 1, 1, 1.0, 0, 0, 0);
 
-		// asserting that vm1 can be allocated at host1 and host2
+		// asserting that vm1 can be allocated at hostFCFS1 and hostFCFS2
 		Assert.assertTrue(host1.vmCreate(vm1));
 		Assert.assertTrue(host2.vmCreate(vm1));
 
@@ -704,7 +704,7 @@ public class PreemptiveHostTest {
 		host2.vmDestroy(vm1);
 		Assert.assertEquals(host2.getAvailableMips(), 1 + 1.0E-9, NEW_ACCEPTABLE_DIFFERENCE);
 
-		// vm1 with mips required that can not be allocated at host1, but can be allocated at host2
+		// vm1 with mips required that can not be allocated at hostFCFS1, but can be allocated at hostFCFS2
 		vm1 = new PreemptableVm(0, 1, 1.000000001, 1.0, 0, 0, 0);
 		Assert.assertFalse(host1.vmCreate(vm1));
 		Assert.assertTrue(host2.vmCreate(vm1));
@@ -713,11 +713,11 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(host1.getAvailableMips(), 1, NEW_ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(host2.getAvailableMips(), 0, NEW_ACCEPTABLE_DIFFERENCE);
 
-		// destroying vm1 from host2 to do new testes and asserting the new available mips
+		// destroying vm1 from hostFCFS2 to do new testes and asserting the new available mips
 		host2.vmDestroy(vm1);
 		Assert.assertEquals(host2.getAvailableMips(), 1 + 1.0E-9, NEW_ACCEPTABLE_DIFFERENCE);
 
-		// vm1 with mips required bigger than host1 and host2 capacity
+		// vm1 with mips required bigger than hostFCFS1 and hostFCFS2 capacity
 		vm1 = new PreemptableVm(0, 1, 1.0000000016, 1.0, 0, 0, 0);
 		Assert.assertFalse(host1.vmCreate(vm1));
 		Assert.assertFalse(host2.vmCreate(vm1));
@@ -725,7 +725,7 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(host2.getAvailableMips(), 1 + 1.0E-9, NEW_ACCEPTABLE_DIFFERENCE);
 
 
-		// vm1 with mips required bigger than host1 and host2 capacity
+		// vm1 with mips required bigger than hostFCFS1 and hostFCFS2 capacity
 		vm1 = new PreemptableVm(0, 1, 1.0000000011, 1.0, 0, 0, 0);
 		Assert.assertFalse(host1.vmCreate(vm1));
 		Assert.assertFalse(host2.vmCreate(vm1));
@@ -758,15 +758,15 @@ public class PreemptiveHostTest {
 		PreemptableVm vm2 = new PreemptableVm(2, 1, 0.999999999, 1.0, 0, 0, 0);
 		PreemptableVm vm3 = new PreemptableVm(3, 1, 0.000000001, 1.0, 0, 0, 0);
 
-		// asserting that vm2 can be allocated at host1 and new capacity of host
+		// asserting that vm2 can be allocated at hostFCFS1 and new capacity of host
 		Assert.assertTrue(host1.vmCreate(vm2));
 		Assert.assertEquals(host1.getAvailableMips(), 0.000000001, NEW_ACCEPTABLE_DIFFERENCE);
 
-		// asserting that vm3 can be allocated at host1 and new capacity of host
+		// asserting that vm3 can be allocated at hostFCFS1 and new capacity of host
 		Assert.assertTrue(host1.vmCreate(vm3));
 		Assert.assertEquals(host1.getAvailableMips(), 0, NEW_ACCEPTABLE_DIFFERENCE);
 
-		// destroying vm2 and vm3 from host1 to do new testes and asserting the new available mips
+		// destroying vm2 and vm3 from hostFCFS1 to do new testes and asserting the new available mips
 		host1.vmDestroy(vm2);
 		Assert.assertEquals(host1.getAvailableMips(), 0.999999999, NEW_ACCEPTABLE_DIFFERENCE);
 		host1.vmDestroy(vm3);
@@ -778,16 +778,16 @@ public class PreemptiveHostTest {
 		Assert.assertTrue(host1.vmCreate(vm2));
 		Assert.assertEquals(host1.getAvailableMips(), 0, NEW_ACCEPTABLE_DIFFERENCE);
 
-		// asserting that vm1 can be allocated at host2 and new capacity of host
+		// asserting that vm1 can be allocated at hostFCFS2 and new capacity of host
 		Assert.assertTrue(host2.vmCreate(vm1));
 		Assert.assertEquals(host2.getAvailableMips(), 0.000000001, NEW_ACCEPTABLE_DIFFERENCE);
 
-		// asserting that vm3 can be allocated at host2 and new capacity of host
+		// asserting that vm3 can be allocated at hostFCFS2 and new capacity of host
 		Assert.assertTrue(host2.vmCreate(vm3));
 		Assert.assertEquals(host2.getAvailableMips(), 0, NEW_ACCEPTABLE_DIFFERENCE);
 
 
-		// destroying vm1 and vm3 from host2 to do new testes and asserting the new available mips
+		// destroying vm1 and vm3 from hostFCFS2 to do new testes and asserting the new available mips
 		host2.vmDestroy(vm1);
 		Assert.assertEquals(host2.getAvailableMips(), 1, NEW_ACCEPTABLE_DIFFERENCE);
 		host2.vmDestroy(vm3);
