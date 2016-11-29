@@ -23,6 +23,10 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicy implements HostSelec
         if (hosts == null)
             throw new IllegalArgumentException(
                     "The list of host can not be null.");
+
+        else if (hosts.isEmpty())
+            throw new IllegalArgumentException(
+                    "The list of host can not be empty.");
     }
 
     @Override
@@ -38,7 +42,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicy implements HostSelec
 
             PreemptiveHost firstHost = preemptiveHosts.get(0);
 
-            if (firstHost.isSuitableForVm(vm)) {
+            if (firstHost.isSuitableForVm(pVm)) {
                 return firstHost;
             }
         }
