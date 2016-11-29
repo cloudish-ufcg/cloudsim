@@ -4,7 +4,6 @@ import junit.framework.Assert;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
-import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
 import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
@@ -14,31 +13,32 @@ import org.mockito.Mockito;
 
 import java.util.*;
 
-import static org.junit.Assert.*;
-
 /**
  * Created by Alessandro Lia Fook Santos on 23/11/16.
  */
 public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
 
     private static final double HOST_CAPACITY = 0.5;
+    public final double ACCEPTABLE_DIFFERENCE = 0.00001;
 
-    List<PreemptiveHost> hosts;
-    HostSelectionPolicy selectionPolicy;
-    VmAvailabilityBasedPreemptionPolicy preemptionPolicy1;
-    VmAvailabilityBasedPreemptionPolicy preemptionPolicy2;
-    VmAvailabilityBasedPreemptionPolicy preemptionPolicy3;
-    VmAvailabilityBasedPreemptionPolicy preemptionPolicy4;
+    public List<PreemptiveHost> hosts;
+    public HostSelectionPolicy selectionPolicyWFVA;
 
-    PreemptiveHost host1;
-    PreemptiveHost host2;
-    PreemptiveHost host3;
-    PreemptiveHost host4;
+    public VmAvailabilityBasedPreemptionPolicy preemptionPolicy1;
+    public VmAvailabilityBasedPreemptionPolicy preemptionPolicy2;
+    public VmAvailabilityBasedPreemptionPolicy preemptionPolicy3;
+    public VmAvailabilityBasedPreemptionPolicy preemptionPolicy4;
+
+    public PreemptiveHost host1;
+    public PreemptiveHost host2;
+    public PreemptiveHost host3;
+    public PreemptiveHost host4;
 
     @Before
     public void setUp() throws Exception {
 
-        int hostId = 0;
+
+        // environment with VmAvailabilityBasedPreemptionPolicy
 
         preemptionPolicy1 = Mockito.mock(VmAvailabilityBasedPreemptionPolicy.class);
         preemptionPolicy2 = Mockito.mock(VmAvailabilityBasedPreemptionPolicy.class);
@@ -51,7 +51,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
 
         peList1.add(new Pe(0, new PeProvisionerSimple(HOST_CAPACITY)));
 
-
+        int hostId = 0;
         host1 = new PreemptiveHost(hostId++, peList1,
                     new VmSchedulerMipsBased(peList1), preemptionPolicy1);
 
@@ -69,9 +69,10 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         hosts.add(host3);
         hosts.add(host4);
 
-        selectionPolicy = new WorstFitVmAvailabilityBasedHostSelectionPolicy(hosts);
+        selectionPolicyWFVA = new WorstFitVmAvailabilityBasedHostSelectionPolicy(hosts);
     }
 
+    //tests for environment with VmAvailabilityBasedPreemptionPolicy
     @Test (expected = IllegalArgumentException.class)
     public void testInvalidInitialization(){
         new WorstFitVmAvailabilityBasedHostSelectionPolicy(null);
@@ -84,12 +85,12 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
 
     @Test (expected = IllegalArgumentException.class)
     public void testInsertIllegalVM(){
-        selectionPolicy.select(new TreeSet<>(), null);
+        selectionPolicyWFVA.select(new TreeSet<>(), null);
     }
 
     @Test (expected = IllegalArgumentException.class)
     public void testInsertIllegalVM2(){
-        selectionPolicy.select(null, null);
+        selectionPolicyWFVA.select(null, null);
     }
 
     @Test
@@ -105,7 +106,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         Mockito.when(preemptionPolicy3.getAvailableMipsByVm(vm0)).thenReturn(10.0);
         Mockito.when(preemptionPolicy4.getAvailableMipsByVm(vm0)).thenReturn(10.0);
 
-        Assert.assertEquals(selectionPolicy.select(null, vm0), host1);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host1);
     }
 
     @Test
@@ -121,7 +122,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         Mockito.when(preemptionPolicy3.getAvailableMipsByVm(vm0)).thenReturn(5.0);
         Mockito.when(preemptionPolicy4.getAvailableMipsByVm(vm0)).thenReturn(5.0);
 
-        Assert.assertEquals(selectionPolicy.select(null, vm0), host2);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host2);
     }
 
     @Test
@@ -137,7 +138,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         Mockito.when(preemptionPolicy3.getAvailableMipsByVm(vm0)).thenReturn(10.0);
         Mockito.when(preemptionPolicy4.getAvailableMipsByVm(vm0)).thenReturn(1.0);
 
-        Assert.assertEquals(selectionPolicy.select(null, vm0), host3);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host3);
     }
 
     @Test
@@ -153,7 +154,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         Mockito.when(preemptionPolicy3.getAvailableMipsByVm(vm0)).thenReturn(1.0);
         Mockito.when(preemptionPolicy4.getAvailableMipsByVm(vm0)).thenReturn(1.0000000001);
 
-        Assert.assertEquals(selectionPolicy.select(null, vm0), host4);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host4);
     }
 
     @Test
@@ -169,7 +170,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         Mockito.when(preemptionPolicy3.getAvailableMipsByVm(vm0)).thenReturn(1.0);
         Mockito.when(preemptionPolicy4.getAvailableMipsByVm(vm0)).thenReturn(1.0000000001);
 
-        Assert.assertEquals(selectionPolicy.select(null, vm0), host4);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host4);
     }
 
     @Test
@@ -192,7 +193,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         Mockito.when(preemptionPolicy4.getAvailableMipsByVm(vm0)).thenReturn(0.0000000001);
         Mockito.when(preemptionPolicy4.isSuitableFor(vm0)).thenReturn(false);
 
-        Assert.assertEquals(selectionPolicy.select(null, vm0), null);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), null);
     }
 
     @Test
@@ -215,7 +216,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         Mockito.when(preemptionPolicy4.getAvailableMipsByVm(vm0)).thenReturn(0.0000000001);
         Mockito.when(preemptionPolicy4.isSuitableFor(vm0)).thenReturn(false);
 
-        Assert.assertEquals(selectionPolicy.select(null, vm0), host3);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host3);
     }
 
     @Test
@@ -238,7 +239,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         Mockito.when(preemptionPolicy4.getAvailableMipsByVm(vm0)).thenReturn(0.0000000001);
         Mockito.when(preemptionPolicy4.isSuitableFor(vm0)).thenReturn(false);
 
-        Assert.assertEquals(selectionPolicy.select(null, vm0), host3);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host3);
     }
 
     @Test
@@ -267,7 +268,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         Mockito.when(preemptionPolicy4.getAvailableMipsByVm(vm0)).thenReturn(0.0000000001);
         Mockito.when(preemptionPolicy4.isSuitableFor(vm0)).thenReturn(false);
 
-        Assert.assertEquals(selectionPolicy.select(null, vm0), null);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), null);
     }
 
     @Test
@@ -290,16 +291,16 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         Mockito.when(preemptionPolicy4.getAvailableMipsByVm(vm0)).thenReturn(0.0000000001);
         Mockito.when(preemptionPolicy4.isSuitableFor(vm0)).thenReturn(false);
 
-        Assert.assertEquals(selectionPolicy.select(null, vm0), host2);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host2);
 
-        selectionPolicy.removeHost(host2);
-        Assert.assertEquals(selectionPolicy.select(null, vm0), host1);
+        selectionPolicyWFVA.removeHost(host2);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host1);
 
-        selectionPolicy.removeHost(host1);
-        Assert.assertEquals(selectionPolicy.select(null, vm0), host3);
+        selectionPolicyWFVA.removeHost(host1);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host3);
 
-        selectionPolicy.addHost(host1);
-        selectionPolicy.addHost(host2);
-        Assert.assertEquals(selectionPolicy.select(null, vm0), host2);
+        selectionPolicyWFVA.addHost(host1);
+        selectionPolicyWFVA.addHost(host2);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host2);
     }
 }

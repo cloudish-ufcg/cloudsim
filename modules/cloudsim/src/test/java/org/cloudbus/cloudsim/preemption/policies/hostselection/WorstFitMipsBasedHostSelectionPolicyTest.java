@@ -93,7 +93,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testVmEqualsNull() {
-    	SortedSet<PreemptiveHost> hostList2 = new TreeSet<>(new PreemptiveHostComparator(0));
+        SortedSet<PreemptiveHost> hostList2 = new TreeSet<>(new PreemptiveHostComparator(0));
         selectionPolicy.select(preemptiveHosts, null);
         selectionPolicy.select(hostList2, null);
     }
