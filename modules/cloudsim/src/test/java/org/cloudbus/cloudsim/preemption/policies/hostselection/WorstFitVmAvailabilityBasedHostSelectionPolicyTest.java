@@ -89,12 +89,12 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
     }
 
     @Test (expected = IllegalArgumentException.class)
-    public void testInsertIllegalVM2(){
+    public void testInsertIllegalListOfHosts(){
         selectionPolicyWFVA.select(null, null);
     }
 
     @Test
-    public void testInsertAnyVM(){
+    public void testSelectHostForVM(){
         double cpuReq = 0.5;
         double memReq = 0;
         double runtime = 10;
@@ -110,7 +110,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
     }
 
     @Test
-    public void testInsertAnyVM2(){
+    public void testSelectHostForVM2(){
         double cpuReq = 0.5;
         double memReq = 0;
         double runtime = 10;
@@ -126,7 +126,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
     }
 
     @Test
-    public void testInsertAnyVM3(){
+    public void testSelectHostForVM3(){
         double cpuReq = 0.5;
         double memReq = 0;
         double runtime = 10;
@@ -142,7 +142,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
     }
 
     @Test
-    public void testInsertAnyVM4(){
+    public void testSelectHostForVM4(){
         double cpuReq = 0.5;
         double memReq = 0;
         double runtime = 10;
@@ -158,23 +158,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
     }
 
     @Test
-    public void testInsertAnyVM5(){
-        double cpuReq = 0.5;
-        double memReq = 0;
-        double runtime = 10;
-
-        PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 0, runtime);
-
-        Mockito.when(preemptionPolicy1.getAvailableMipsByVm(vm0)).thenReturn(1.0);
-        Mockito.when(preemptionPolicy2.getAvailableMipsByVm(vm0)).thenReturn(1.0);
-        Mockito.when(preemptionPolicy3.getAvailableMipsByVm(vm0)).thenReturn(1.0);
-        Mockito.when(preemptionPolicy4.getAvailableMipsByVm(vm0)).thenReturn(1.0000000001);
-
-        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host4);
-    }
-
-    @Test
-    public void testInsertAnyVM6(){
+    public void testSelectHostForVM5(){
         double cpuReq = 0.6;
         double memReq = 0;
         double runtime = 10;
@@ -197,7 +181,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
     }
 
     @Test
-    public void testInsertAnyVM7(){
+    public void testSelectHostForVM6(){
         double cpuReq = 0.0000001;
         double memReq = 0;
         double runtime = 10;
@@ -220,7 +204,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
     }
 
     @Test
-    public void testInsertAnyVM8(){
+    public void testSelectHostForVM7(){
         double cpuReq = 0.0000001;
         double memReq = 0;
         double runtime = 10;
@@ -243,7 +227,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
     }
 
     @Test
-    public void testInsertAnyVM9(){
+    public void testSelectHostForVM8(){
 
         double cpuReq = 0.0000001;
         double memReq = 0;
@@ -268,11 +252,12 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         Mockito.when(preemptionPolicy4.getAvailableMipsByVm(vm0)).thenReturn(0.0000000001);
         Mockito.when(preemptionPolicy4.isSuitableFor(vm0)).thenReturn(false);
 
+
         Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), null);
     }
 
     @Test
-    public void testInsertAnyVM10(){
+    public void testSelectHostForVM9(){
         double cpuReq = 0.0000001;
         double memReq = 0;
         double runtime = 10;
@@ -299,8 +284,12 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         selectionPolicyWFVA.removeHost(host1);
         Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host3);
 
+        selectionPolicyWFVA.removeHost(host3);
+        Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host4);
+
         selectionPolicyWFVA.addHost(host1);
         selectionPolicyWFVA.addHost(host2);
+        selectionPolicyWFVA.addHost(host3);
         Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), host2);
     }
 }

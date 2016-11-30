@@ -719,4 +719,26 @@ public class PreemptableVmAllocationTest {
 		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_2), 96.3, ACCEPTABLE_DIFERENCE);
 
 	}
+
+	// In this case, availability will be considered, but the vm is not violating SLO target.
+	@Test
+	public void testSelectHostConsideringAvailabilityOfArrivingVM(){
+
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
+		Mockito.when(hostSelector.select(Mockito.any(SortedSet.class), Mockito.any(Vm.class))).thenReturn(host1);
+
+		Assert.assertEquals(host1, preemptablePolicy.selectHost(vm1, true));
+
+	}
+
+	// In this case, availability will be considered and the vm is violating SLO target, because it's defined now.
+	@Test
+	public void testSelectHostConsideringAvailabilityOfArrivingVM2(){
+
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0, 0.9);
+		Mockito.when(hostSelector.select(Mockito.any(SortedSet.class), Mockito.any(Vm.class))).thenReturn(host1);
+
+		Assert.assertEquals(host1, preemptablePolicy.selectHost(vm1, true));
+
+	}
 }
