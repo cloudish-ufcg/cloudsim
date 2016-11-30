@@ -31,48 +31,69 @@ public class PreemptableVmAllocationTest {
 	private HostSelectionPolicy hostSelector;
 	private PreemptiveHost host1, host2, host3;
 	private PreemptableVmAllocationPolicy preemptablePolicy;
+
 	private static final int PRIORITY_0 = 0;
 	private static final int PRIORITY_1 = 1;
 	private static final int PRIORITY_2 = 2;
+
 	private static final int NUMBER_OF_PRIORITIES = 3;
 	private static final double ACCEPTABLE_DIFERENCE = 0.000001;
 	private Properties properties;
-	
+
+	private PreemptableVm vm1, vm2, vm3, vm4;
+
 	@Before
 	public void setUp() {
+
+		double HOST_CAPACITY = 100;
+
 		List<Pe> peList1 = new ArrayList<Pe>();
-		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
-		
+		peList1.add(new Pe(0, new PeProvisionerSimple(HOST_CAPACITY)));
+
 		properties = new Properties();
 		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "1");
-		
-		host1 = new PreemptiveHost(1, peList1,
+
+		int hostId = 0;
+
+		host1 = new PreemptiveHost(hostId++, peList1,
 				new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
-		
-		List<Pe> peList2 = new ArrayList<Pe>();
-		peList2.add(new Pe(0, new PeProvisionerSimple(500)));
-		host2 = new PreemptiveHost(2, peList2,
+
+		List<Pe> peList2 = new ArrayList<>();
+		peList2.add(new Pe(0, new PeProvisionerSimple((HOST_CAPACITY / 2))));
+		host2 = new PreemptiveHost(hostId++, peList2,
 				new VmSchedulerMipsBased(peList2), new FCFSBasedPreemptionPolicy(properties));
-		
-		List<PreemptiveHost> hosts = new ArrayList<PreemptiveHost>();
+
+		List<PreemptiveHost> hosts = new ArrayList<>();
 		hosts.add(host1);
 		hosts.add(host2);
-		
-		sortedHosts = new TreeSet<PreemptiveHost>(new PreemptiveHostComparator(0));
-		
+
+		sortedHosts = new TreeSet<>(new PreemptiveHostComparator(0));
+
 		for (PreemptiveHost googleHost : hosts) {
 			sortedHosts.add(googleHost);
-		}		
+		}
 
 		hostSelector = Mockito.mock(WorstFitMipsBasedHostSelectionPolicy.class);
 
 		preemptablePolicy = new PreemptableVmAllocationPolicy(hosts, "");
 		preemptablePolicy.setHostSelector(hostSelector);
+
+		int vmId = 0;
+		int userId = 1;
+		double cpuReq = 1d;
+		double memReq = 1d;
+		double submitTime = 0d;
+		int priority = 0;
+		double runtime = 0d;
+
+		vm1 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
+		vm2 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
+		vm3 = new PreemptableVm(vmId++, userId++, cpuReq, memReq, submitTime, priority, runtime);
+		vm4 = new PreemptableVm(vmId++, userId++, cpuReq, memReq, submitTime, priority, runtime);
 	}
-	
+
 	@Test
 	public void testAllocateHostForVm() {
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
 
 		// mocking host selector
 		Mockito.when(hostSelector.select(sortedHosts, vm1)).thenReturn(host1);
@@ -89,8 +110,6 @@ public class PreemptableVmAllocationTest {
 
 	@Test
 	public void testAllocateHostForVm2() {
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
 
 		// mocking host selector
 		Mockito.when(hostSelector.select(sortedHosts, vm1)).thenReturn(host1);
@@ -102,17 +121,17 @@ public class PreemptableVmAllocationTest {
 		Assert.assertEquals(1, host1.getVmList().size());
 		Assert.assertEquals(1, preemptablePolicy.getVmTable().size());
 		Assert.assertEquals(host1, preemptablePolicy.getVmTable().get(vm1.getUid()));
-		
+
 		// allocating the 2nd vm
 		Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm2));
-		
+
 		// checking 
 		Assert.assertEquals(host1, vm1.getHost());
 		Assert.assertEquals(1, host1.getVmList().size());
 
 		Assert.assertEquals(host2, vm2.getHost());
 		Assert.assertEquals(1, host2.getVmList().size());
-		
+
 		Assert.assertEquals(2, preemptablePolicy.getVmTable().size());
 
 		// Asserting VmTable after allocations
@@ -123,10 +142,6 @@ public class PreemptableVmAllocationTest {
 
 	@Test
 	public void testAllocateVMsToSameHost(){
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
-		PreemptableVm vm3 = new PreemptableVm(3, 1, 1.0, 1.0, 0, 0, 0);
-		PreemptableVm vm4 = new PreemptableVm(4, 1, 1.0, 1.0, 0, 0, 0);
 
 		// mocking host selector
 		Mockito.when(hostSelector.select(sortedHosts, vm1)).thenReturn(host1);
@@ -170,13 +185,12 @@ public class PreemptableVmAllocationTest {
 		Assert.assertEquals(host1, preemptablePolicy.getVmTable().get(vm2.getUid()));
 		Assert.assertEquals(host1, preemptablePolicy.getVmTable().get(vm3.getUid()));
 		Assert.assertEquals(host2, preemptablePolicy.getVmTable().get(vm4.getUid()));
-
 	}
-	
+
 	@Test
 	public void testDeallocateHostForVm() {
+
 		// setting environment
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
 		Assert.assertTrue(host1.vmCreate(vm1));
 		Map<String, Host> vmTable = new HashMap<String, Host>();
 		vmTable.put(vm1.getUid(), host1);
@@ -197,17 +211,14 @@ public class PreemptableVmAllocationTest {
 		Assert.assertEquals(0, host2.getVmList().size());
 		Assert.assertEquals(0, preemptablePolicy.getVmTable().size());
 	}
-	
-	
+
 	@Test
 	public void testDeallocateHostForVm2() {
+
 		// setting environment
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
 		Assert.assertTrue(host1.vmCreate(vm1));
-		
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
 		Assert.assertTrue(host2.vmCreate(vm2));
-		
+
 		Map<String, Host> vmTable = new HashMap<String, Host>();
 		vmTable.put(vm1.getUid(), host1);
 		vmTable.put(vm2.getUid(), host2);
@@ -216,10 +227,10 @@ public class PreemptableVmAllocationTest {
 		// checking
 		Assert.assertEquals(host1, vm1.getHost());
 		Assert.assertEquals(1, host1.getVmList().size());
-		
+
 		Assert.assertEquals(host2, vm2.getHost());
 		Assert.assertEquals(1, host2.getVmList().size());
-		
+
 		Assert.assertEquals(2, preemptablePolicy.getVmTable().size());
 
 		// deallocating vm1
@@ -228,10 +239,10 @@ public class PreemptableVmAllocationTest {
 		// checking
 		Assert.assertNull(vm1.getHost());
 		Assert.assertEquals(0, host1.getVmList().size());
-		
+
 		Assert.assertEquals(host2, vm2.getHost());
 		Assert.assertEquals(1, host2.getVmList().size());
-		
+
 		Assert.assertEquals(1, preemptablePolicy.getVmTable().size());
 
 		// deallocating vm2
@@ -249,7 +260,7 @@ public class PreemptableVmAllocationTest {
 
 	@Test
 	public void testDeallocateVMNonExistent(){
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
+
 		Assert.assertTrue(preemptablePolicy.getVmTable().isEmpty());
 		preemptablePolicy.deallocateHostForVm(vm1);
 		Assert.assertTrue(preemptablePolicy.getVmTable().isEmpty());
@@ -257,7 +268,6 @@ public class PreemptableVmAllocationTest {
 
 	@Test
 	public void testDeallocateVMNonexistentAfterDeallocateExistingVM(){
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
 
 		// mocking host selector
 		Mockito.when(hostSelector.select(sortedHosts, vm1)).thenReturn(host1);
@@ -282,11 +292,9 @@ public class PreemptableVmAllocationTest {
 
 	@Test
 	public void testDeallocateMoreThanOneVMFromSameHost(){
-		// setting environment
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
-		Assert.assertTrue(host1.vmCreate(vm1));
 
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
+		// setting environment
+		Assert.assertTrue(host1.vmCreate(vm1));
 		Assert.assertTrue(host1.vmCreate(vm2));
 
 		Map<String, Host> vmTable = new HashMap<String, Host>();
@@ -323,22 +331,19 @@ public class PreemptableVmAllocationTest {
 		Assert.assertEquals(0, preemptablePolicy.getVmTable().size());
 
 	}
-	
+
 	@Test
 	public void testOptimizeAllocation() {
 		Assert.assertNull(preemptablePolicy
 				.optimizeAllocation(new ArrayList<Vm>()));
 	}
-	
+
 	@Test
 	public void testPreempt() {
 		// setting environment
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
 		Assert.assertTrue(host1.vmCreate(vm1));
-		
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
 		Assert.assertTrue(host2.vmCreate(vm2));
-		
+
 		Map<String, Host> vmTable = new HashMap<String, Host>();
 		vmTable.put(vm1.getUid(), host1);
 		vmTable.put(vm2.getUid(), host2);
@@ -347,10 +352,10 @@ public class PreemptableVmAllocationTest {
 		// checking
 		Assert.assertEquals(host1, vm1.getHost());
 		Assert.assertEquals(1, host1.getVmList().size());
-		
+
 		Assert.assertEquals(host2, vm2.getHost());
 		Assert.assertEquals(1, host2.getVmList().size());
-		
+
 		Assert.assertEquals(2, preemptablePolicy.getVmTable().size());
 
 		// preempting
@@ -363,7 +368,7 @@ public class PreemptableVmAllocationTest {
 		Assert.assertEquals(0, host1.getVmList().size());
 
 		Assert.assertEquals(1, host2.getVmList().size());
-		
+
 		Assert.assertEquals(1, preemptablePolicy.getVmTable().size());
 
 		// preempting
@@ -384,12 +389,9 @@ public class PreemptableVmAllocationTest {
 
 	@Test
 	public void testPreemptInvalidVm() {
+
 		// setting environment
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
 		Assert.assertTrue(host1.vmCreate(vm1));
-		
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
-		
 		Map<String, Host> vmTable = new HashMap<String, Host>();
 		vmTable.put(vm1.getUid(), host1);
 		preemptablePolicy.setVmTable(vmTable);
@@ -397,31 +399,31 @@ public class PreemptableVmAllocationTest {
 		// checking
 		Assert.assertEquals(host1, vm1.getHost());
 		Assert.assertEquals(1, host1.getVmList().size());
-		
+
 		Assert.assertNull(vm2.getHost());
 		Assert.assertEquals(0, host2.getVmList().size());
-		
+
 		Assert.assertEquals(1, preemptablePolicy.getVmTable().size());
 
 		// preempting invalid vm
 		Assert.assertFalse(preemptablePolicy.preempt(vm2));
-		
+
 		// checking
 		Assert.assertEquals(host1, vm1.getHost());
 		Assert.assertEquals(1, host1.getVmList().size());
-		
+
 		Assert.assertNull(vm2.getHost());
 		Assert.assertEquals(0, host2.getVmList().size());
-		
+
 		Assert.assertEquals(1, preemptablePolicy.getVmTable().size());
 	}
 
 	@Test
 	public void testPreemptSameVmMoreThanOneTime() {
+
 		// setting environment
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
 		Assert.assertTrue(host1.vmCreate(vm1));
-		
+
 		Map<String, Host> vmTable = new HashMap<String, Host>();
 		vmTable.put(vm1.getUid(), host1);
 		preemptablePolicy.setVmTable(vmTable);
@@ -430,7 +432,7 @@ public class PreemptableVmAllocationTest {
 		Assert.assertEquals(host1, vm1.getHost());
 		Assert.assertEquals(1, host1.getVmList().size());
 		Assert.assertEquals(0, host2.getVmList().size());
-		
+
 		Assert.assertEquals(1, preemptablePolicy.getVmTable().size());
 
 		// preempting vm1
@@ -440,7 +442,6 @@ public class PreemptableVmAllocationTest {
 		Assert.assertNull(vm1.getHost());
 		Assert.assertEquals(0, host1.getVmList().size());
 		Assert.assertEquals(0, host2.getVmList().size());
-		
 		Assert.assertEquals(0, preemptablePolicy.getVmTable().size());
 
 		// preempting vm1 again
@@ -454,14 +455,11 @@ public class PreemptableVmAllocationTest {
 		Assert.assertEquals(0, preemptablePolicy.getVmTable().size());
 	}
 
-
 	@Test
 	public void preemptMoreThanOneVmFromSameHost(){
-		// setting environment
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
-		Assert.assertTrue(host1.vmCreate(vm1));
 
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
+		// setting environment
+		Assert.assertTrue(host1.vmCreate(vm1));
 		Assert.assertTrue(host1.vmCreate(vm2));
 
 		Map<String, Host> vmTable = new HashMap<String, Host>();
@@ -497,7 +495,6 @@ public class PreemptableVmAllocationTest {
 
 	@Test
 	public void testAllocateVMAtNullHost(){
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
 
 		// mocking host selector
 		Mockito.when(hostSelector.select(sortedHosts, vm1)).thenReturn(null);
@@ -512,10 +509,6 @@ public class PreemptableVmAllocationTest {
 
 	@Test
 	public void testAllocateAtSpecificHost(){
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
-		PreemptableVm vm3 = new PreemptableVm(3, 1, 1.0, 1.0, 0, 0, 0);
-		PreemptableVm vm4 = new PreemptableVm(4, 1, 1.0, 1.0, 0, 0, 0);
 
 		// checking vm1 allocation at null host
 		Assert.assertFalse(preemptablePolicy.allocateHostForVm(vm1, null));
@@ -574,42 +567,42 @@ public class PreemptableVmAllocationTest {
 
 	@Test
 	public void testGetHostByUserId(){
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
-		PreemptableVm vm3 = new PreemptableVm(3, 2, 1.0, 1.0, 0, 0, 0);
-		PreemptableVm vm4 = new PreemptableVm(4, 3, 1.0, 1.0, 0, 0, 0);
 
 		Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm1, host1));
 		Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm2, host1));
 		Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm3, host1));
 		Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm4, host2));
 
-		Assert.assertEquals(host1, preemptablePolicy.getHost(1, 1));
-		Assert.assertEquals(host1, preemptablePolicy.getHost(2, 1));
-		Assert.assertEquals(host1, preemptablePolicy.getHost(3, 2));
-		Assert.assertEquals(host2, preemptablePolicy.getHost(4, 3));
-		
+		Assert.assertEquals(host1, preemptablePolicy.getHost(vm1.getId(), vm1.getUserId()));
+		Assert.assertEquals(host1, preemptablePolicy.getHost(vm2.getId(), vm2.getUserId()));
+		Assert.assertEquals(host1, preemptablePolicy.getHost(vm3.getId(), vm3.getUserId()));
+		Assert.assertEquals(host2, preemptablePolicy.getHost(vm4.getId(), vm4.getUserId()));
+
 		// checking invalid parameters
-		Assert.assertNull(preemptablePolicy.getHost(5, 3));
-		Assert.assertNull(preemptablePolicy.getHost(2, 4));
+		Assert.assertNull(preemptablePolicy.getHost(5, 2));
+		Assert.assertNull(preemptablePolicy.getHost(4, 1));
 	}
 
 	@Test
 	public void testPriorityToSortedHostsMap(){
+
 		// creating 3 hosts with 3 priorities
 		List<PreemptiveHost> listaHosts = new ArrayList<PreemptiveHost>();
 		List<Pe> peList1 = new ArrayList<Pe>();
-		peList1.add(new Pe(0, new PeProvisionerSimple(100.5)));
-		
+		double HOST_CAPACITY = 100.5;
+		peList1.add(new Pe(0, new PeProvisionerSimple(HOST_CAPACITY)));
+
 		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, String.valueOf(NUMBER_OF_PRIORITIES));
-		
-		host1 = new PreemptiveHost(1, peList1,
+
+		int hostId = 0;
+
+		host1 = new PreemptiveHost(hostId++, peList1,
 				new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
 
-		host2 = new PreemptiveHost(2, peList1,
+		host2 = new PreemptiveHost(hostId++, peList1,
 				new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
 
-		host3 = new PreemptiveHost(3, peList1,
+		host3 = new PreemptiveHost(hostId++, peList1,
 				new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
 		listaHosts.add(host1);
 		listaHosts.add(host2);
@@ -631,7 +624,16 @@ public class PreemptableVmAllocationTest {
 		}
 
 		// allocating VM with priority 1
-		PreemptableVm vmPriority1 = new PreemptableVm(1, 1, 50.2, 1.0, 0, 1, 0);
+
+		int vmId = 0;
+		int userId = 1;
+		double cpuReq = 50.2;
+		double memReq = 1d;
+		double submitTime = 0d;
+		int priority = 1;
+		double runtime = 0d;
+
+		PreemptableVm vmPriority1 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
 		Mockito.when(hostSelector.select(preemptablePolicy.getPriorityToSortedHost().get(vmPriority1.getPriority()), vmPriority1)).thenReturn(host1);
 		preemptablePolicy.allocateHostForVm(vmPriority1);
 
@@ -641,9 +643,9 @@ public class PreemptableVmAllocationTest {
 		expectedListPriority0.add(host2);
 		expectedListPriority0.add(host3);
 		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_0).toArray(), expectedListPriority0.toArray());
-		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_0), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_0), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_0), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
 
 		// testing if the sortedHost for priority1 has changed
 		List<PreemptiveHost> expectedListPriority1 = new ArrayList<>();
@@ -651,9 +653,9 @@ public class PreemptableVmAllocationTest {
 		expectedListPriority1.add(host3);
 		expectedListPriority1.add(host1);
 		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_1).toArray(), expectedListPriority1.toArray());
-		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_1), 50.3, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_1), 100.5, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_1), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_1), HOST_CAPACITY - vmPriority1.getMips(), ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_1), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_1), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
 
 		// testing if the sortedHost for priority2 has changed
 		List<PreemptiveHost> expectedListPriority2 = new ArrayList<>();
@@ -661,27 +663,30 @@ public class PreemptableVmAllocationTest {
 		expectedListPriority2.add(host3);
 		expectedListPriority2.add(host1);
 		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_2).toArray(), expectedListPriority2.toArray());
-		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_2), 50.3, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_2), 100.5, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_2), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_2), HOST_CAPACITY - vmPriority1.getMips(), ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_2), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_2), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
 
 		// allocating VM with priority 2
-		PreemptableVm vmPriority2 = new PreemptableVm(1, 1, 50.3, 1.0, 0, 2, 0);
+		cpuReq = 50.3;
+		priority = 2;
+
+		PreemptableVm vmPriority2 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
 		Mockito.when(hostSelector.select(preemptablePolicy.getPriorityToSortedHost().get(vmPriority2.getPriority()), vmPriority2)).thenReturn(host2);
 		preemptablePolicy.allocateHostForVm(vmPriority2);
 
 		// testing if the sortedHost for priority0 is the same
 		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_0).toArray(), expectedListPriority0.toArray());
-		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_0), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_0), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_0), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
 
 
 		// testing if the sortedHost for priority1 is the same
 		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_1).toArray(), expectedListPriority1.toArray());
-		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_1), 50.3, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_1), 100.5, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_1), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_1), HOST_CAPACITY - vmPriority1.getMips(), ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_1), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_1), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
 
 
 		// testing if the sortedHost for priority2 has changed
@@ -690,33 +695,37 @@ public class PreemptableVmAllocationTest {
 		expectedListPriority2.add(host1);
 		expectedListPriority2.add(host2);
 		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_2).toArray(), expectedListPriority2.toArray());
-		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_2), 50.3, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_2), 50.2, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_2), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_2), HOST_CAPACITY - vmPriority1.getMips(), ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_2), HOST_CAPACITY - vmPriority2.getMips(), ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_2), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
 
 
 		// allocating VM with priority 1 again
-		PreemptableVm vmPriority1_2 = new PreemptableVm(1, 1, 4.2, 1.0, 0, 1, 0);
+
+		priority = 1;
+		cpuReq = 4.2;
+
+		PreemptableVm vmPriority1_2 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
 		Mockito.when(hostSelector.select(preemptablePolicy.getPriorityToSortedHost().get(vmPriority1_2.getPriority()), vmPriority1_2)).thenReturn(host3);
 		preemptablePolicy.allocateHostForVm(vmPriority1_2);
 
 		// testing if the sortedHost for priority0 is the same
 		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_0).toArray(), expectedListPriority0.toArray());
-		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_0), 100.5, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_0), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_0), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_0), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
 
 		// testing if the sortedHost for priority1 is the same, changing only the available mips for this priority at hostFCFS3
 		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_1).toArray(), expectedListPriority1.toArray());
-		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_1), 50.3, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_1), 100.5, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_1), 96.3, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_1), HOST_CAPACITY - vmPriority1.getMips(), ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_1), HOST_CAPACITY, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_1), HOST_CAPACITY - vmPriority1_2.getMips(), ACCEPTABLE_DIFERENCE);
 
 		// testing if the sortedHost for priority2 is the same, changing only the available mips for this priority at hostFCFS3
 		Assert.assertArrayEquals(preemptablePolicy.getPriorityToSortedHost().get(PRIORITY_2).toArray(), expectedListPriority2.toArray());
-		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_2), 50.3, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_2), 50.2, ACCEPTABLE_DIFERENCE);
-		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_2), 96.3, ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host1.getAvailableMipsByPriority(PRIORITY_2), HOST_CAPACITY - vmPriority1.getMips(), ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host2.getAvailableMipsByPriority(PRIORITY_2), HOST_CAPACITY - vmPriority2.getMips(), ACCEPTABLE_DIFERENCE);
+		Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_2), HOST_CAPACITY - vmPriority1_2.getMips(), ACCEPTABLE_DIFERENCE);
 
 	}
 
@@ -724,9 +733,7 @@ public class PreemptableVmAllocationTest {
 	@Test
 	public void testSelectHostConsideringAvailabilityOfArrivingVM(){
 
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
 		Mockito.when(hostSelector.select(Mockito.any(SortedSet.class), Mockito.any(Vm.class))).thenReturn(host1);
-
 		Assert.assertEquals(host1, preemptablePolicy.selectHost(vm1, true));
 
 	}
@@ -735,9 +742,7 @@ public class PreemptableVmAllocationTest {
 	@Test
 	public void testSelectHostConsideringAvailabilityOfArrivingVM2(){
 
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0, 0.9);
 		Mockito.when(hostSelector.select(Mockito.any(SortedSet.class), Mockito.any(Vm.class))).thenReturn(host1);
-
 		Assert.assertEquals(host1, preemptablePolicy.selectHost(vm1, true));
 
 	}
