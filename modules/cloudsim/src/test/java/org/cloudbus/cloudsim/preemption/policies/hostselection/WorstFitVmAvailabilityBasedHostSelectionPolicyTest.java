@@ -14,7 +14,7 @@ import org.mockito.Mockito;
 import java.util.*;
 
 /**
- * Created by Alessandro Lia Fook Santos on 23/11/16.
+ * Created by Alessandro Lia Fook Santos and Joao Victor Mafra on 23/11/16.
  */
 public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
 
@@ -33,6 +33,7 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
     public PreemptiveHost host2;
     public PreemptiveHost host3;
     public PreemptiveHost host4;
+    private PreemptableVm vm0;
 
     @Before
     public void setUp() throws Exception {
@@ -70,6 +71,17 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         hosts.add(host4);
 
         selectionPolicyWFVA = new WorstFitVmAvailabilityBasedHostSelectionPolicy(hosts);
+
+        int vmId = 1;
+        int userId = 1;
+        double cpuReq = 0.5;
+        double memReq = 0;
+        double submitTime = 0d;
+        int priority = 0;
+        double runtime = 10;
+
+        vm0 = new PreemptableVm(vmId, userId, cpuReq, memReq, submitTime, priority, runtime);
+
     }
 
     //tests for environment with VmAvailabilityBasedPreemptionPolicy
@@ -95,11 +107,6 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
 
     @Test
     public void testSelectHostForVM(){
-        double cpuReq = 0.5;
-        double memReq = 0;
-        double runtime = 10;
-
-        PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 0, runtime);
 
         Mockito.when(preemptionPolicy1.getAvailableMipsByVm(vm0)).thenReturn(10.0);
         Mockito.when(preemptionPolicy2.getAvailableMipsByVm(vm0)).thenReturn(10.0);
@@ -111,11 +118,6 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
 
     @Test
     public void testSelectHostForVM2(){
-        double cpuReq = 0.5;
-        double memReq = 0;
-        double runtime = 10;
-
-        PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 0, runtime);
 
         Mockito.when(preemptionPolicy1.getAvailableMipsByVm(vm0)).thenReturn(5.0);
         Mockito.when(preemptionPolicy2.getAvailableMipsByVm(vm0)).thenReturn(10.0);
@@ -127,11 +129,6 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
 
     @Test
     public void testSelectHostForVM3(){
-        double cpuReq = 0.5;
-        double memReq = 0;
-        double runtime = 10;
-
-        PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 0, runtime);
 
         Mockito.when(preemptionPolicy1.getAvailableMipsByVm(vm0)).thenReturn(5.0);
         Mockito.when(preemptionPolicy2.getAvailableMipsByVm(vm0)).thenReturn(9.9);
@@ -143,11 +140,6 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
 
     @Test
     public void testSelectHostForVM4(){
-        double cpuReq = 0.5;
-        double memReq = 0;
-        double runtime = 10;
-
-        PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 0, runtime);
 
         Mockito.when(preemptionPolicy1.getAvailableMipsByVm(vm0)).thenReturn(1.0);
         Mockito.when(preemptionPolicy2.getAvailableMipsByVm(vm0)).thenReturn(1.0);
@@ -159,11 +151,16 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
 
     @Test
     public void testSelectHostForVM5(){
+
+        int vmId = 0;
+        int userId = 1;
         double cpuReq = 0.6;
         double memReq = 0;
+        double submitTime = 0;
+        int priority = 0;
         double runtime = 10;
 
-        PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 0, runtime);
+        vm0 = new PreemptableVm(vmId, userId, cpuReq, memReq, submitTime, priority, runtime);
 
         Mockito.when(preemptionPolicy1.getAvailableMipsByVm(vm0)).thenReturn(0.4);
         Mockito.when(preemptionPolicy1.isSuitableFor(vm0)).thenReturn(false);
@@ -182,11 +179,16 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
 
     @Test
     public void testSelectHostForVM6(){
+
+        int vmId = 0;
+        int userId = 1;
         double cpuReq = 0.0000001;
         double memReq = 0;
+        double submitTime = 0;
+        int priority = 0;
         double runtime = 10;
 
-        PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 0, runtime);
+        vm0 = new PreemptableVm(vmId, userId, cpuReq, memReq, submitTime, priority, runtime);
 
         Mockito.when(preemptionPolicy1.getAvailableMipsByVm(vm0)).thenReturn(0.000000004);
         Mockito.when(preemptionPolicy1.isSuitableFor(vm0)).thenReturn(false);
@@ -205,11 +207,16 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
 
     @Test
     public void testSelectHostForVM7(){
+
+        int vmId = 0;
+        int userId = 1;
         double cpuReq = 0.0000001;
         double memReq = 0;
+        double submitTime = 0;
+        int priority = 0;
         double runtime = 10;
 
-        PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 0, runtime);
+        vm0 = new PreemptableVm(vmId, userId, cpuReq, memReq, submitTime, priority, runtime);
 
         Mockito.when(preemptionPolicy1.getAvailableMipsByVm(vm0)).thenReturn(0.000000004);
         Mockito.when(preemptionPolicy1.isSuitableFor(vm0)).thenReturn(false);
@@ -229,15 +236,18 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
     @Test
     public void testSelectHostForVM8(){
 
+        int vmId = 0;
+        int userId = 1;
         double cpuReq = 0.0000001;
         double memReq = 0;
+        double submitTime = 0;
+        int priority = 0;
         double runtime = 10;
-        int id = 0;
 
-        PreemptableVm vm0 = new PreemptableVm(id, 1, cpuReq, memReq, 0, 0, runtime);
+        vm0 = new PreemptableVm(vmId, userId, cpuReq, memReq, submitTime, priority, runtime);
 
         cpuReq = 0.499999996;
-        PreemptableVm vm1 = new PreemptableVm(id++, 1, cpuReq, memReq, 0, 0, runtime);
+        PreemptableVm vm1 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
         host1.vmCreate(vm1); // create the vm into the host to reduce his available mips
 
         Mockito.when(preemptionPolicy1.getAvailableMipsByVm(vm0)).thenReturn(0.000000004);
@@ -252,17 +262,20 @@ public class WorstFitVmAvailabilityBasedHostSelectionPolicyTest {
         Mockito.when(preemptionPolicy4.getAvailableMipsByVm(vm0)).thenReturn(0.0000000001);
         Mockito.when(preemptionPolicy4.isSuitableFor(vm0)).thenReturn(false);
 
-
         Assert.assertEquals(selectionPolicyWFVA.select(null, vm0), null);
     }
 
     @Test
     public void testSelectHostForVM9(){
+        int vmId = 0;
+        int userId = 1;
         double cpuReq = 0.0000001;
         double memReq = 0;
+        double submitTime = 0;
+        int priority = 0;
         double runtime = 10;
 
-        PreemptableVm vm0 = new PreemptableVm(0, 1, cpuReq, memReq, 0, 0, runtime);
+        vm0 = new PreemptableVm(vmId, userId, cpuReq, memReq, submitTime, priority, runtime);
 
         Mockito.when(preemptionPolicy1.getAvailableMipsByVm(vm0)).thenReturn(0.0000002);
         Mockito.when(preemptionPolicy1.isSuitableFor(vm0)).thenReturn(false);
