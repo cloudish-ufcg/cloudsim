@@ -22,8 +22,7 @@ import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
  * @author Giovanni Farias
  *
  */
-public class PreemptableVmAllocationPolicy extends VmAllocationPolicy implements
-		Preemptable {
+public abstract class PreemptableVmAllocationPolicy extends VmAllocationPolicy {
 
 	/**
 	 * The map between each VM and its allocated host. The map key is a VM UID
@@ -59,31 +58,32 @@ public class PreemptableVmAllocationPolicy extends VmAllocationPolicy implements
 		setVmTable(new HashMap<String, Host>());
 	}
 
-	@Override
-	public boolean preempt(PreemptableVm vm) {
-		Log.printConcatLine(simulationTimeUtil.clock(),
-				": Preempting VM #", vm.getId(), " in VMAllocationPolicy.");
-		
-		Host host = getVmTable().remove(vm.getUid());
-		
-		if (host == null) {
-			Log.printConcatLine(simulationTimeUtil.clock(),
-					": VM #", vm.getId(), " is not present in VMTable.");
-			
-			return false;
-		}
-		
-		Log.printConcatLine(simulationTimeUtil.clock(),
-				": VM #", vm.getId(), " is allocated in Host #", host.getId());
-
-		vm.preempt(simulationTimeUtil.clock());
-		// just to update the sorted set
-		removePriorityHost(host);
-		host.vmDestroy(vm);
-		addPriorityHost(host);
-		vm.setBeingInstantiated(true);
-		return true;
-	}
+	
+	public abstract boolean preempt(PreemptableVm vm); 
+//	{
+//		Log.printConcatLine(simulationTimeUtil.clock(),
+//				": Preempting VM #", vm.getId(), " in VMAllocationPolicy.");
+//		
+//		Host host = getVmTable().remove(vm.getUid());
+//		
+//		if (host == null) {
+//			Log.printConcatLine(simulationTimeUtil.clock(),
+//					": VM #", vm.getId(), " is not present in VMTable.");
+//			
+//			return false;
+//		}
+//		
+//		Log.printConcatLine(simulationTimeUtil.clock(),
+//				": VM #", vm.getId(), " is allocated in Host #", host.getId());
+//
+//		vm.preempt(simulationTimeUtil.clock());
+//		// just to update the sorted set
+//		removePriorityHost(host);
+//		host.vmDestroy(vm);
+//		addPriorityHost(host);
+//		vm.setBeingInstantiated(true);
+//		return true;
+//	}
 
 	private void addPriorityHost(Host host) {
 		PreemptiveHost gHost = (PreemptiveHost) host;
