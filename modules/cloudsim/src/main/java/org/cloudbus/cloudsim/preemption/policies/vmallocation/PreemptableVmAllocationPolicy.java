@@ -48,6 +48,16 @@ public abstract class PreemptableVmAllocationPolicy extends VmAllocationPolicy {
 		return null;
 	}
 
+	@Override
+	public Host getHost(Vm vm) {
+		return null;
+	}
+
+	@Override
+	public Host getHost(int vmId, int userId) {
+		return null;
+	}
+
 	public void setSimulationTimeUtil(SimulationTimeUtil simulationTimeUtil) {
 		this.simulationTimeUtil = simulationTimeUtil;
 	}

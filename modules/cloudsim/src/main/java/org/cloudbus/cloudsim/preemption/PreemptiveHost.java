@@ -49,6 +49,16 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
         return result;
     }
 
+    public boolean equals(Object obj) {
+
+		if(obj instanceof PreemptiveHost) {
+			PreemptiveHost host = (PreemptiveHost) obj;
+			return host.getId() == this.getId();
+		}
+		return false;
+	}
+
+
     @Override
     public int hashCode() {
         return getId();

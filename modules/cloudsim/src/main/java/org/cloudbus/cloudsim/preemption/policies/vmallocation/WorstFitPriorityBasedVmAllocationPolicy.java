@@ -13,8 +13,6 @@ import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
 public class WorstFitPriorityBasedVmAllocationPolicy extends
 		PreemptableVmAllocationPolicy {
 
-	private Map<String, Host> vmTable;
-
 	private Map<Integer, SortedSet<PreemptiveHost>> priorityToSortedHost;
 
 	public WorstFitPriorityBasedVmAllocationPolicy(List<PreemptiveHost> hosts) {
@@ -26,14 +24,13 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 		}
 
 		setSimulationTimeUtil(new SimulationTimeUtil());
-		priorityToSortedHost = new HashMap<Integer, SortedSet<PreemptiveHost>>();
+		priorityToSortedHost = new HashMap<>();
 		int numberOfPriorities = hosts.get(0).getNumberOfPriorities();
 
 		for (int priority = 0; priority < numberOfPriorities; priority++) {
 
 			PreemptiveHostComparator comparator = new PreemptiveHostComparator(priority);
-			getPriorityToSortedHost().put(priority, new TreeSet<PreemptiveHost>(comparator));
-
+			getPriorityToSortedHost().put(priority, new TreeSet<>(comparator));
 		}
 
 		// creating priority host skins
@@ -43,7 +40,6 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 			}
 		}
 
-		setVmTable(new HashMap<String, Host>());
 	}
 
 	@Override
@@ -51,7 +47,7 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 		Log.printConcatLine(simulationTimeUtil.clock(),
 				": Preempting VM #", vm.getId(), " in VMAllocationPolicy.");
 
-		Host host = getVmTable().remove(vm.getUid());
+		Host host = vm.getHost();
 
 		if (host == null) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
@@ -64,6 +60,7 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 				": VM #", vm.getId(), " is allocated in Host #", host.getId());
 
 		vm.preempt(simulationTimeUtil.clock());
+
 		// just to update the sorted set
 		removePriorityHost(host);
 		host.vmDestroy(vm);
@@ -99,9 +96,6 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 		boolean result = host.vmCreate(vm);
 		addPriorityHost(host);
 
-		if (result) {
-			getVmTable().put(vm.getUid(), host);
-		}
 		return result;
 	}
 
@@ -115,15 +109,13 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 		boolean result = host.vmCreate(vm);
 		addPriorityHost(host);
 
-		if (result) {
-			getVmTable().put(vm.getUid(), host);
-		}
 		return result;
 	}
 
 	@Override
 	public void deallocateHostForVm(Vm vm) {
-		Host host = getVmTable().remove(vm.getUid());
+
+		Host host = vm.getHost();
 		if (host != null) {
 			// just to update the sorted set
 			removePriorityHost(host);
@@ -134,10 +126,8 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 
 	@Override
 	public Host selectHost(Vm vm) {
-		if (vm == null){
-			throw new IllegalArgumentException("The Vm can not be null.");
-		}
 
+		validateVm(vm);
 
 		PreemptableVm gVm = (PreemptableVm) vm;
 
@@ -156,28 +146,16 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 		return null;
 	}
 
-	@Override
-	public Host getHost(Vm vm) {
-		return getVmTable().get(vm.getUid());
-	}
-
-	@Override
-	public Host getHost(int vmId, int userId) {
-		return getVmTable().get(Vm.getUid(userId, vmId));
+	private void validateVm(Vm vm) {
+		if (vm == null){
+			throw new IllegalArgumentException("The Vm can not be null.");
+		}
 	}
 
 	@Override
 	public List<Host> getHostList() {
 		List<Host> hostList = new ArrayList<Host>(getPriorityToSortedHost().get(0));
 		return hostList;
-	}
-
-	public Map<String, Host> getVmTable() {
-		return vmTable;
-	}
-
-	protected void setVmTable(Map<String, Host> vmTable) {
-		this.vmTable = vmTable;
 	}
 
 	public Map<Integer, SortedSet<PreemptiveHost>> getPriorityToSortedHost() {
@@ -188,10 +166,4 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 			Map<Integer, SortedSet<PreemptiveHost>> priorityToSortedHost) {
 		this.priorityToSortedHost = priorityToSortedHost;
 	}
-
-
-
-
-
-
 }
