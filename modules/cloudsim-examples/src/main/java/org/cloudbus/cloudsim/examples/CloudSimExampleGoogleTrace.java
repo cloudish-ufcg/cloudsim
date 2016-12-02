@@ -39,6 +39,7 @@ import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBased
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
+import org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitPriorityBasedVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 
 /**
@@ -269,8 +270,7 @@ public class CloudSimExampleGoogleTrace {
 //			datacenter = new GoogleDatacenter(name, characteristics,
 //					new VmAllocationPolicySimple(hostList), storageList, 0);
             datacenter = new PreemptiveDatacenter(name, characteristics,
-                    new PreemptableVmAllocationPolicy(hostList,
-                            new WorstFitMipsBasedHostSelectionPolicy()),
+                    new WorstFitPriorityBasedVmAllocationPolicy(hostList),
                     storageList, 0, properties);
         } catch (Exception e) {
             e.printStackTrace();
