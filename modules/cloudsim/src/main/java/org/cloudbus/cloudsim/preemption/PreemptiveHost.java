@@ -174,4 +174,7 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 	private void setPreemptionPolicy(PreemptionPolicy preemptionPolicy) {
 		this.preemptionPolicy = preemptionPolicy;
 	}
-}
+
+	public double getAvailableMipsByVm(PreemptableVm vm) {
+		return preemptionPolicy.getAvailableMipsByVm(vm);
+	}}

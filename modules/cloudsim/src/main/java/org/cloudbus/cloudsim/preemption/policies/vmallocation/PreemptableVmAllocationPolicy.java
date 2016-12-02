@@ -33,7 +33,7 @@ public abstract class PreemptableVmAllocationPolicy extends VmAllocationPolicy {
 
 
 	public PreemptableVmAllocationPolicy (List<Host> hostList){
-		super(new ArrayList<>());
+		super(hostList);
 	}
 	
 	public abstract boolean preempt(PreemptableVm vm);

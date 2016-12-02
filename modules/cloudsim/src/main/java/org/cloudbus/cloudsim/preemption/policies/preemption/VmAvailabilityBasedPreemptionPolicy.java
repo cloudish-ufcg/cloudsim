@@ -203,4 +203,12 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 		
 		return priorityToVms;
 	}
+
+	@Override
+	public double getAvailableMipsByVm(PreemptableVm vm) {
+		double availableMipsByPriority = getAvailableMipsByPriority(vm
+				.getPriority());
+		double mipsToBeAvilableOfSamePriority = calcMipsOfSamePriorityToBeAvailable(vm);
+		return availableMipsByPriority + mipsToBeAvilableOfSamePriority;
+	}
 }

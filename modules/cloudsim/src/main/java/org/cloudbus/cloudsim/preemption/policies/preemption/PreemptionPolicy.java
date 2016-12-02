@@ -97,4 +97,7 @@ public abstract class PreemptionPolicy {
 		return DecimalUtil.format(getTotalMips() - inUseByNonPreemptiveVms,
 				DECIMAL_ACCURACY);
 	}
+
+
+	public abstract double getAvailableMipsByVm(PreemptableVm vm);
 }
