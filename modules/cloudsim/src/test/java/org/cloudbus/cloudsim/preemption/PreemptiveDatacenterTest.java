@@ -26,6 +26,7 @@ import org.cloudbus.cloudsim.preemption.policies.hostselection.HostSelectionPoli
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
+import org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitPriorityBasedVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.After;
 import org.junit.Assert;
@@ -44,7 +45,7 @@ public class PreemptiveDatacenterTest {
     private PreemptiveHost host;
     private SimulationTimeUtil timeUtil;
     private HostSelectionPolicy hostSelector;
-    private PreemptableVmAllocationPolicy preemptableVmAllocationPolicy;
+    private WorstFitPriorityBasedVmAllocationPolicy preemptableVmAllocationPolicy;
     private String datacenterFile;
     private String datacenterUrl;
     private Properties properties;
@@ -90,7 +91,7 @@ public class PreemptiveDatacenterTest {
             googleHostList.add((PreemptiveHost) host);
         }
 
-        preemptableVmAllocationPolicy = new PreemptableVmAllocationPolicy(googleHostList, hostSelector);
+        preemptableVmAllocationPolicy = new WorstFitPriorityBasedVmAllocationPolicy(googleHostList);
 
         datacenterFile = "outputUtilizationTest.sqlite3";
         datacenterUrl = "jdbc:sqlite:" + datacenterFile;

@@ -23,6 +23,7 @@ import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBased
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
+import org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitPriorityBasedVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -220,8 +221,7 @@ public class TraceDatacenterBrokerTest {
         PreemptiveDatacenter datacenter = null;
         try {
             datacenter = new PreemptiveDatacenter(name, characteristics,
-                    new PreemptableVmAllocationPolicy(hostList,
-                            new WorstFitMipsBasedHostSelectionPolicy()),
+                    new WorstFitPriorityBasedVmAllocationPolicy(hostList),
                     storageList, 0, properties);
         } catch (Exception e) {
             e.printStackTrace();
