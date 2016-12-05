@@ -66,6 +66,16 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
         preemptablePolicy = new WorstFitPriorityBasedVmAllocationPolicy(hosts);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalHostList(){
+        preemptablePolicy = new WorstFitPriorityBasedVmAllocationPolicy(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIllegalVmToSelect(){
+        preemptablePolicy.selectHost(null);
+    }
+
     @Test
     public void testAllocateHostForVm() {
         PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);

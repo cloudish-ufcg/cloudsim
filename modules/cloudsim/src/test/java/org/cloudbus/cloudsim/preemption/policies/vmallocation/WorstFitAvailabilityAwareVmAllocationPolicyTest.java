@@ -24,7 +24,7 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
     private static final double HOST_CAPACITY = 0.5;
     public final double ACCEPTABLE_DIFFERENCE = 0.00001;
 
-    public List<Host> hosts;
+    public List<PreemptiveHost> hosts;
 
     public VmAvailabilityBasedPreemptionPolicy preemptionPolicy1;
     public VmAvailabilityBasedPreemptionPolicy preemptionPolicy2;
