@@ -7,6 +7,7 @@ import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.util.VmAvailabilityBasedPreemptiveHostComparator;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -15,8 +16,11 @@ import java.util.List;
  */
 public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAllocationPolicy {
 
-    public WorstFitAvailabilityAwareVmAllocationPolicy(List<Host> hostList) {
-        super(hostList);
+    List<PreemptiveHost> hostList;
+
+    public WorstFitAvailabilityAwareVmAllocationPolicy(List<PreemptiveHost> hostList) {
+        super(new ArrayList<>());
+        setHostList(hostList);
     }
 
     @Override
@@ -34,6 +38,7 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
     }
 
     private boolean validateHostForVm(PreemptableVm vm, Host host) {
+
         if (host == null) {
             Log.printConcatLine(simulationTimeUtil.clock(),
                     ": VM #", vm.getId(), " do not have a host.");
@@ -65,6 +70,7 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
         if (vm == null)
             throw new IllegalArgumentException("The Vm can not be null.");
     }
+
     @Override
     public boolean allocateHostForVm(Vm vm) {
         Host host = selectHost(vm);
@@ -79,7 +85,6 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
 
         return result;
     }
-
     @Override
     public boolean allocateHostForVm(Vm vm, Host host) {
 
@@ -102,5 +107,15 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
         if (host != null) {
             host.vmDestroy(vm);
         }
+    }
+
+    @Override
+    protected void setHostList(List<? extends Host> hostList) {
+        this.hostList = (List<PreemptiveHost>) hostList;
+    }
+
+    @Override
+    public <T extends Host> List<T> getHostList() {
+        return (List<T>) this.hostList;
     }
 }
