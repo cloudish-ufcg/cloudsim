@@ -98,8 +98,8 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
             return true;
         }
 
-        double mipsToBeAvilableBasedOnVmAvailability = calcMipsOfSamePriorityToBeAvailable(vm);
-        return ((availableMipsForVmPriority + mipsToBeAvilableBasedOnVmAvailability) >= vm.getMips());
+        double mipsToBeAvailableBasedOnVmAvailability = calcMipsOfSamePriorityToBeAvailable(vm);
+        return ((availableMipsForVmPriority + mipsToBeAvailableBasedOnVmAvailability) >= vm.getMips());
     }
 
     protected double calcMipsOfSamePriorityToBeAvailable(PreemptableVm arrivingVm) {

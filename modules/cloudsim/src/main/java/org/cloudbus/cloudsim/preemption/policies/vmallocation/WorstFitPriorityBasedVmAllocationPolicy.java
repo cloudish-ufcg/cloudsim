@@ -69,14 +69,14 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 		return true;
 	}
 
-	private void addPriorityHost(Host host) {
+	protected void addPriorityHost(Host host) {
 		PreemptiveHost gHost = (PreemptiveHost) host;
 		for (int priority = 0; priority < gHost.getNumberOfPriorities(); priority++) {
 			getPriorityToSortedHost().get(priority).add(gHost);
 		}
 	}
 
-	private void removePriorityHost(Host host) {
+	protected void removePriorityHost(Host host) {
 		PreemptiveHost gHost = (PreemptiveHost) host;
 		for (int priority = 0; priority < gHost.getNumberOfPriorities(); priority++) {
 			getPriorityToSortedHost().get(priority).remove(gHost);

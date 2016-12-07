@@ -32,7 +32,7 @@ public abstract class PreemptableVmAllocationPolicy extends VmAllocationPolicy {
 	SimulationTimeUtil simulationTimeUtil;
 
 
-	public PreemptableVmAllocationPolicy (List<Host> hostList){
+	public PreemptableVmAllocationPolicy (List<? extends Host> hostList){
 		super(hostList);
 	}
 	
