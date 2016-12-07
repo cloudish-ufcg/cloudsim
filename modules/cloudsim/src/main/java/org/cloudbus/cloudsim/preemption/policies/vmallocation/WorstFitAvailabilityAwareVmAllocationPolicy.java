@@ -5,6 +5,7 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
+import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.util.VmAvailabilityBasedPreemptiveHostComparator;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
     public WorstFitAvailabilityAwareVmAllocationPolicy(List<PreemptiveHost> hostList) {
         super(new ArrayList<>());
         setHostList(hostList);
+        setSimulationTimeUtil(new SimulationTimeUtil());
     }
 
     @Override

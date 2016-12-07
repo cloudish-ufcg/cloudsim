@@ -100,4 +100,6 @@ public abstract class PreemptionPolicy {
 
 
 	public abstract double getAvailableMipsByVm(PreemptableVm vm);
+
+	public abstract double getAvailableMipsByPriorityAndAvailability(int priority);
 }

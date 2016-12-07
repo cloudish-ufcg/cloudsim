@@ -45,6 +45,11 @@ public class FCFSBasedPreemptionPolicy extends PreemptionPolicy {
 	}
 
 	@Override
+	public double getAvailableMipsByPriorityAndAvailability(int priority) {
+		return getAvailableMipsByPriority(priority);
+	}
+
+	@Override
 	public double getAvailableMipsByVm(PreemptableVm vm) {
 		return getAvailableMipsByPriority(vm.getPriority());
 	}
