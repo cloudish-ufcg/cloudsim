@@ -177,10 +177,7 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 
 
 	public double getAvailableMipsByPriorityAndAvailability(int priority) {
-		double availableMips = getAvailableMips() + getAvailableMipsByPriority(priority)
-				+ preemptionPolicy.getAvailableMipsByPriorityAndAvailability(priority);
-
-		return availableMips;
+		return preemptionPolicy.getAvailableMipsByPriorityAndAvailability(priority);
 	}
 
 	public double getAvailableMipsByVm(PreemptableVm vm) {
