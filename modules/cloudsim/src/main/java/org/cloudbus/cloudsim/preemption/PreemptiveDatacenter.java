@@ -29,6 +29,7 @@ import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
+import org.cloudbus.cloudsim.core.predicates.Predicate;
 import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.HostUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.PreemptableVmDataStore;
@@ -596,7 +597,7 @@ public class PreemptiveDatacenter extends Datacenter {
 				//updating host utilization
 				host.updateUsage(simulationTimeUtil.clock());
 							
-				if (!getVmsForScheduling().isEmpty()) {
+				if (!getVmsForScheduling().isEmpty() && !nextEventIsDestroy()) {
 					processBackfilling(host);
 				}
 			} else {
@@ -606,7 +607,23 @@ public class PreemptiveDatacenter extends Datacenter {
 		} else {
 			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 					vm.getId(), " doesn't achieve the runtime yet.");
-		}		
+		}
+	}
+
+	private boolean nextEventIsDestroy() {
+		if (numEventsWaiting(new Predicate() {
+			
+			@Override
+			public boolean match(SimEvent event) {
+				return ((event.getTag() == CloudSimTags.VM_DESTROY_ACK) || (event
+						.getTag() == CloudSimTags.VM_DESTROY));
+			}
+		}) > 0) {
+			Log.printConcatLine(simulationTimeUtil.clock(), ": Is destroy the next event ?", true);
+			return true;
+		}
+		Log.printConcatLine(simulationTimeUtil.clock(), ": Is destroy the next event ?", false);
+		return false;
 	}
 
 	private void processBackfilling(Host host) {	

@@ -271,7 +271,7 @@ public class CloudSimExampleGoogleTrace {
 //			datacenter = new GoogleDatacenter(name, characteristics,
 //					new VmAllocationPolicySimple(hostList), storageList, 0);
             datacenter = new PreemptiveDatacenter(name, characteristics,
-                    new WorstFitAvailabilityAwareVmAllocationPolicy(hostList),
+                    new WorstFitPriorityBasedVmAllocationPolicy(hostList),
                     storageList, 0, properties);
         } catch (Exception e) {
             e.printStackTrace();
