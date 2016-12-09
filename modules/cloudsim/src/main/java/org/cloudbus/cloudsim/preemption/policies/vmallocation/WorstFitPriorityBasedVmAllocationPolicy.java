@@ -43,6 +43,13 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 	}
 
 	@Override
+	public void preProcess() {
+		/*
+		 * There is no need for pre-processing data in this policy
+		 */
+	}
+
+	@Override
 	public boolean preempt(PreemptableVm vm) {
 		Log.printConcatLine(simulationTimeUtil.clock(),
 				": Preempting VM #", vm.getId(), " in VMAllocationPolicy.");
@@ -166,4 +173,5 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 			Map<Integer, SortedSet<PreemptiveHost>> priorityToSortedHost) {
 		this.priorityToSortedHost = priorityToSortedHost;
 	}
+
 }
