@@ -1,11 +1,5 @@
 package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
@@ -15,6 +9,10 @@ import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
 import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedPreemptiveHostComparator;
+import org.cloudbus.cloudsim.preemption.util.VmAvailabilityBasedPreemptiveHostComparator;
+
+import java.util.*;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Created by Alessandro Lia Fook Santos on 02/12/16.
@@ -57,8 +55,7 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
 
     }
 
-    @Override
-    public void preProcess() {
+    public void preProcess(){
 
         priorityToSortedHostAvailabilityAware = new HashMap<>();
 
@@ -106,7 +103,7 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
         return true;
     }
 
-    private void addPriorityHost(Host host) {
+    protected void addPriorityHost(Host host) {
         PreemptiveHost gHost = (PreemptiveHost) host;
         for (int priority = 0; priority < gHost.getNumberOfPriorities(); priority++) {
             getPriorityToSortedHostFCFS().get(priority).add(gHost);
@@ -114,7 +111,7 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
         }
     }
 
-    private void removePriorityHost(Host host) {
+    protected void removePriorityHost(Host host) {
         PreemptiveHost gHost = (PreemptiveHost) host;
         for (int priority = 0; priority < gHost.getNumberOfPriorities(); priority++) {
             getPriorityToSortedHostFCFS().get(priority).remove(gHost);
@@ -141,9 +138,13 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
         if (! getHostList().isEmpty()) {
             PreemptableVm pVm = (PreemptableVm) vm;
             PreemptiveHost firstHost;
-
+            /*
+            @TODO Decide if the vm has to be violating SLO in this time
+            @TODO or in the next time to choose the way of select the host.
+            */
             if (pVm.getCurrentAvailability(simulationTimeUtil.clock()) > getSLOTarget(pVm.getPriority())){
                 firstHost = getPriorityToSortedHostFCFS().get(pVm.getPriority()).first();
+
             } else {
                 firstHost = getPriorityToSortedHostAvailabilityAware().get(pVm.getPriority()).first();
             }

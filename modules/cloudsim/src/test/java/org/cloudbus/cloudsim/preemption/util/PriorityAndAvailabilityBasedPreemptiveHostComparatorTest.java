@@ -8,8 +8,6 @@ import org.mockito.Mockito;
 
 import java.util.*;
 
-import static org.junit.Assert.*;
-
 /**
  * Created by Alessandro Lia Fook Santos on 06/12/16.
  */

@@ -51,7 +51,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         // creating object under test
         selectionPolicy = new WorstFitMipsBasedHostSelectionPolicy();
 
-        //creating lists of hosts
+        //creating lists of hostsWithMockedPolicy
         hostList = new TreeSet<PreemptiveHost>(new PreemptiveHostComparator(0));
         
         // populating host list
@@ -173,7 +173,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
             hostList.add(otherHost);
         }
 
-        // once all hosts are fully occupied test allocation of vm's
+        // once all hostsWithMockedPolicy are fully occupied test allocation of vm's
 		Assert.assertNull(selectionPolicy.select(hostList, vm1000));
 		Assert.assertNull(selectionPolicy.select(hostList, vm500));
 		Assert.assertNull(selectionPolicy.select(hostList, vm250));
@@ -188,7 +188,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
     @Test
     public void testAllocatingVMsWhereFirstHostIsNotSuitable(){
     	
-        //creating hosts
+        //creating hostsWithMockedPolicy
         SortedSet<PreemptiveHost> hosts = new TreeSet<PreemptiveHost>(new PreemptiveHostComparator(0));
         
         List<Pe> peList = new ArrayList<Pe>();

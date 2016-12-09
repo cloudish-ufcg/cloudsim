@@ -48,7 +48,7 @@ public class PreemptableVmDataStoreTest {
         running = new TreeSet<>();
         waiting = new TreeSet<>();
 
-        //creating hosts
+        //creating hostsWithMockedPolicy
         host1 = Mockito.mock(PreemptiveHost.class);
         host2 = Mockito.mock(PreemptiveHost.class);
 
@@ -86,7 +86,7 @@ public class PreemptableVmDataStoreTest {
     @After
     public void tearDown() {
         new File(properties.getProperty(PreemptableVmDataStore.CHECKPOINT_DIR_PROP)
-                + "vms-" + properties.getProperty("number_of_hosts") + "-hosts-"
+                + "vms-" + properties.getProperty("number_of_hosts") + "-hostsWithMockedPolicy-"
                 + String.valueOf(TIME)).delete();
     }
 

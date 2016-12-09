@@ -25,7 +25,6 @@ import org.mockito.Mockito;
 public class WorstFitPriorityBasedVmAllocationPolicyTest {
 
     private SortedSet<PreemptiveHost> sortedHosts;
-    private HostSelectionPolicy hostSelector;
     private PreemptiveHost host1, host2, host3;
     private WorstFitPriorityBasedVmAllocationPolicy preemptablePolicy;
     private static final int PRIORITY_0 = 0;
@@ -60,8 +59,6 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
         for (PreemptiveHost googleHost : hosts) {
             sortedHosts.add(googleHost);
         }
-
-        hostSelector = Mockito.mock(HostSelectionPolicy.class);
 
         preemptablePolicy = new WorstFitPriorityBasedVmAllocationPolicy(hosts);
     }
@@ -502,7 +499,7 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testPriorityToSortedHostsMap() {
-        // creating 3 hosts with 3 priorities
+        // creating 3 hostsWithMockedPolicy with 3 priorities
         List<PreemptiveHost> listaHosts = new ArrayList<PreemptiveHost>();
         List<Pe> peList1 = new ArrayList<Pe>();
         peList1.add(new Pe(0, new PeProvisionerSimple(100.5)));
@@ -521,7 +518,7 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
         listaHosts.add(host2);
         listaHosts.add(host3);
 
-        // creating policy with these hosts
+        // creating policy with these hostsWithMockedPolicy
         preemptablePolicy = new WorstFitPriorityBasedVmAllocationPolicy(listaHosts);
 
         // asserting that the HashMap has 3 elements mapping priority to a sortedList

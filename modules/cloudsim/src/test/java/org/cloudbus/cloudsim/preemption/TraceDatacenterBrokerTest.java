@@ -184,7 +184,7 @@ public class TraceDatacenterBrokerTest {
 
         Log.printLine("Creating a datacenter with " + totalMipsCapacity
                 + " total capacity and " + numberOfHosts
-                + " hosts, each one with " + mipsPerHost + " mips.");
+                + " hostsWithMockedPolicy, each one with " + mipsPerHost + " mips.");
 
         List<PreemptiveHost> hostList = new ArrayList<PreemptiveHost>();
 

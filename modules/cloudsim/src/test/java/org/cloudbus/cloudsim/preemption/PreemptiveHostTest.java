@@ -487,7 +487,7 @@ public class PreemptiveHostTest {
 	@Test
 	public void testHashCode(){
 
-		// creating hosts
+		// creating hostsWithMockedPolicy
 		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
@@ -501,13 +501,13 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(1, host1.hashCode());
 		Assert.assertEquals(2, host2.hashCode());
 
-		// comparing hashcode of different hosts
+		// comparing hashcode of different hostsWithMockedPolicy
 		Assert.assertFalse(host1.hashCode() == host2.hashCode());
 	}
 	
 	@Test
 	public void testGetAvailableMipsByPriority(){
-		// creating hosts
+		// creating hostsWithMockedPolicy
 		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100.5)));
@@ -694,11 +694,11 @@ public class PreemptiveHostTest {
 		Assert.assertTrue(host1.vmCreate(vm1));
 		Assert.assertTrue(host2.vmCreate(vm1));
 
-		// asserting new available mips of two hosts
+		// asserting new available mips of two hostsWithMockedPolicy
 		Assert.assertEquals(host1.getAvailableMips(), 0, NEW_ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(host2.getAvailableMips(), 1.0E-9, NEW_ACCEPTABLE_DIFFERENCE);
 
-		// destroying vm1 from hosts to do new testes and asserting the new available mips
+		// destroying vm1 from hostsWithMockedPolicy to do new testes and asserting the new available mips
 		host1.vmDestroy(vm1);
 		Assert.assertEquals(host1.getAvailableMips(), 1, NEW_ACCEPTABLE_DIFFERENCE);
 		host2.vmDestroy(vm1);
@@ -709,7 +709,7 @@ public class PreemptiveHostTest {
 		Assert.assertFalse(host1.vmCreate(vm1));
 		Assert.assertTrue(host2.vmCreate(vm1));
 
-		// asserting new available mips of two hosts
+		// asserting new available mips of two hostsWithMockedPolicy
 		Assert.assertEquals(host1.getAvailableMips(), 1, NEW_ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(host2.getAvailableMips(), 0, NEW_ACCEPTABLE_DIFFERENCE);
 
