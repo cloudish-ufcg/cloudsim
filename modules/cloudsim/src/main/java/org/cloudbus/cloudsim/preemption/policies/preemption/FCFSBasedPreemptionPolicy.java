@@ -8,10 +8,7 @@ import org.cloudbus.cloudsim.preemption.PreemptableVm;
 
 public class FCFSBasedPreemptionPolicy extends PreemptionPolicy {
 
-	public static final String NUMBER_OF_PRIORITIES_PROP = "number_of_priorities";
-
-	public FCFSBasedPreemptionPolicy(Properties properties) {
-		
+	public FCFSBasedPreemptionPolicy(Properties properties) {		
 		if (properties.getProperty(NUMBER_OF_PRIORITIES_PROP) != null) {
 			int numberOfPriorities = Integer.parseInt(properties.getProperty(NUMBER_OF_PRIORITIES_PROP));
 			if (numberOfPriorities < 1) {
@@ -22,7 +19,7 @@ public class FCFSBasedPreemptionPolicy extends PreemptionPolicy {
 		
 		// initializing maps
 		for (int priority = 0; priority < getNumberOfPriorities(); priority++) {
-			getPriorityToVms().put(priority, new TreeSet<Vm>());
+			getPriorityToVms().put(priority, new TreeSet<PreemptableVm>());
 			getPriorityToInUseMips().put(priority, new Double(0));
 		}
 	}
@@ -45,5 +42,15 @@ public class FCFSBasedPreemptionPolicy extends PreemptionPolicy {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public double getAvailableMipsByPriorityAndAvailability(int priority) {
+		return getAvailableMipsByPriority(priority);
+	}
+
+	@Override
+	public double getAvailableMipsByVm(PreemptableVm vm) {
+		return getAvailableMipsByPriority(vm.getPriority());
 	}
 }

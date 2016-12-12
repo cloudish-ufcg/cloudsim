@@ -13,6 +13,7 @@ import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmScheduler;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,12 +30,12 @@ public class PreemptiveHostTest {
 	public void setUp(){
 		
 		properties = new Properties();
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
 	}
 
 	@Test
 	public void testInitializing() {
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "1");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "1");
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
 		PreemptiveHost host1 = new PreemptiveHost(1, peList1,
@@ -46,7 +47,7 @@ public class PreemptiveHostTest {
 	
 	@Test(expected = IllegalArgumentException.class)
 	public void testInitializingWithInvalidPriority() {
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "0");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "0");
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
 		new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
@@ -54,7 +55,7 @@ public class PreemptiveHostTest {
 	
 	@Test(expected = IllegalArgumentException.class)
 	public void testInitializingWithInvalidPriority2() {
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "-1");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "-1");
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
 		new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
@@ -124,24 +125,24 @@ public class PreemptiveHostTest {
 	public void testNextVmForPreempting() {
 		// setting environment
 		Map<Integer, Double> priorityToMipsInUse = new HashMap<Integer, Double>();
-		Map<Integer, SortedSet<Vm>> priorityToVms = new HashMap<Integer, SortedSet<Vm>>();
+		Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new HashMap<Integer, SortedSet<PreemptableVm>>();
 		double cpuReq = 1.0;
 
 		//priority 0
 		PreemptableVm vm0 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 0, 0);
 		priorityToMipsInUse.put(0, cpuReq);
-		SortedSet<Vm> priority0Vms = new TreeSet<Vm>();
+		SortedSet<PreemptableVm> priority0Vms = new TreeSet<PreemptableVm>();
 		priority0Vms.add(vm0);
 		priorityToVms.put(0, priority0Vms);
 		
 		// priority 1
 		PreemptableVm vm1 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 1, 0);
 		priorityToMipsInUse.put(1, cpuReq);
-		SortedSet<Vm> priority1Vms = new TreeSet<Vm>();
+		SortedSet<PreemptableVm> priority1Vms = new TreeSet<PreemptableVm>();
 		priority1Vms.add(vm1);
 		priorityToVms.put(1, priority1Vms);
 		
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
 		PreemptiveHost host1 = new PreemptiveHost(1, peList1,
@@ -166,7 +167,7 @@ public class PreemptiveHostTest {
 		
 		// simulating removing vm1
 		priorityToMipsInUse.put(1, 0d);
-		priority1Vms = new TreeSet<Vm>();
+		priority1Vms = new TreeSet<PreemptableVm>();
 		priorityToVms.put(1, priority1Vms);
 		
 		host1.getPreemptionPolicy().setPriorityToInUseMips(priorityToMipsInUse);
@@ -193,7 +194,7 @@ public class PreemptiveHostTest {
 
 	@Test
 	public void testVmCreate() {
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
 		double cpuReq = 1.0;
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
@@ -259,7 +260,7 @@ public class PreemptiveHostTest {
 		peList1.add(new Pe(0, new PeProvisionerSimple(5 * cpuReq)));
 		VmScheduler schedulerMipsBased = new VmSchedulerMipsBased(peList1);
 
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
 		Host googleHost = new PreemptiveHost(id, peList1, schedulerMipsBased, new FCFSBasedPreemptionPolicy(properties));
 
 		Vm vm1 = new PreemptableVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime);
@@ -318,7 +319,7 @@ public class PreemptiveHostTest {
 		peList1.add(new Pe(0, new PeProvisionerSimple(cpuCapacity)));
 		VmScheduler vmSchedulerMipsBased = new VmSchedulerMipsBased(peList1);
 
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
 		Host googleHost = new PreemptiveHost(id, peList1, vmSchedulerMipsBased, new FCFSBasedPreemptionPolicy(properties));
 
 		Vm vm1 = new PreemptableVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime);
@@ -366,7 +367,7 @@ public class PreemptiveHostTest {
 	@Test
 	public void testVmCreateWithNull() {
 		properties.setProperty(
-				FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
+				PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
 		PreemptiveHost host1 = new PreemptiveHost(1, peList1,
@@ -379,7 +380,7 @@ public class PreemptiveHostTest {
 		@Test
 	public void testVmDestroy() {
 		
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
 		PreemptiveHost host1 = new PreemptiveHost(1, peList1,
@@ -440,7 +441,7 @@ public class PreemptiveHostTest {
 		int totalVms = 20;
 		int freeCapacity = 5;
 		
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(totalVms + freeCapacity)));
 		PreemptiveHost host1 = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
@@ -487,7 +488,7 @@ public class PreemptiveHostTest {
 	public void testHashCode(){
 
 		// creating hosts
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
 		PreemptiveHost host1 = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
@@ -507,7 +508,7 @@ public class PreemptiveHostTest {
 	@Test
 	public void testGetAvailableMipsByPriority(){
 		// creating hosts
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100.5)));
 		PreemptiveHost host1 = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
@@ -600,11 +601,11 @@ public class PreemptiveHostTest {
 	public void testGetAvailableMipsByPriority2() {
 		// setting environment
 		Map<Integer, Double> priorityToMipsInUse = new HashMap<Integer, Double>();
-		Map<Integer, SortedSet<Vm>> priorityToVms = new HashMap<Integer, SortedSet<Vm>>();
+		Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new HashMap<Integer, SortedSet<PreemptableVm>>();
 		double cpuReq = 1.0;
 
-		SortedSet<Vm> priority0Vms = new TreeSet<Vm>();
-		SortedSet<Vm> priority1Vms = new TreeSet<Vm>();
+		SortedSet<PreemptableVm> priority0Vms = new TreeSet<PreemptableVm>();
+		SortedSet<PreemptableVm> priority1Vms = new TreeSet<PreemptableVm>();
 
 		for (int id = 0; id < 20; id++) {
 			if (id % 2 == 0) {
@@ -620,7 +621,7 @@ public class PreemptiveHostTest {
 		priorityToVms.put(0,priority0Vms);
 		priorityToVms.put(1,priority1Vms);
 
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
 		List<Pe> peList1 = new ArrayList<Pe>();
 		peList1.add(new Pe(0, new PeProvisionerSimple(100)));
 		PreemptiveHost host1 = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
@@ -674,7 +675,7 @@ public class PreemptiveHostTest {
 		double NEW_ACCEPTABLE_DIFFERENCE = 0.000000001;
 
 		// creating a new host with capacity that will be rounded to 1
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, String.valueOf(NUMBER_OF_PRIORITIES));
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, String.valueOf(NUMBER_OF_PRIORITIES));
 		List<Pe> peList2 = new ArrayList<Pe>();
 		peList2.add(new Pe(0, new PeProvisionerSimple(1.0000000001))); // round to 1
 		PreemptiveHost host1 = new PreemptiveHost(HOST_ID + 1, peList2,
@@ -740,7 +741,7 @@ public class PreemptiveHostTest {
 		double NEW_ACCEPTABLE_DIFFERENCE = 0.000000001;
 
 		// creating a new host with capacity that will be rounded to 1
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, String.valueOf(NUMBER_OF_PRIORITIES));
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, String.valueOf(NUMBER_OF_PRIORITIES));
 		List<Pe> peList2 = new ArrayList<Pe>();
 		peList2.add(new Pe(0, new PeProvisionerSimple(1.0000000001))); // round to 1
 		PreemptiveHost host1 = new PreemptiveHost(HOST_ID + 1, peList2,

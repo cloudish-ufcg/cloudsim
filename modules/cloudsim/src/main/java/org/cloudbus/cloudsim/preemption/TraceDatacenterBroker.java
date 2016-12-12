@@ -153,9 +153,10 @@ public class TraceDatacenterBroker extends SimEntity {
         
         // creating next event if the are more events to be treated
         if (inputTraceDataStore.hasMoreEvents(getIntervalIndex(),
-                SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize())) ||
+        		getTaskStoringIntervalSize()) ||
                 getSubmittedTasks() > getConcludedTasks()) {
-            send(getId(), SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
+
+            send(getId(), getTaskStoringIntervalSize(), STORE_FINISHED_TASKS_EVENT);
         }
     }
 
@@ -211,7 +212,7 @@ public class TraceDatacenterBroker extends SimEntity {
 		        Log.printLine(CloudSim.clock() + ": The datacenter will be initialize from time: " + startTime);
 				
 				// creating the first task store event
-				send(getId(), startTime + SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize()),
+				send(getId(), startTime + getTaskStoringIntervalSize(),
 						STORE_FINISHED_TASKS_EVENT);
 				
 				// scheduling datacenter events
@@ -225,9 +226,9 @@ public class TraceDatacenterBroker extends SimEntity {
         	     *  set intervalInde  accordingly  
         	     */
         	    
-				int intervalIndex = (int) ((startTime - inputTraceDataStore
-						.getMinInterestedTime()) / SimulationTimeUtil
-						.getTimeInMicro(getTaskLoadingIntervalSize()));        	    
+        	    int intervalIndex = (int) ((startTime - inputTraceDataStore
+						.getMinInterestedTime()) / getTaskLoadingIntervalSize()); 
+        	    
         	    inputTraceDataStore.setNextTaskId(50000000);
         	    setIntervalIndex(intervalIndex);
         	    
@@ -235,7 +236,7 @@ public class TraceDatacenterBroker extends SimEntity {
         		loadNextGoogleTasks();
         		
         		// creating the first task store event
-        		send(getId(), SimulationTimeUtil.getTimeInMicro(getTaskStoringIntervalSize()), STORE_FINISHED_TASKS_EVENT);
+        		send(getId(), getTaskStoringIntervalSize(), STORE_FINISHED_TASKS_EVENT);
         		
         		// scheduling datacenter events
         		sendNow(getDatacenterId(), PreemptiveDatacenter.SCHEDULE_DATACENTER_EVENTS_EVENT);
@@ -254,7 +255,7 @@ public class TraceDatacenterBroker extends SimEntity {
         Log.printLine("Loading next google tasks. Interval index " + getIntervalIndex());
 
         List<Task> nextGoogleTasks = inputTraceDataStore
-                .getGoogleTaskInterval(getIntervalIndex(), SimulationTimeUtil.getTimeInMicro(getTaskLoadingIntervalSize()));
+                .getGoogleTaskInterval(getIntervalIndex(), getTaskLoadingIntervalSize());
 
         // if nextGoogleTasks == null there are not more tasks
         if (nextGoogleTasks != null) {
@@ -262,7 +263,7 @@ public class TraceDatacenterBroker extends SimEntity {
             submitTasks();
             setIntervalIndex(++intervalIndex);
 
-            send(getId(), SimulationTimeUtil.getTimeInMicro(getTaskLoadingIntervalSize()), LOAD_NEXT_TASKS_EVENT);
+            send(getId(), getTaskLoadingIntervalSize(), LOAD_NEXT_TASKS_EVENT);
         }
     }
 

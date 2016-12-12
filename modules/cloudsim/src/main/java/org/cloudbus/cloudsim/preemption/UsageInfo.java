@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
-import org.cloudbus.cloudsim.Vm;
-
 public class UsageInfo {
 
 	private int hostId;
@@ -18,7 +16,7 @@ public class UsageInfo {
 	private Map<Integer, Integer> priorityToNumberOfVms;
 	
 	public UsageInfo(int hostId, double time, Map<Integer, Double> priorityToInUseMips,
-			Map<Integer, SortedSet<Vm>> priorityToVms, double totalUsage, double availableMips) {
+			Map<Integer, SortedSet<PreemptableVm>> priorityToVms, double totalUsage, double availableMips) {
 		
 		this.hostId = hostId;
 		this.time = time;
