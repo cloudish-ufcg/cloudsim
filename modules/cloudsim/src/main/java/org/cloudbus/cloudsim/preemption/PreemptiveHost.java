@@ -49,6 +49,16 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
         return result;
     }
 
+    public boolean equals(Object obj) {
+
+		if(obj instanceof PreemptiveHost) {
+			PreemptiveHost host = (PreemptiveHost) obj;
+			return host.getId() == this.getId();
+		}
+		return false;
+	}
+
+
     @Override
     public int hashCode() {
         return getId();
@@ -82,6 +92,8 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 		boolean result = super.vmCreate(vm);
 		
 		if (result) {
+			// TODO add a comment here
+			preemptableVm.setStartExec(CloudSim.clock());
 			preemptionPolicy.allocating(preemptableVm);
 			
 			double totalUsage = getTotalUsage();
@@ -162,4 +174,12 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 	private void setPreemptionPolicy(PreemptionPolicy preemptionPolicy) {
 		this.preemptionPolicy = preemptionPolicy;
 	}
-}
+
+
+	public double getAvailableMipsByPriorityAndAvailability(int priority) {
+		return preemptionPolicy.getAvailableMipsByPriorityAndAvailability(priority);
+	}
+
+	public double getAvailableMipsByVm(PreemptableVm vm) {
+		return preemptionPolicy.getAvailableMipsByVm(vm);
+	}}

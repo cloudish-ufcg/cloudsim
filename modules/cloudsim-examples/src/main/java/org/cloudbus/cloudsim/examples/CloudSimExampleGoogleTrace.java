@@ -35,10 +35,10 @@ import org.cloudbus.cloudsim.preemption.TaskState;
 import org.cloudbus.cloudsim.preemption.TraceDatacenterBroker;
 import org.cloudbus.cloudsim.preemption.UsageEntry;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
-import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
+import org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitPriorityBasedVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 
 /**
@@ -230,6 +230,7 @@ public class CloudSimExampleGoogleTrace {
         for (int hostId = 0; hostId < numberOfHosts; hostId++) {
         	PreemptionPolicy preemptionPolicy; 
         	if (properties.getProperty("preemption_policy_class") != null) {
+        		Log.printLine("Creating a hosts with preemption policy " + properties.getProperty("preemption_policy_class"));
         		preemptionPolicy = (PreemptionPolicy) createInstance("preemption_policy_class", properties);
         	} else {
         		Log.printLine("Creating a hosts with defatult preemption policy FCFS based .");
@@ -265,11 +266,18 @@ public class CloudSimExampleGoogleTrace {
 
         PreemptiveDatacenter datacenter = null;
         try {
-//			datacenter = new GoogleDatacenter(name, characteristics,
-//					new VmAllocationPolicySimple(hostList), storageList, 0);
-            datacenter = new PreemptiveDatacenter(name, characteristics,
-                    new PreemptableVmAllocationPolicy(hostList,
-                            new WorstFitMipsBasedHostSelectionPolicy()),
+        	PreemptableVmAllocationPolicy vmAllocationPolicy;
+            
+            if (properties.getProperty("vm_allocation_policy_class") != null) {
+        		Log.printLine("Creating a hosts with VmAllocationPolicy " + properties.getProperty("vm_allocation_policy_class"));
+        		vmAllocationPolicy = (PreemptableVmAllocationPolicy) createInstance("vm_allocation_policy_class", properties, hostList);
+        	} else {
+        		Log.printLine("Creating a hosts with defatult vm_allocation_policy_class WorstFitPriorityBased.");
+        		vmAllocationPolicy = new  WorstFitPriorityBasedVmAllocationPolicy(hostList);
+        	}
+            
+			datacenter = new PreemptiveDatacenter(name, characteristics,
+                    vmAllocationPolicy,
                     storageList, 0, properties);
         } catch (Exception e) {
             e.printStackTrace();
@@ -278,7 +286,7 @@ public class CloudSimExampleGoogleTrace {
         return datacenter;
     }
 
-    private static TraceDatacenterBroker createGoogleTraceBroker(String name,
+	private static TraceDatacenterBroker createGoogleTraceBroker(String name,
                                                                  Properties properties) {
 
         TraceDatacenterBroker broker = null;
@@ -313,6 +321,11 @@ public class CloudSimExampleGoogleTrace {
         int count1 = 0;
         double totalVm2Availability = 0;
         int count2 = 0;
+        
+        double fulfillmentP0 = 0;
+        double fulfillmentP1 = 0;
+        double fulfillmentP2 = 0;
+        
         int totalPreemptions = 0;
         int totalMigrations = 0;
 
@@ -330,12 +343,21 @@ public class CloudSimExampleGoogleTrace {
             if (googleTask.getPriority() == 0) {
                 totalVm0Availability += vmAvailabilty;
                 count0++;
+                if (vmAvailabilty >= 1) {
+                	fulfillmentP0++;
+                }
             } else if (googleTask.getPriority() == 1) {
                 totalVm1Availability += vmAvailabilty;
                 count1++;
+                if (vmAvailabilty >= 0.9) {
+                	fulfillmentP1++;
+                }
             } else {
                 totalVm2Availability += vmAvailabilty;
                 count2++;
+                if (vmAvailabilty >= 0.5) {
+                	fulfillmentP2++;
+                }
             }
 
             totalPreemptions += googleTask.getNumberOfPreemptions();
@@ -369,11 +391,28 @@ public class CloudSimExampleGoogleTrace {
         
         System.out.println("Total of Preemptions: " + totalPreemptions);
         System.out.println("Total of Migrations: " + totalMigrations);
+        
+        System.out.println("violatingP0: " + fulfillmentP0);
+        System.out.println("totalP0: " + count0);
+        System.out.println("violatingP1: " + fulfillmentP1);
+        System.out.println("totalP1: " + count1);
+        System.out.println("violatingP2: " + fulfillmentP2);
+        System.out.println("totalP2: " + count2);
+        
+        System.out.println("========== % Fulfillment SLO (priority 0) is " + dft.format((fulfillmentP0 / count0)) + " =========");
+        System.out.println("========== % Fulfillment SLO (priority 1) is " + dft.format((fulfillmentP1 / count1)) + " =========");
+        System.out.println("========== % Fulfillment SLO (priority 2) is " + dft.format((fulfillmentP2 / count2)) + " =========");
 
     }
     
     private static Object createInstance(String propName, Properties properties) throws Exception {
 		return Class.forName(properties.getProperty(propName)).getConstructor(Properties.class)
 				.newInstance(properties);
+	}
+    
+    private static Object createInstance(String propName,
+			Properties properties, List<PreemptiveHost> hostList) throws Exception {
+		return Class.forName(properties.getProperty(propName)).getConstructor(List.class)
+				.newInstance(hostList);
 	}
 }

@@ -1,13 +1,10 @@
 package org.cloudbus.cloudsim.preemption.util;
 
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
-import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import java.util.Comparator;
 
 /**
  * Created by Alessandro Lia Fook and João Victor Mafra on 20/09/16.
