@@ -169,9 +169,4 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 		return priorityToSortedHost;
 	}
 
-	public void setPriorityToSortedHost(
-			Map<Integer, SortedSet<PreemptiveHost>> priorityToSortedHost) {
-		this.priorityToSortedHost = priorityToSortedHost;
-	}
-
 }

@@ -89,9 +89,9 @@ public class TraceDatacenterBrokerTest {
                         .prepareStatement(INSERT_CLOUDLET_SQL);
                 // submit time
                 if (i < NUMBER_OF_TASKS/2 + 1){
-                    insertMemberStatement.setDouble(1, getTimeInMicro(0));
+                    insertMemberStatement.setDouble(1, 0);
                 } else {
-                    insertMemberStatement.setDouble(1, getTimeInMicro(1));
+                    insertMemberStatement.setDouble(1, 1);
                 }
                 insertMemberStatement.setDouble(2, -1); // jid is not important for now
                 insertMemberStatement.setInt(3, -1); // tid is not important for now
@@ -108,10 +108,6 @@ public class TraceDatacenterBrokerTest {
             connection.close();
         }
     }
-    private static double getTimeInMicro(double timeInMinutes) {
-        return timeInMinutes * 60 * 1000000;
-    }
-
 
     @Before
     public void init() {

@@ -55,7 +55,7 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
 
     }
 
-    public void preProcess(){
+    public void preProcess() {
 
         priorityToSortedHostAvailabilityAware = new HashMap<>();
 
@@ -77,11 +77,11 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
 
     }
 
-    private void verifyHosts(List<PreemptiveHost> hostList){
-        if (hostList == null){
+    private void verifyHosts(List<PreemptiveHost> hostList) {
+        if (hostList == null) {
             throw new IllegalArgumentException(
                     "The set of host can not be null.");
-        } else if (hostList.isEmpty()){
+        } else if (hostList.isEmpty()) {
             throw new IllegalArgumentException(
                     "The set of host can not be empty.");
         }
@@ -90,9 +90,10 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
     @Override
     public boolean preempt(PreemptableVm vm) {
 
+        verifyVm(vm);
         Host host = vm.getHost();
 
-        if (validateHostForVm(vm, host))
+        if (!validateHostForVm(vm, host))
             return false;
 
         vm.preempt(simulationTimeUtil.clock());
@@ -125,9 +126,9 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
             Log.printConcatLine(simulationTimeUtil.clock(),
                     ": VM #", vm.getId(), " do not have a host.");
 
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 
     @Override
@@ -135,14 +136,14 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
 
         verifyVm(vm);
 
-        if (! getHostList().isEmpty()) {
+        if (!getHostList().isEmpty()) {
             PreemptableVm pVm = (PreemptableVm) vm;
             PreemptiveHost firstHost;
             /*
             @TODO Decide if the vm has to be violating SLO in this time
             @TODO or in the next time to choose the way of select the host.
             */
-            if (pVm.getCurrentAvailability(simulationTimeUtil.clock()) > getSLOTarget(pVm.getPriority())){
+            if (pVm.getCurrentAvailability(simulationTimeUtil.clock()) > getSLOTarget(pVm.getPriority())) {
                 firstHost = getPriorityToSortedHostFCFS().get(pVm.getPriority()).first();
 
             } else {
@@ -167,22 +168,15 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
 
     @Override
     public boolean allocateHostForVm(Vm vm) {
-        Host host = selectHost(vm);
+        throw new RuntimeException("Do not support this method in " +
+                "WorstFitAvailabilityAwareAllocationPolicy");
 
-        if (host == null) {
-            return false;
-        }
-
-        removePriorityHost(host);
-        boolean result = host.vmCreate(vm);
-        addPriorityHost(host);
-
-        return result;
     }
+
     @Override
     public boolean allocateHostForVm(Vm vm, Host host) {
-
-        if (host == null) {
+        verifyVm(vm);
+        if (!validateHostForVm((PreemptableVm) vm, host)) {
             return false;
         }
 
@@ -195,22 +189,22 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
 
     @Override
     public void deallocateHostForVm(Vm vm) {
+        verifyVm(vm);
 
         Host host = vm.getHost();
-        validateHostForVm((PreemptableVm)vm,  host);
 
-        if (host != null) {
+        if (validateHostForVm((PreemptableVm) vm, host)) {
             removePriorityHost(host);
             host.vmDestroy(vm);
             addPriorityHost(host);
         }
     }
 
-    public Map<Integer, SortedSet<PreemptiveHost>> getPriorityToSortedHostFCFS() {
+    private Map<Integer, SortedSet<PreemptiveHost>> getPriorityToSortedHostFCFS() {
         return this.priorityToSortedHostFCFS;
     }
 
-    public Map<Integer, SortedSet<PreemptiveHost>> getPriorityToSortedHostAvailabilityAware() {
+    private Map<Integer, SortedSet<PreemptiveHost>> getPriorityToSortedHostAvailabilityAware() {
         return this.priorityToSortedHostAvailabilityAware;
     }
 

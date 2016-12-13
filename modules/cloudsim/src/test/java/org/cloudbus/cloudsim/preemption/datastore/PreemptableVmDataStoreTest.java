@@ -86,7 +86,7 @@ public class PreemptableVmDataStoreTest {
     @After
     public void tearDown() {
         new File(properties.getProperty(PreemptableVmDataStore.CHECKPOINT_DIR_PROP)
-                + "vms-" + properties.getProperty("number_of_hosts") + "-hostsWithMockedPolicy-"
+                + "vms-" + properties.getProperty("number_of_hosts") + "-hosts-"
                 + String.valueOf(TIME)).delete();
     }
 
