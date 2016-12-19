@@ -1,5 +1,11 @@
 package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
@@ -9,10 +15,6 @@ import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
 import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedPreemptiveHostComparator;
-import org.cloudbus.cloudsim.preemption.util.VmAvailabilityBasedPreemptiveHostComparator;
-
-import java.util.*;
-import java.util.concurrent.BlockingQueue;
 
 /**
  * Created by Alessandro Lia Fook Santos on 02/12/16.
