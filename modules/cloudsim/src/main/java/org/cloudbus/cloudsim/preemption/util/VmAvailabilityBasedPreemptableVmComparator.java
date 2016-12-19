@@ -32,7 +32,7 @@ public class VmAvailabilityBasedPreemptableVmComparator implements
 		int result = new Double(vm1Diff).compareTo(new Double(vm2Diff));
 
         if (result == 0) {        	        	
-        	int result2 = new Double(vm1.getSubmitTime()).compareTo(new Double(vm2.getSubmitTime()));
+        	int result2 = (-1) * new Double(vm1.getSubmitTime()).compareTo(new Double(vm2.getSubmitTime()));
         	
         	if (result2 == 0) {
         		return new Integer(vm1.getId()).compareTo(new Integer(vm2.getId()));
