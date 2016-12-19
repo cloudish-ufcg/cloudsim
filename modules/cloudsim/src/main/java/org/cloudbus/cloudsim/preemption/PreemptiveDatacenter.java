@@ -43,6 +43,8 @@ import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedVmCompa
  */
 public class PreemptiveDatacenter extends Datacenter {
 
+	private static final int INVALID_INTERVAL_SIZE = -1;
+
 	private static final int DATACENTER_BASE = 600;
 
 	// datacenter events
@@ -52,6 +54,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	public static final int STORE_DATACENTER_INFO_EVENT = DATACENTER_BASE + 4;
 	public static final int MAKE_DATACENTER_CHECKPOINT_EVENT = DATACENTER_BASE + 5;
 	public static final int INITIALIZE_FROM_CHECKPOINT_EVENT = DATACENTER_BASE + 6;
+	public static final int TRY_TO_ALLOCATE_WAITING_QUEUE_EVENT = DATACENTER_BASE + 7;
 	
 	// default interval sizes 
 	// TODO review this default values, maybe it should be in microseconds
@@ -59,7 +62,6 @@ public class PreemptiveDatacenter extends Datacenter {
 	private static final int DEFAULT_DATACENTER_INFO_STORING_INTERVAL_SIZE = 1440; // one day in minutes
 	private static final int DEFAULT_DATACENTER_COLLECT_INFO_INTERVAL_SIZE = 5; // in minutes
 	private static final int DEFAULT_CHECKPOINT_INTERVAL_SIZE = 1440; // one day in minutes
-
 
 	PreemptableVmAllocationPolicy vmAllocationPolicy;
 	
@@ -77,6 +79,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	private double datacenterCollectInfoIntervalSize;
 	private double datacenterStoringInfoIntervalSize;
 	private double checkpointIntervalSize;
+	private double allocateWaitingQueueIntervalSize = INVALID_INTERVAL_SIZE; 
 
 	private boolean collectDatacenterInfo = false;
 	private boolean makeCheckpoint = false;
@@ -104,7 +107,7 @@ public class PreemptiveDatacenter extends Datacenter {
         setDatacenterInfo(new LinkedList<DatacenterInfo>());
         
         // There is no last event processed, then lastProcessTime must be invalid one
-        lastProcessTime = -1;
+        lastProcessTime = INVALID_INTERVAL_SIZE;
        
 		if (properties.getProperty("make_checkpoint") != null
 				&& properties.getProperty("make_checkpoint")
@@ -115,6 +118,12 @@ public class PreemptiveDatacenter extends Datacenter {
 							: Double.parseDouble(properties.getProperty("checkpoint_interval_size"));
 			
 			setCheckpointIntervalSize(checkpointIntervalSize);
+		}
+		
+		if (properties.getProperty("allocate_waiting_queue_interval_size") != null) {
+			double allocateWaitingQueueIntervalSize = Double
+					.parseDouble(properties.getProperty("allocate_waiting_queue_interval_size"));
+			setAllocateWaitingQueueIntervalSize(allocateWaitingQueueIntervalSize);
 		}
         
 		if (properties.getProperty("collect_datacenter_summary_info") != null
@@ -155,6 +164,10 @@ public class PreemptiveDatacenter extends Datacenter {
 			case SCHEDULE_DATACENTER_EVENTS_EVENT:
 				scheduleDatacenterEvents();
 				break;
+				
+			case TRY_TO_ALLOCATE_WAITING_QUEUE_EVENT:
+				tryToAllocateWaitingQueue();
+				break;
 		
 			case STORE_HOST_UTILIZATION_EVENT:
 				storeHostUtilization(false);
@@ -186,7 +199,23 @@ public class PreemptiveDatacenter extends Datacenter {
 		}
 	}
 
-    protected void initializeFromCheckpoint(PreemptableVmDataStore vmDataStore) {
+    private void tryToAllocateWaitingQueue() {
+    	if (firstProcessNow()) {
+			Log.printConcatLine(simulationTimeUtil.clock(),
+					": First processing at this time. Pre processing and updating last process time to ", simulationTimeUtil.clock());
+			lastProcessTime = simulationTimeUtil.clock();
+			getVmAllocationPolicy().preProcess();
+			
+			allocatingWaitingQueue();
+		} else {
+			Log.printConcatLine(simulationTimeUtil.clock(),
+					": The waiting queue already was tried to be alocated at this time.");
+		}	
+    	
+    	send(getId(), getAllocateWaitingQueueIntervalSize(), PreemptiveDatacenter.TRY_TO_ALLOCATE_WAITING_QUEUE_EVENT);
+	}
+
+	protected void initializeFromCheckpoint(PreemptableVmDataStore vmDataStore) {
         Log.printLine(simulationTimeUtil.clock() + ": Initializing datacenter from checkpoint.");
         System.out.println(simulationTimeUtil.clock() + ": Initializing datacenter from checkpoint.");
 		List<PreemptableVm> runningVms = vmDataStore.getAllRunningVms();
@@ -287,6 +316,11 @@ public class PreemptiveDatacenter extends Datacenter {
 		// creating the first checkpoint event
 		if (makeCheckpoint) {
 			send(getId(), getCheckpointIntervalSize(), PreemptiveDatacenter.MAKE_DATACENTER_CHECKPOINT_EVENT);
+		}
+		
+		// periodically trying to allocate waiting queue
+		if (getAllocateWaitingQueueIntervalSize() != INVALID_INTERVAL_SIZE) {
+			send(getId(), getAllocateWaitingQueueIntervalSize(), PreemptiveDatacenter.TRY_TO_ALLOCATE_WAITING_QUEUE_EVENT);
 		}
 	}
 
@@ -461,7 +495,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		Log.printConcatLine(simulationTimeUtil.clock(),
 				": Trying to allocate host for VM #", vm.getId());
 		
-		if (passedTime()) {
+		if (firstProcessNow()) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
 					": Time passed out. Pre processing and updating last process time to ", simulationTimeUtil.clock());
 			lastProcessTime = simulationTimeUtil.clock();
@@ -512,7 +546,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		return result;
 	}
 
-	private boolean passedTime() {
+	private boolean firstProcessNow() {
 		return simulationTimeUtil.clock() > lastProcessTime;
 	}
 
@@ -615,7 +649,7 @@ public class PreemptiveDatacenter extends Datacenter {
 				host.updateUsage(simulationTimeUtil.clock());
 							
 				if (!getVmsForScheduling().isEmpty() && !nextEventIsDestroy()) {
-					processBackfilling(host);
+					allocatingWaitingQueue();
 				}
 			} else {
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
@@ -643,8 +677,8 @@ public class PreemptiveDatacenter extends Datacenter {
 		return false;
 	}
 
-	private void processBackfilling(Host host) {	
-		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to allocate the VMs in waiting queue after a VM detroying.");
+	private void allocatingWaitingQueue() {	
+		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to allocate the VMs in waiting queue.");
 		
 		boolean isBackfilling = false;
 		
@@ -740,5 +774,14 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	public void setHostUsageDataStore(HostUsageDataStore hostUsageDataStore) {
 		this.hostUsageDataStore = hostUsageDataStore;
+	}
+
+	public double getAllocateWaitingQueueIntervalSize() {
+		return allocateWaitingQueueIntervalSize;
+	}
+
+	public void setAllocateWaitingQueueIntervalSize(
+			double allocateWaitingQueueIntervalSize) {
+		this.allocateWaitingQueueIntervalSize = allocateWaitingQueueIntervalSize;
 	}
 }
