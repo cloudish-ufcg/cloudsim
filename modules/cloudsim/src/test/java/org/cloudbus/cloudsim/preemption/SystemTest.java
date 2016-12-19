@@ -121,7 +121,7 @@ public class SystemTest {
 
         // creating data center
         datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
-                new LinkedList<>(), 0, properties);
+                new LinkedList<Storage>(), 0, properties);
 
         datacenter.setSimulationTimeUtil(timeUtil);
 
@@ -175,7 +175,7 @@ public class SystemTest {
         // creating data center
         try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
-                    new LinkedList<>(), 0, properties);
+                    new LinkedList<Storage>(), 0, properties);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -475,7 +475,7 @@ public class SystemTest {
         // creating data center
         try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
-                    new LinkedList<>(), 0, properties);
+                    new LinkedList<Storage>(), 0, properties);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
