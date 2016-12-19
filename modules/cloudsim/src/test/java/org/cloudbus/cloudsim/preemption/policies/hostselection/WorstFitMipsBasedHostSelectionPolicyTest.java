@@ -12,6 +12,7 @@ import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.Assert;
@@ -50,7 +51,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         // creating object under test
         selectionPolicy = new WorstFitMipsBasedHostSelectionPolicy();
 
-        //creating lists of hosts
+        //creating lists of hostsWithMockedPolicy
         hostList = new TreeSet<PreemptiveHost>(new PreemptiveHostComparator(0));
         
         // populating host list
@@ -59,7 +60,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         peList.add(new Pe(0, new PeProvisionerSimple(mips))); // need to store Pe id and MIPS Rating
 
         properties = new Properties();
-		properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
+		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
         
         host1 = new PreemptiveHost(1, peList, new VmSchedulerMipsBased(peList), new FCFSBasedPreemptionPolicy(properties));
         hostList.add(host1);
@@ -172,7 +173,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
             hostList.add(otherHost);
         }
 
-        // once all hosts are fully occupied test allocation of vm's
+        // once all hostsWithMockedPolicy are fully occupied test allocation of vm's
 		Assert.assertNull(selectionPolicy.select(hostList, vm1000));
 		Assert.assertNull(selectionPolicy.select(hostList, vm500));
 		Assert.assertNull(selectionPolicy.select(hostList, vm250));
@@ -187,7 +188,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
     @Test
     public void testAllocatingVMsWhereFirstHostIsNotSuitable(){
     	
-        //creating hosts
+        //creating hostsWithMockedPolicy
         SortedSet<PreemptiveHost> hosts = new TreeSet<PreemptiveHost>(new PreemptiveHostComparator(0));
         
         List<Pe> peList = new ArrayList<Pe>();
