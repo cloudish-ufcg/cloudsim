@@ -314,8 +314,8 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		
 		Assert.assertEquals(10, policy.getPriorityToInUseMips().get(1), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(2, policy.getPriorityToVms().get(1).size());
-		Assert.assertEquals(vm1, policy.getPriorityToVms().get(1).first());
-		Assert.assertEquals(vm0, policy.getPriorityToVms().get(1).last());
+		Assert.assertEquals(vm0, policy.getPriorityToVms().get(1).first());
+		Assert.assertEquals(vm1, policy.getPriorityToVms().get(1).last());
 		
 		Assert.assertEquals(0, policy.getPriorityToInUseMips().get(2), ACCEPTABLE_DIFFERENCE);
 		Assert.assertTrue(policy.getPriorityToVms().get(2).isEmpty());
@@ -384,8 +384,8 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 	
 		Assert.assertEquals(9.1, policy.getPriorityToInUseMips().get(1), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(2, policy.getPriorityToVms().get(1).size());
-		Assert.assertEquals(vm1, policy.getPriorityToVms().get(1).first());
-		Assert.assertEquals(vm0, policy.getPriorityToVms().get(1).last());
+		Assert.assertEquals(vm0, policy.getPriorityToVms().get(1).first());
+		Assert.assertEquals(vm1, policy.getPriorityToVms().get(1).last());
 		
 		Assert.assertEquals(0, policy.getPriorityToInUseMips().get(2), ACCEPTABLE_DIFFERENCE);
 		Assert.assertTrue(policy.getPriorityToVms().get(2).isEmpty());
