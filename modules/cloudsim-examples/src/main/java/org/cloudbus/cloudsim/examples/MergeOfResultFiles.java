@@ -16,10 +16,11 @@ import com.beust.jcommander.Parameter;
 /**
  * Created by Joao Victor Mafra and Alessandro Lia Fook Santos on 07/11/16.
  */
+
 public class MergeOfResultFiles {
 
 	private static Properties properties;
-	private static double INTERVAL_SIZE = 86400000000.0;
+	private static double INTERVAL_SIZE = 8640.0;
 
     public static void main(String[] args) throws Exception{
 
@@ -62,13 +63,21 @@ public class MergeOfResultFiles {
 
             double time = Double.parseDouble(task.time);
 
+            int factor;
+
+            if (task.id_factor.equals("")){
+            	factor = 0;
+			} else {
+            	factor = Integer.parseInt(task.id_factor);
+			}
+
             properties.setProperty(TaskDataStore.DATABASE_URL_PROP, task.path_before);
             TaskDataStore dataStore = new TaskDataStore(properties);
             List<TaskState> tasks_before = dataStore.getTasksFinishedBefore(time);
 
             properties.setProperty(TaskDataStore.DATABASE_URL_PROP, task.path_after);
             dataStore = new TaskDataStore(properties);
-            List<TaskState> tasks_after = dataStore.getAllTasks();
+            List<TaskState> tasks_after = modifyStateId(dataStore.getAllTasks(), factor);
 
             List<TaskState> listOfAllTasks = new ArrayList<>();
             listOfAllTasks.addAll(tasks_before);
@@ -258,5 +267,26 @@ public class MergeOfResultFiles {
 
 		@Parameter(names = "--output", description = "path where will be saved the new file")
 		String path_output = "";
+
+		@Parameter(names = "--factor", description = "factor to which vms ids will be added")
+		String id_factor = "";
+	}
+
+	private static List<TaskState> modifyStateId(List<TaskState> listOfTasks, int factor){
+
+    	List<TaskState> finalListOfTasks = new ArrayList<TaskState>();
+    	TaskState taskState;
+
+    	int i = 0;
+    	for (TaskState task : listOfTasks){
+
+			taskState = new TaskState(task.getTaskId() + factor, task.getCpuReq(), task.getSubmitTime(), task.getFinishTime(),
+					task.getRuntime(), task.getPriority(), task.getNumberOfPreemptions(), task.getNumberOfBackfillingChoices(),
+					task.getNumberOfMigrations());
+
+    		finalListOfTasks.add(taskState);
+		}
+
+		return finalListOfTasks;
 	}
 }
