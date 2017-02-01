@@ -11,6 +11,7 @@ import java.util.Properties;
 
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.preemption.DatacenterInfo;
+import org.cloudbus.cloudsim.preemption.UsageEntry;
 
 public class DatacenterUsageDataStore extends DataStore {
 
@@ -152,5 +153,38 @@ public class DatacenterUsageDataStore extends DataStore {
 			Log.printLine("Couldn't get tasks from DB.");
 			return null;
 		}
+	}
+
+	public List<DatacenterInfo> getDatacenterInfoFinishedBefore(double interestedTime) {
+		Statement statement = null;
+		Connection conn = null;
+
+		try {
+			conn = getConnection();
+			statement = conn.createStatement();
+
+			statement.execute("SELECT * FROM " + DATACENTER_TABLE_NAME
+					+ " WHERE time <= '" + interestedTime + "'");
+			ResultSet rs = statement.getResultSet();
+
+			return generateDatacenterInfoList(rs);
+		} catch (SQLException e) {
+			Log.print(e);
+			Log.printLine("Couldn't get tasks from DB.");
+			return null;
+		}
+	}
+
+	private List<DatacenterInfo> generateDatacenterInfoList(ResultSet rs) throws SQLException{
+		List<DatacenterInfo> datacenterInfoList = new ArrayList<>();
+		while (rs.next()) {
+			datacenterInfoList.add(new DatacenterInfo(rs.getDouble("time"), rs
+					.getInt("vmsRunning"), rs.getInt("vmsRunningP0"), rs
+					.getInt("vmsRunningP1"), rs.getInt("vmsRunningP2"), rs
+					.getInt("vmsForScheduling"), rs.getInt("vmsForSchedulingP0"),
+					rs.getInt("vmsForSchedulingP1"), rs.getInt("vmsForSchedulingP2")));
+		}
+
+		return datacenterInfoList;
 	}
 }

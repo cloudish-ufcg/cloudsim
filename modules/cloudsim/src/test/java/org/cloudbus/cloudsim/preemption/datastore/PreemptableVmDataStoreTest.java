@@ -48,7 +48,7 @@ public class PreemptableVmDataStoreTest {
         running = new TreeSet<>();
         waiting = new TreeSet<>();
 
-        //creating hosts
+        //creating hostsWithMockedPolicy
         host1 = Mockito.mock(PreemptiveHost.class);
         host2 = Mockito.mock(PreemptiveHost.class);
 

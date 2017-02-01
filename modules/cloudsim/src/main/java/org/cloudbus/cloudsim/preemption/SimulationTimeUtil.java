@@ -14,8 +14,5 @@ public class SimulationTimeUtil {
 	public double clock() {
 		return CloudSim.clock();
 	}
-	
-    public static double getTimeInMicro(double timeInMinute) {
-        return timeInMinute * 60 * 1000000;
-    }
+
 }

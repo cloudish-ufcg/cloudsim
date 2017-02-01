@@ -35,10 +35,10 @@ import org.cloudbus.cloudsim.preemption.TaskState;
 import org.cloudbus.cloudsim.preemption.TraceDatacenterBroker;
 import org.cloudbus.cloudsim.preemption.UsageEntry;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
-import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
+import org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitPriorityBasedVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 
 /**
@@ -266,11 +266,18 @@ public class CloudSimExampleGoogleTrace {
 
         PreemptiveDatacenter datacenter = null;
         try {
-//			datacenter = new GoogleDatacenter(name, characteristics,
-//					new VmAllocationPolicySimple(hostList), storageList, 0);
-            datacenter = new PreemptiveDatacenter(name, characteristics,
-                    new PreemptableVmAllocationPolicy(hostList,
-                            new WorstFitMipsBasedHostSelectionPolicy()),
+        	PreemptableVmAllocationPolicy vmAllocationPolicy;
+            
+            if (properties.getProperty("vm_allocation_policy_class") != null) {
+        		Log.printLine("Creating a hosts with VmAllocationPolicy " + properties.getProperty("vm_allocation_policy_class"));
+        		vmAllocationPolicy = (PreemptableVmAllocationPolicy) createInstance("vm_allocation_policy_class", properties, hostList);
+        	} else {
+        		Log.printLine("Creating a hosts with defatult vm_allocation_policy_class WorstFitPriorityBased.");
+        		vmAllocationPolicy = new  WorstFitPriorityBasedVmAllocationPolicy(hostList);
+        	}
+            
+			datacenter = new PreemptiveDatacenter(name, characteristics,
+                    vmAllocationPolicy,
                     storageList, 0, properties);
         } catch (Exception e) {
             e.printStackTrace();
@@ -279,7 +286,7 @@ public class CloudSimExampleGoogleTrace {
         return datacenter;
     }
 
-    private static TraceDatacenterBroker createGoogleTraceBroker(String name,
+	private static TraceDatacenterBroker createGoogleTraceBroker(String name,
                                                                  Properties properties) {
 
         TraceDatacenterBroker broker = null;
@@ -401,5 +408,11 @@ public class CloudSimExampleGoogleTrace {
     private static Object createInstance(String propName, Properties properties) throws Exception {
 		return Class.forName(properties.getProperty(propName)).getConstructor(Properties.class)
 				.newInstance(properties);
+	}
+    
+    private static Object createInstance(String propName,
+			Properties properties, List<PreemptiveHost> hostList) throws Exception {
+		return Class.forName(properties.getProperty(propName)).getConstructor(List.class)
+				.newInstance(hostList);
 	}
 }

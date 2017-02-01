@@ -23,6 +23,7 @@ import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBased
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
+import org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitPriorityBasedVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -88,9 +89,9 @@ public class TraceDatacenterBrokerTest {
                         .prepareStatement(INSERT_CLOUDLET_SQL);
                 // submit time
                 if (i < NUMBER_OF_TASKS/2 + 1){
-                    insertMemberStatement.setDouble(1, getTimeInMicro(0));
+                    insertMemberStatement.setDouble(1, 0);
                 } else {
-                    insertMemberStatement.setDouble(1, getTimeInMicro(1));
+                    insertMemberStatement.setDouble(1, 1);
                 }
                 insertMemberStatement.setDouble(2, -1); // jid is not important for now
                 insertMemberStatement.setInt(3, -1); // tid is not important for now
@@ -107,10 +108,6 @@ public class TraceDatacenterBrokerTest {
             connection.close();
         }
     }
-    private static double getTimeInMicro(double timeInMinutes) {
-        return timeInMinutes * 60 * 1000000;
-    }
-
 
     @Before
     public void init() {
@@ -183,7 +180,7 @@ public class TraceDatacenterBrokerTest {
 
         Log.printLine("Creating a datacenter with " + totalMipsCapacity
                 + " total capacity and " + numberOfHosts
-                + " hosts, each one with " + mipsPerHost + " mips.");
+                + " hostsWithMockedPolicy, each one with " + mipsPerHost + " mips.");
 
         List<PreemptiveHost> hostList = new ArrayList<PreemptiveHost>();
 
@@ -220,8 +217,7 @@ public class TraceDatacenterBrokerTest {
         PreemptiveDatacenter datacenter = null;
         try {
             datacenter = new PreemptiveDatacenter(name, characteristics,
-                    new PreemptableVmAllocationPolicy(hostList,
-                            new WorstFitMipsBasedHostSelectionPolicy()),
+                    new WorstFitPriorityBasedVmAllocationPolicy(hostList),
                     storageList, 0, properties);
         } catch (Exception e) {
             e.printStackTrace();
