@@ -10,8 +10,9 @@ import java.util.List;
 import java.util.Properties;
 
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.preemption.UsageEntry;
-import org.cloudbus.cloudsim.preemption.UsageInfo;
+import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.preemption.*;
+import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
 
 public class HostUsageDataStore extends DataStore {
 
@@ -146,5 +147,130 @@ public class HostUsageDataStore extends DataStore {
 			}
 		}
 		return false;
+	}
+
+	public List<UsageEntry> getUsageEntriesFinishedBefore(double interestedTime) {
+		Statement statement = null;
+		Connection conn = null;
+
+		try {
+			conn = getConnection();
+			statement = conn.createStatement();
+
+			statement.execute("SELECT * FROM " + UTILIZATION_TABLE_NAME
+					+ " WHERE time < '" + interestedTime + "'");
+			ResultSet rs = statement.getResultSet();
+
+			return generateUsageEntriesList(rs);
+		} catch (SQLException e) {
+			Log.print(e);
+			Log.printLine("Couldn't get tasks from DB.");
+			return null;
+		}
+	}
+
+	private List<UsageEntry> generateUsageEntriesList(ResultSet rs) throws SQLException{
+		List<UsageEntry> usageEntries = new ArrayList<>();
+		while (rs.next()) {
+			usageEntries.add(new UsageEntry(rs.getInt("hostId"), rs
+					.getDouble("time"), rs.getDouble("usage"), rs
+					.getInt("vms"), rs.getInt("priority"), rs
+					.getDouble("availableMips")));
+		}
+
+		return usageEntries;
+	}
+
+	public List<UsageEntry> getUsageEntryInterval(int intervalIndex,
+											double intervalSize, double minInterestedTime, double maxInterestedTime) throws SQLException, ClassNotFoundException {
+
+		if (intervalIndex < 0){
+			throw new IllegalArgumentException("Interval index must be not negative");
+		}
+
+		if (intervalSize <= 0){
+			throw new IllegalArgumentException("Interval size must be positive");
+		}
+
+		if (!hasMoreEvents(intervalIndex, intervalSize)) {
+			Log.printLine("The Interval index is "
+					+ intervalIndex
+					+ " and there are not more events to be treated.");
+			return null;
+		}
+
+		double minTime = Math.max(minInterestedTime, (intervalIndex * intervalSize));
+		double maxTime = Math.min(maxInterestedTime, ((intervalIndex + 1) * intervalSize));
+
+
+		List<UsageEntry> usageEntries = new ArrayList<UsageEntry>();
+
+		Statement statement = null;
+		Connection connection;
+		try {
+			connection = getConnection();
+
+			if (connection != null) {
+				statement = connection.createStatement();
+
+				String sql = "SELECT hostId, time, usage, vms,priority, availableMips FROM usage WHERE time >= '"
+						+ minTime + "' AND time < '" + maxTime + "'";
+
+				ResultSet rs = statement.executeQuery(sql);
+
+				while (rs.next()) {
+					/*
+					 * TODO We need to check if this nextTaskId variable is considered for post processing.
+					 * If we execute part of the trace more than one time, the same task can be have different
+					 * taskId (depending of the interval size).
+					 */
+					//TODO review it
+					usageEntries.add(new UsageEntry(rs.getInt("hostId"), rs
+							.getDouble("time"), rs.getDouble("usage"), rs
+							.getInt("vms"), rs.getInt("priority"), rs
+							.getDouble("availableMips")));
+				}
+
+				Log.printLine(CloudSim.clock() + ": Interval index is " + intervalIndex + " and number of tasks is " + usageEntries.size());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return usageEntries;
+	}
+
+	public boolean hasMoreEvents(int intervalIndex,
+								 double intervalSize) throws SQLException, ClassNotFoundException {
+		return (intervalIndex >= 0 && (intervalIndex * intervalSize) <= getMaxTraceTime());
+	}
+
+	public double getMaxTraceTime() throws ClassNotFoundException,
+			SQLException {
+		Statement statement = null;
+		Connection connection = null;
+
+		try {
+			Class.forName(DATASTORE_SQLITE_DRIVER);
+			connection = getConnection();
+
+			if (connection != null) {
+				Log.printLine("Connected to the database: " + getDatabaseURL());
+
+				statement = connection.createStatement();
+
+				// getting the max submitTime from database
+				ResultSet results = statement
+						.executeQuery("SELECT MAX(time) FROM usage");
+
+				while (results.next()) {
+					return results.getDouble("MAX(time)");
+				}
+			}
+		} finally {
+			close(statement, connection);
+		}
+		// It should never return this value.
+		return -1;
 	}
 }
