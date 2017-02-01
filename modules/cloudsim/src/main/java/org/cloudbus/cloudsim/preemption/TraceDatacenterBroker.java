@@ -229,7 +229,16 @@ public class TraceDatacenterBroker extends SimEntity {
         	    int intervalIndex = (int) ((startTime - inputTraceDataStore
 						.getMinInterestedTime()) / getTaskLoadingIntervalSize()); 
         	    
-        	    inputTraceDataStore.setNextTaskId(50000000);
+        	    if (properties.getProperty("first_task_id") == null
+						|| Integer.parseInt(properties
+								.getProperty("first_task_id")) < 0) {
+					throw new IllegalArgumentException(
+							"first_task_id property must be a not negative double for initializating from checkpoint.");
+				}
+        	    
+        	    int firstTaskId = Integer.parseInt(properties.getProperty("first_task_id"));
+        	    
+        	    inputTraceDataStore.setNextTaskId(firstTaskId);
         	    setIntervalIndex(intervalIndex);
         	    
         	} else {

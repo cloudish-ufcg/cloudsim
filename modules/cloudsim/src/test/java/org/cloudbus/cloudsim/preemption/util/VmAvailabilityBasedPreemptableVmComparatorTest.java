@@ -310,11 +310,11 @@ public class VmAvailabilityBasedPreemptableVmComparatorTest {
 		
 		// checking sort
 		Assert.assertEquals(5, sortedSet.size());
-		Assert.assertEquals(vm4, sortedSet.first());
-		Assert.assertEquals(vm3, sortedSet.last());
-		Assert.assertTrue(sortedSet.contains(vm0));
+		Assert.assertEquals(vm0, sortedSet.first());
+		Assert.assertEquals(vm4, sortedSet.last());
 		Assert.assertTrue(sortedSet.contains(vm1));
 		Assert.assertTrue(sortedSet.contains(vm2));
+		Assert.assertTrue(sortedSet.contains(vm3));
 		
 		// removing vm0 and vm3
 		sortedSet.remove(vm0);
@@ -322,9 +322,9 @@ public class VmAvailabilityBasedPreemptableVmComparatorTest {
 		
 		// checking sort
 		Assert.assertEquals(3, sortedSet.size());
-		Assert.assertEquals(vm4, sortedSet.first());
-		Assert.assertEquals(vm2, sortedSet.last());
-		Assert.assertTrue(sortedSet.contains(vm1));
+		Assert.assertEquals(vm1, sortedSet.first());
+		Assert.assertEquals(vm4, sortedSet.last());
+		Assert.assertTrue(sortedSet.contains(vm2));
 		
 		// removing vm2 and vm1
 		sortedSet.remove(vm2);
