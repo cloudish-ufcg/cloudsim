@@ -32,8 +32,10 @@ import org.cloudbus.cloudsim.core.predicates.Predicate;
 import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.HostUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.PreemptableVmDataStore;
+import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedVmComparator;
+import org.cloudbus.cloudsim.preemption.util.PriorityAndTTVBasedPreemptableVmComparator;
 
 /**
  * TODO
@@ -685,18 +687,30 @@ public class PreemptiveDatacenter extends Datacenter {
 		ArrayList<PreemptableVm> waitingQueue = new ArrayList<PreemptableVm>(getVmsForScheduling());
 		
 		// TODO Think better about how to configure it
-		String preemptionPolicyClass = properties.getProperty("preemption_policy_class");
+		String preemptionPolicyClass = properties
+				.getProperty("preemption_policy_class");
 		if (preemptionPolicyClass != null
 				&& "org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy"
 						.equals(preemptionPolicyClass)) {
-			
-			Log.printConcatLine(simulationTimeUtil.clock(), ": Sorting the waiting queue based on priority + current availability.");
+
+			Log.printConcatLine(simulationTimeUtil.clock(),
+					": Sorting the waiting queue based on priority + current availability.");
 
 			Collections.sort(waitingQueue,
 					new PriorityAndAvailabilityBasedVmComparator(
 							simulationTimeUtil));
+		} else if (preemptionPolicyClass != null
+				&& "org.cloudbus.cloudsim.preemption.policies.preemption.TTVBasedPreemptionPolicy"
+						.equals(preemptionPolicyClass)) {
+
+			Log.printConcatLine(simulationTimeUtil.clock(),
+					": Sorting the waiting queue based on priority + TTV.");
+
+			Map<Integer, Double> sloTargets = VmAvailabilityBasedPreemptionPolicy
+					.getSLOAvailabilityTargets(properties);
+			
+			Collections.sort(waitingQueue, new PriorityAndTTVBasedPreemptableVmComparator(sloTargets, simulationTimeUtil));
 		}
-		
 		for (PreemptableVm currentVm : waitingQueue) {
 				if (!allocateHostForVm(false, currentVm, null, isBackfilling)) {
 					isBackfilling = true;
