@@ -7,15 +7,11 @@ import org.cloudbus.cloudsim.*;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
-import org.cloudbus.cloudsim.preemption.policies.hostselection.HostSelectionPolicy;
-import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
+import org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitPriorityBasedVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.mockito.Mockito;
 
 
@@ -32,7 +28,6 @@ public class SystemTest {
     private SimEvent event;
     private PreemptiveHost host;
     private SimulationTimeUtil timeUtil;
-    private HostSelectionPolicy hostSelector;
     private PreemptableVmAllocationPolicy preemptableVmAllocationPolicy;
     private DatacenterCharacteristics characteristics;
 
@@ -78,21 +73,24 @@ public class SystemTest {
         datacenterOutputUrl = "jdbc:sqlite:" + datacenterOutputFile;
 
         properties = Mockito.mock(Properties.class);
+        // time in micro
         Mockito.when(properties.getProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP)).thenReturn("3");
-        Mockito.when(properties.getProperty("logging")).thenReturn("no");
+        Mockito.when(properties.getProperty("logging")).thenReturn("yes");
         Mockito.when(properties.getProperty("input_trace_database_url")).thenReturn(datacenterInputUrl);
-        Mockito.when(properties.getProperty("loading_interval_size")).thenReturn("5");
-        Mockito.when(properties.getProperty("storing_interval_size")).thenReturn("4");
+        Mockito.when(properties.getProperty("loading_interval_size")).thenReturn("300000000");
+        Mockito.when(properties.getProperty("storing_interval_size")).thenReturn("240000000");
         Mockito.when(properties.getProperty("output_tasks_database_url")).thenReturn(datacenterOutputUrl);
         Mockito.when(properties.getProperty("utilization_database_url")).thenReturn(datacenterOutputUrl);
-        Mockito.when(properties.getProperty("utilization_storing_interval_size")).thenReturn("8");
+        Mockito.when(properties.getProperty("utilization_storing_interval_size")).thenReturn("480000000");
         Mockito.when(properties.getProperty("datacenter_database_url")).thenReturn(datacenterOutputUrl);
         Mockito.when(properties.getProperty("collect_datacenter_summary_info")).thenReturn("yes");
-        Mockito.when(properties.getProperty("datacenter_storing_interval_size")).thenReturn("1440");
-        Mockito.when(properties.getProperty("datacenter_collect_info_interval_size")).thenReturn("4");
+        Mockito.when(properties.getProperty("datacenter_storing_interval_size")).thenReturn("300000000");
+        Mockito.when(properties.getProperty("datacenter_collect_info_interval_size")).thenReturn("240000000");
         Mockito.when(properties.getProperty("make_checkpoint")).thenReturn("no");
-        Mockito.when(properties.getProperty("checkpoint_interval_size")).thenReturn("1440");
+        Mockito.when(properties.getProperty("checkpoint_interval_size")).thenReturn("300000000");
         Mockito.when(properties.getProperty("checkpoint_dir")).thenReturn(datacenterOutputUrl);
+        Mockito.when(properties.getProperty("preemption_policy_class")).thenReturn("org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy");
+
 
         // creating host
         List<Pe> peList1 = new ArrayList<Pe>();
@@ -115,17 +113,15 @@ public class SystemTest {
         timeUtil = Mockito.mock(SimulationTimeUtil.class);
         Mockito.when(timeUtil.clock()).thenReturn(0d);
 
-        hostSelector = new WorstFitMipsBasedHostSelectionPolicy();
-
         List<PreemptiveHost> googleHostList = new ArrayList<PreemptiveHost>();
         for (Host host : hostList) {
             googleHostList.add((PreemptiveHost) host);
         }
-        preemptableVmAllocationPolicy = new PreemptableVmAllocationPolicy(googleHostList, hostSelector);
+        preemptableVmAllocationPolicy = new WorstFitPriorityBasedVmAllocationPolicy(googleHostList);
 
         // creating data center
         datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
-                                                new LinkedList<>(), 0, properties);
+                new LinkedList<Storage>(), 0, properties);
 
         datacenter.setSimulationTimeUtil(timeUtil);
 
@@ -161,8 +157,94 @@ public class SystemTest {
         verifyResultsSingleHost(listOfStoredTasks);
     }
 
+    //testing the operation of the system for a single host
+    //TODO processBackfiling is called more than once at same time because of method processEventForAllVms()
     @Test
-    public void testSystemMultipleHostWithTrace(){
+    public void testSystemSingleHost() {
+
+        // First step: Initialize the CloudSim package. It should be called
+        // before creating any entities.
+        int num_user = 1; // number of grid users
+        Calendar calendar = Calendar.getInstance();
+        boolean trace_flag = false; // mean trace events
+
+        // Initialize the CloudSim library
+        CloudSim.init(num_user, calendar, trace_flag);
+        CloudSim.runStart();
+
+        // creating data center
+        try {
+            datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
+                    new LinkedList<Storage>(), 0, properties);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        //asserting host on data center and host total capacity
+        Assert.assertEquals(host, datacenter.getHostList().get(0));
+        Assert.assertEquals(hostCapacity, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        // creating vms model P0S0, total of vms 6603
+        // with cpu total requisition of 3301.5
+        populateVmLists();
+
+        submitEvents();
+        CloudSim.runClockTick();
+
+
+        advanceTime(0.0);
+        //allocating vms with submit time 0
+        testSimulationRuntime0();
+
+        advanceTime(1.0);
+        //allocating vms with submit time 1
+        testSimulationRuntime1();
+
+        advanceTime(2.0);
+        //       executing simulation at runtime 2
+        testSimulationRuntime2();
+
+
+        advanceTime(3.0);
+//        executing simulation to verify preemption and running of vms through running time of simulation
+        testSimulationRuntime3();
+
+        advanceTime(4.0);
+        testSimulationRuntime4();
+
+        advanceTime(5.0);
+        testSimulationRuntime5();
+
+        advanceTime(6.0);
+        testSimulationRuntime6();
+
+        advanceTime(7.0);
+        testSimulationRuntime7();
+
+        advanceTime(8.0);
+        testSimulationRuntime8();
+
+        verifyAvailabilityOfSingleHost();
+    }
+
+    private void advanceTime(double time) {
+        while (CloudSim.clock() < time){
+            CloudSim.runClockTick();
+        }
+        CloudSim.runClockTick();
+    }
+
+    private void submitEvents() {
+        for (int i = 0; i < NUMBER_OF_VMS; i++) {
+            CloudSim.send(datacenter.getId(), datacenter.getId(), 0d, CloudSimTags.VM_CREATE, vmP0S0.get(i));
+            CloudSim.send(datacenter.getId(), datacenter.getId(), 0d, CloudSimTags.VM_CREATE, vmP1S0.get(i));
+            CloudSim.send(datacenter.getId(), datacenter.getId(), 0d, CloudSimTags.VM_CREATE, vmP2S0.get(i));
+            CloudSim.send(datacenter.getId(), datacenter.getId(), 1d, CloudSimTags.VM_CREATE, vmP0S1.get(i));
+        }
+    }
+
+    @Test
+    public void testSystemMultipleHostWithTrace() {
         Mockito.when(properties.getProperty("number_of_hosts")).thenReturn("3");
         Mockito.when(properties.getProperty("total_cpu_capacity")).thenReturn("6603");
 
@@ -183,50 +265,13 @@ public class SystemTest {
 
     }
 
-
-    @Test
-    //testing the operation of the system for a single host
-    public void testSystemSingleHost() {
-
-        datacenter.getVmAllocationPolicy().setSimulationTimeUtil(timeUtil);
-
-        //asserting host on data center and host total capacity
-        Assert.assertEquals(host, datacenter.getHostList().get(0));
-        Assert.assertEquals(hostCapacity, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-
-        // creating vms model P0S0, total of vms 6603
-        // with cpu total requisition of 3301.5
-        populateVmLists();
-
-        //allocating vms with submit time 0
-        executingSimularionRuntime0();
-
-        //allocating vms with submit time 1
-        executingSimulationRuntime1();
-
-        //executing simulation at runtime 2
-        executingSimulationRuntime2();
-
-        //executing simulation to verify preemption and running of vms through running time of simulation
-
-        executingSimulationRuntime3();
-        executingSimulationRuntime4();
-        executingSimulationRuntime5();
-        executingSimulationRuntime6();
-        executingSimulationRuntime7();
-        executingSimulationRuntime8();
-
-        verifyAvailabilityOfSingleHost();
-    }
-
-    private void executingSimulationRuntime8() {
+    private void testSimulationRuntime8() {
         // passing time to 8
         Mockito.when(timeUtil.clock()).thenReturn(8.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
 
         // finishing vms of priority 0, submit time 0, runtime 8 that are finished in simulation time 7
 
-        processEventForAllVms();
+        CloudSim.runClockTick();
 
         //testing new available considering the end of 6603 vms described before
 
@@ -243,14 +288,7 @@ public class SystemTest {
     }
 
 
-    private void executingSimulationRuntime7() {
-        // passing time to 7
-        Mockito.when(timeUtil.clock()).thenReturn(7.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
-
-        // finishing vms of priority 1, submit time 0, runtime 5
-
-        processEventForAllVms();
+    private void testSimulationRuntime7() {
 
         //testing new available considering the end of vms described above
         Assert.assertEquals(3301.75, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
@@ -265,14 +303,7 @@ public class SystemTest {
         testNumberOfPreemptionsAndBackfillingOfSingleHost();
     }
 
-    private void executingSimulationRuntime6() {
-        // passing time to 6
-        Mockito.when(timeUtil.clock()).thenReturn(6.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
-
-        // finishing the last one VM with priority 2
-
-        processEventForAllVms();
+    private void testSimulationRuntime6() {
 
         //testing new available considering the end of vms described above
         Assert.assertEquals(1321.15, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
@@ -287,17 +318,11 @@ public class SystemTest {
         testNumberOfPreemptionsAndBackfillingOfSingleHost();
     }
 
-    private void executingSimulationRuntime5() {
-        // passing time to 5
-        Mockito.when(timeUtil.clock()).thenReturn(5.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
-
+    private void testSimulationRuntime5() {
 
         // finishing vms of priority 2, submit time 0, runtime 2 and
         // finishing vms of priority 0, submit time 1, runtime 2
         // finishing vm id 6603 priority 1, submit time 5, runtime 5
-
-        processEventForAllVms();
 
         //testing new available considering the end of vms described before, and reallocate of
         /*after deallocate 3301 vms of vmP2S0 available mips are 660.25
@@ -316,14 +341,7 @@ public class SystemTest {
         testNumberOfPreemptionsAndBackfillingOfSingleHost();
     }
 
-    private void executingSimulationRuntime4() {
-        // passing time to 4
-        Mockito.when(timeUtil.clock()).thenReturn(4.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
-
-        // finishing vms of priority 2, submit time 0, and runtime 2 that are finished at time 4
-
-        processEventForAllVms();
+    private void testSimulationRuntime4() {
 
         //testing new available considering the end of vms described above, and reallocate of
         /*after deallocate of 3301 vms of vmP2S0 available mips are 660.25
@@ -341,14 +359,7 @@ public class SystemTest {
         testNumberOfPreemptionsAndBackfillingOfSingleHost();
     }
 
-    private void executingSimulationRuntime3() {
-        // passing time to 3
-        Mockito.when(timeUtil.clock()).thenReturn(3.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
-
-
-        // finishing vms of priority 0, submit time 1, and runtime 2, because the runtime is completed at time 3
-        processEventForAllVms();
+    private void testSimulationRuntime3() {
 
         //testing new available considering the end of vms described above, and reallocating of
         /*after deallocate available mips is 3301.75
@@ -368,23 +379,11 @@ public class SystemTest {
         testNumberOfPreemptionsAndBackfillingOfSingleHost();
     }
 
-    private void executingSimulationRuntime2() {
+    private void testSimulationRuntime2() {
         testNumberOfPreemptionsAndBackfillingOfSingleHostTimeLessThan3();
     }
 
-    private void executingSimulationRuntime1() {
-        // passing time to 1 and allocate all vms of submit time equals 1 and priority 0
-        Mockito.when(timeUtil.clock()).thenReturn(1.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
-
-
-        //allocate 6603 vms of priority 0, submit time 1, and Cpu requisition of 0.6
-        //with total requested Cpu equals 3961.8
-        // P0_0 = allocated / P0_1 = 5502 allocated / P1_0 = 1 allocated
-        for (int i = 0; i < NUMBER_OF_VMS; i++) {
-            Mockito.when(event.getData()).thenReturn(vmP0S1.get(i));
-            datacenter.processEvent(event);
-        }
+    private void testSimulationRuntime1() {
 
         //testing capacity of host
         //TODO discuss about imprecision on results
@@ -403,54 +402,8 @@ public class SystemTest {
         testNumberOfPreemptionsAndBackfillingOfSingleHostTimeLessThan3();
     }
 
-    private void executingSimularionRuntime0() {
+    private void testSimulationRuntime0() {
         // start time on 0 and mock the hostSelector to return desired host
-        Mockito.when(timeUtil.clock()).thenReturn(0d);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
-
-        //allocate 6603 vms os priority 0, submit time 0, and Cpu requisition of 0.5
-        //with total requested Cpu equals 3301.5
-        for (int i = 0; i < NUMBER_OF_VMS; i++) {
-            Mockito.when(event.getData()).thenReturn(vmP0S0.get(i));
-            datacenter.processEvent(event);
-        }
-
-        //testing capacity of host
-        Assert.assertEquals(hostCapacity - 3301.5, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 3301.5, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 3301.5, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 3301.5, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
-
-        //testing size of lists
-        Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
-        Assert.assertEquals(NUMBER_OF_VMS, datacenter.getVmsRunning().size());
-
-        //allocate 6603 vms os priority 1, submit time 0, and Cpu requisition of 0.3
-        //with total requested Cpu equals 1980.9
-
-        for (int i = 0; i < NUMBER_OF_VMS; i++) {
-            Mockito.when(event.getData()).thenReturn(vmP1S0.get(i));
-            datacenter.processEvent(event);
-        }
-
-        //testing capacity of host
-        Assert.assertEquals(hostCapacity - 5282.4, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 3301.5, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 5282.4, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 5282.4, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
-
-        //testing size of lists
-        Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
-        Assert.assertEquals(2 * NUMBER_OF_VMS, datacenter.getVmsRunning().size());
-
-        //allocate 6603 vms of priority 2, submit time 0, and Cpu requisition of 0.2
-        //with total requested Cpu equals 1320.6
-
-        for (int i = 0; i < NUMBER_OF_VMS; i++) {
-            Mockito.when(event.getData()).thenReturn(vmP2S0.get(i));
-            datacenter.processEvent(event);
-        }
-
         //testing capacity of host
         //TODO discuss about the imprecision of results (expetecd 0.25, and actual is 0.249999999186723)
         Assert.assertEquals(0.25, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
@@ -505,13 +458,27 @@ public class SystemTest {
             preemptiveHostList.add((PreemptiveHost) host);
         }
 
-        preemptableVmAllocationPolicy = new PreemptableVmAllocationPolicy(preemptiveHostList, hostSelector);
-
-        datacenter.setVmAllocationPolicy(preemptableVmAllocationPolicy);
+        preemptableVmAllocationPolicy = new WorstFitPriorityBasedVmAllocationPolicy(preemptiveHostList);
 
         Mockito.when(characteristics.getHostList()).thenReturn(hostList);
 
-        datacenter.getVmAllocationPolicy().setSimulationTimeUtil(timeUtil);
+        // First step: Initialize the CloudSim package. It should be called
+        // before creating any entities.
+        int num_user = 1; // number of grid users
+        Calendar calendar = Calendar.getInstance();
+        boolean trace_flag = false; // mean trace events
+
+        // Initialize the CloudSim library
+        CloudSim.init(num_user, calendar, trace_flag);
+        CloudSim.runStart();
+
+        // creating data center
+        try {
+            datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
+                    new LinkedList<Storage>(), 0, properties);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
 
         //asserting hosts in datacenter and host total capacity
         Assert.assertEquals(host1.getId(), datacenter.getHostList().get(0).getId());
@@ -524,28 +491,43 @@ public class SystemTest {
 
         // creating vms model P0S0, total of vms 6603
         // with cpu total requisition of 3301.5
-
         populateVmLists();
 
+        submitEvents();
+        CloudSim.runClockTick();
+
+        advanceTime(0.0);
         //allocating vms with submit time 0
         executingSimulationMultipleHostsRuntime0();
 
+        advanceTime(1.0);
         //allocating vms with submit time 1
         executingSimulationMultipleHostRuntime1();
 
-        //executing simulation at runtime 2
+        advanceTime(2.0);
+//        //executing simulation at runtime 2
         executingSimulationMultipleHostsRuntime2();
 
-        //executing simulation to verify preemption and running of vms through running time of simulation
-
+        advanceTime(3.0);
+//        //executing simulation to verify preemption and running of vms through running time of simulation
         executingSimulationMultipleHostsRuntime3();
+
+        advanceTime(4.0);
         executingSimulationMultipleHostsRuntime4();
+
+        advanceTime(5.0);
         executingSimulationMultipleHostsRuntime5();
+
+        advanceTime(6.0);
         executingSimulationMultipleHostsRuntime6();
+
+        advanceTime(7.0);
         executingSimulationMultipleHostsRuntime7();
+
+        advanceTime(8.0);
         executingSimulationMultipleHostsRuntime8();
 
-        // verify expected availability for the vms
+//        // verify expected availability for the vms
         verifyAvailabilityOfMultipleHosts();
     }
 
@@ -558,11 +540,6 @@ public class SystemTest {
         double capacityTotal = host1.getTotalMips();
 
         // passing time to 1 and allocate all vms of submit time equals 1 and priority 0
-        Mockito.when(timeUtil.clock()).thenReturn(8.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
-
-        //try to destroy any vm
-        processEventForAllVms();
 
         //testing capacity of host
         Assert.assertEquals(capacityTotal, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
@@ -597,11 +574,6 @@ public class SystemTest {
         double capacityTotal = host1.getTotalMips();
 
         // passing time to 1 and allocate all vms of submit time equals 1 and priority 0
-        Mockito.when(timeUtil.clock()).thenReturn(7.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
-
-        //try to destroy any vm
-        processEventForAllVms();
 
         //testing capacity of host
         Assert.assertEquals(capacityTotal - 1100.5, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
@@ -636,28 +608,22 @@ public class SystemTest {
         double capacityTotal = host1.getTotalMips();
 
         // passing time to 1 and allocate all vms of submit time equals 1 and priority 0
-        Mockito.when(timeUtil.clock()).thenReturn(6.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
-
-        //try to destroy any vm
-        processEventForAllVms();
-
         //testing capacity of host
-        Assert.assertEquals(capacityTotal - 1761.1, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1760.8, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1760.8, host2.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(capacityTotal - 1760.5, host3.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1760.8, host3.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
 
         Assert.assertEquals(capacityTotal - 1100.5, host1.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1100.5, host2.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1100.5, host3.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
 
-        Assert.assertEquals(capacityTotal - 1761.1, host1.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1760.8, host1.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1760.8, host2.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(capacityTotal - 1760.5, host3.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1760.8, host3.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
 
-        Assert.assertEquals(capacityTotal - 1761.1, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1760.8, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1760.8, host2.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(capacityTotal - 1760.5, host3.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1760.8, host3.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
         //testing size of lists
         Assert.assertEquals(0, datacenter.getVmsForScheduling().size());
@@ -674,33 +640,27 @@ public class SystemTest {
 
         double capacityTotal = host1.getTotalMips();
 
-        // passing time to 1 and allocate all vms of submit time equals 1 and priority 0
-        Mockito.when(timeUtil.clock()).thenReturn(5.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
-
-        //try to destroy any vm
-        processEventForAllVms();
 
         //testing capacity of host
-        Assert.assertEquals(capacityTotal - 1761.1, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(capacityTotal - 1761.2, host2.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(capacityTotal - 1761.1, host3.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1761, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1761, host2.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1761, host3.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
 
         Assert.assertEquals(capacityTotal - 1100.5, host1.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1100.5, host2.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1100.5, host3.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
 
-        Assert.assertEquals(capacityTotal - 1761.1, host1.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1760.8, host1.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1760.8, host2.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(capacityTotal - 1760.5, host3.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1760.8, host3.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
 
-        Assert.assertEquals(capacityTotal - 1761.1, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(capacityTotal - 1761.2, host2.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(capacityTotal - 1761.1, host3.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1761, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1761, host2.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1761, host3.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
         //testing size of lists
         Assert.assertEquals(0, datacenter.getVmsForScheduling().size());
-        Assert.assertEquals(13211, datacenter.getVmsRunning().size());
+        Assert.assertEquals(13209, datacenter.getVmsRunning().size());
 
         verifyNumberOfPreemptionAndBackfillingOfMultipleHostsTimeGreaterThan1();
     }
@@ -714,32 +674,27 @@ public class SystemTest {
         double capacityTotal = host1.getTotalMips();
 
         // passing time to 1 and allocate all vms of submit time equals 1 and priority 0
-        Mockito.when(timeUtil.clock()).thenReturn(4.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
-
-        //try to destroy any vm
-        processEventForAllVms();
 
         //testing capacity of host
-        Assert.assertEquals(0.1, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(0, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(0, host2.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(0.1, host3.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(0, host3.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
 
         Assert.assertEquals(capacityTotal - 1320.7, host1.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1320.7, host2.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1320.7, host3.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
 
-        Assert.assertEquals(capacityTotal - 1981.3, host1.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1981, host1.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1981, host2.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(capacityTotal - 1980.7, host3.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1981, host3.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
 
-        Assert.assertEquals(0.1, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(0, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(0, host2.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(0.1, host3.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(0, host3.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
         //testing size of lists
-        Assert.assertEquals(5, datacenter.getVmsForScheduling().size());
-        Assert.assertEquals(17606, datacenter.getVmsRunning().size());
+        Assert.assertEquals(3, datacenter.getVmsForScheduling().size());
+        Assert.assertEquals(17607, datacenter.getVmsRunning().size());
 
         verifyNumberOfPreemptionAndBackfillingOfMultipleHostsTimeGreaterThan1();
     }
@@ -752,33 +707,26 @@ public class SystemTest {
 
         double capacityTotal = host1.getTotalMips();
 
-        // passing time to 1 and allocate all vms of submit time equals 1 and priority 0
-        Mockito.when(timeUtil.clock()).thenReturn(3.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
-
-        //try to destroy any vm
-        processEventForAllVms();
-
         //testing capacity of host
-        Assert.assertEquals(0.1, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(0, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(0, host2.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(0.1, host3.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(0, host3.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
 
         Assert.assertEquals(capacityTotal - 1320.7, host1.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1320.7, host2.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1320.7, host3.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
 
-        Assert.assertEquals(capacityTotal - 1981.3, host1.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1981, host1.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(capacityTotal - 1981, host2.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(capacityTotal - 1980.7, host3.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(capacityTotal - 1981, host3.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
 
-        Assert.assertEquals(0.1, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(0, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(0, host2.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(0.1, host3.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(0, host3.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
         //testing size of lists
-        Assert.assertEquals(3304, datacenter.getVmsForScheduling().size());
-        Assert.assertEquals(17606, datacenter.getVmsRunning().size());
+        Assert.assertEquals(3303, datacenter.getVmsForScheduling().size());
+        Assert.assertEquals(17607, datacenter.getVmsRunning().size());
 
         verifyNumberOfPreemptionAndBackfillingOfMultipleHostsTimeGreaterThan1();
     }
@@ -788,13 +736,6 @@ public class SystemTest {
         PreemptiveHost host1 = (PreemptiveHost) datacenter.getHostList().get(0);
         PreemptiveHost host2 = (PreemptiveHost) datacenter.getHostList().get(1);
         PreemptiveHost host3 = (PreemptiveHost) datacenter.getHostList().get(2);
-
-        // passing time to 1 and allocate all vms of submit time equals 1 and priority 0
-        Mockito.when(timeUtil.clock()).thenReturn(2.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
-
-        //try to destroy any vm
-        processEventForAllVms();
 
         //testing capacity of host
         Assert.assertEquals(0.1, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
@@ -826,19 +767,6 @@ public class SystemTest {
         PreemptiveHost host2 = (PreemptiveHost) datacenter.getHostList().get(1);
         PreemptiveHost host3 = (PreemptiveHost) datacenter.getHostList().get(2);
 
-        // passing time to 1 and allocate all vms of submit time equals 1 and priority 0
-        Mockito.when(timeUtil.clock()).thenReturn(1.0);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
-
-
-        //allocate 6603 vms of priority 0, submit time 1, and Cpu requisition of 0.6
-        //with total requested Cpu equals 3961.8
-        // P0_0 = allocated / P0_1 = 5502 allocated / P1_0 = 1 allocated
-        for (int i = 0; i < NUMBER_OF_VMS; i++) {
-            Mockito.when(event.getData()).thenReturn(vmP0S1.get(i));
-            datacenter.processEvent(event);
-        }
-
         //testing capacity of host
         Assert.assertEquals(0.1, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(0.1, host2.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
@@ -868,73 +796,6 @@ public class SystemTest {
         PreemptiveHost host1 = (PreemptiveHost) datacenter.getHostList().get(0);
         PreemptiveHost host2 = (PreemptiveHost) datacenter.getHostList().get(1);
         PreemptiveHost host3 = (PreemptiveHost) datacenter.getHostList().get(2);
-
-        // start time on 0 and mock the hostSelector to return desired host
-        Mockito.when(timeUtil.clock()).thenReturn(0d);
-        Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
-
-        //allocate 6603 vms os priority 0, submit time 0, and Cpu requisition of 0.5
-        //with total requested Cpu equals 3301.5
-        for (int i = 0; i < NUMBER_OF_VMS; i++) {
-            Mockito.when(event.getData()).thenReturn(vmP0S0.get(i));
-            datacenter.processEvent(event);
-        }
-
-        //testing capacity of each host
-        Assert.assertEquals(hostCapacity - 1100.5, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1100.5, host1.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1100.5, host1.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1100.5, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
-
-        Assert.assertEquals(hostCapacity - 1100.5, host2.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1100.5, host2.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1100.5, host2.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1100.5, host2.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
-
-        Assert.assertEquals(hostCapacity - 1100.5, host3.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1100.5, host3.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1100.5, host3.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1100.5, host3.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
-
-        //testing size of lists
-        Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
-        Assert.assertEquals(NUMBER_OF_VMS, datacenter.getVmsRunning().size());
-
-
-        //allocate 6603 vms os priority 1, submit time 0, and Cpu requisition of 0.3
-        //with total requested Cpu equals 1980.9
-        for (int i = 0; i < NUMBER_OF_VMS; i++) {
-            Mockito.when(event.getData()).thenReturn(vmP1S0.get(i));
-            datacenter.processEvent(event);
-        }
-
-        //testing capacity of each host
-        Assert.assertEquals(hostCapacity - 1760.8, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1100.5, host1.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1760.8, host1.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1760.8, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
-
-        Assert.assertEquals(hostCapacity - 1760.8, host2.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1100.5, host2.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1760.8, host2.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1760.8, host2.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
-
-        Assert.assertEquals(hostCapacity - 1760.8, host3.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1100.5, host3.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1760.8, host3.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(hostCapacity - 1760.8, host3.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
-
-        //testing size of lists
-        Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
-        Assert.assertEquals(NUMBER_OF_VMS * 2, datacenter.getVmsRunning().size());
-
-        //allocate 6603 vms of priority 2, submit time 0, and Cpu requisition of 0.2
-        //with total requested Cpu equals 1320.6
-
-        for (int i = 0; i < NUMBER_OF_VMS; i++) {
-            Mockito.when(event.getData()).thenReturn(vmP2S0.get(i));
-            datacenter.processEvent(event);
-        }
 
         //testing capacity of each host
         Assert.assertEquals(hostCapacity - 2201, host1.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
@@ -1066,13 +927,8 @@ public class SystemTest {
                 Assert.assertEquals(actualVMP10.getNumberOfBackfillingChoice(), 0);
             }
 
-            if (actualVMP20.getId() == 13206) {
-                Assert.assertEquals(actualVMP20.getNumberOfPreemptions(), 1);
-                Assert.assertEquals(actualVMP20.getNumberOfBackfillingChoice(), 1);
-            } else {
-                Assert.assertEquals(actualVMP20.getNumberOfPreemptions(), 1);
-                Assert.assertEquals(actualVMP20.getNumberOfBackfillingChoice(), 0);
-            }
+            Assert.assertEquals(actualVMP20.getNumberOfPreemptions(), 1);
+            Assert.assertEquals(actualVMP20.getNumberOfBackfillingChoice(), 0);
 
             Assert.assertEquals(actualVMP00.getNumberOfPreemptions(), 0);
             Assert.assertEquals(actualVMP01.getNumberOfPreemptions(), 0);
@@ -1212,20 +1068,20 @@ public class SystemTest {
 
         // asserting VM availability of P2S0
         finishTime = 4.0;
-        for (int i = 0; i < 3299; i++) {
+        for (int i = 0; i <= 3299; i++) {
             PreemptableVm vm = (PreemptableVm) vmP2S0.get(i);
             Assert.assertEquals(0.5, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
         }
 
 
         finishTime = 5.0;
-        for (int i = 3299; i < 6598; i++) {
+        for (int i = 3300; i <= 6599; i++) {
             PreemptableVm vm = (PreemptableVm) vmP2S0.get(i);
             Assert.assertEquals(0.4, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
         }
 
         finishTime = 6.0;
-        for (int i = 6598; i < NUMBER_OF_VMS; i++) {
+        for (int i = 6600; i < NUMBER_OF_VMS; i++) {
             PreemptableVm vm = (PreemptableVm) vmP2S0.get(i);
             Assert.assertEquals(0.33, vm.getRuntime() / (finishTime - vm.getSubmitTime()), ACCEPTABLE_DIFFERENCE_FOR_AVAILABILITY);
         }
@@ -1293,8 +1149,7 @@ public class SystemTest {
         try {
 //
             datacenter = new PreemptiveDatacenter(name, characteristics,
-                    new PreemptableVmAllocationPolicy(hostList,
-                            new WorstFitMipsBasedHostSelectionPolicy()),
+                    new WorstFitPriorityBasedVmAllocationPolicy(hostList),
                     storageList, 0, properties);
         } catch (Exception e) {
             e.printStackTrace();
@@ -1361,19 +1216,14 @@ public class SystemTest {
 
                 Assert.assertEquals(task.getNumberOfPreemptions(), 1);
             }
-            if (task.getTaskId() == 13207) { // the only vms that are chosen from backfilling in time 3
 
-                Assert.assertEquals(1, task.getNumberOfBackfillingChoices());
-            }
-
-            else {
-
-                Assert.assertEquals(0, task.getNumberOfBackfillingChoices());
-            }
+            Assert.assertEquals(0, task.getNumberOfBackfillingChoices());
         }
     }
 
+
     private static void verifyResultsMultipleHosts(List<TaskState> listOfStoredTasks) {
+
         for (TaskState task : listOfStoredTasks) {
 
             double avail = task.getRuntime() / (task.getFinishTime() - task.getSubmitTime());
@@ -1392,15 +1242,15 @@ public class SystemTest {
 
             } else if (task.getPriority() == 1) {
 
-                    Assert.assertEquals(1, task.getNumberOfPreemptions());
-                    Assert.assertEquals(0.714285, avail, ACCEPTABLE_DIFFERENCE);
+                Assert.assertEquals(1, task.getNumberOfPreemptions());
+                Assert.assertEquals(0.714285, avail, ACCEPTABLE_DIFFERENCE);
 
             } else { // priority 2
-                // 3299 vms with priority 2 had availability = 0.5, 3299 had avail = 0.4 and 5 had avail = 0.33
-                if (task.getTaskId() < 16506) { // the group of vms that return to running in time 3
+                // 3300 vms with priority 2 had availability = 0.5, 3300 had avail = 0.4 and 3 had avail = 0.33
+                if (task.getTaskId() <= 16506) {// the group of vms that return to running in time 3
                     Assert.assertEquals(0.5, avail, ACCEPTABLE_DIFFERENCE);
 
-                } else if (task.getTaskId() < 19805) { // the group of vms that return to running in time 4
+                } else if (task.getTaskId() <= 19806) { // the group of vms that return to running in time 4
                     Assert.assertEquals(0.4, avail, ACCEPTABLE_DIFFERENCE);
 
                 } else { // the group of vms that return to running in time 5
@@ -1413,6 +1263,5 @@ public class SystemTest {
 
             Assert.assertEquals(0, task.getNumberOfBackfillingChoices());
         }
-
     }
 }

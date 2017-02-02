@@ -1,10 +1,6 @@
 package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
@@ -21,8 +17,8 @@ import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedPreempt
  */
 public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAllocationPolicy {
 
-    private Map<Integer, SortedSet<PreemptiveHost>> priorityToSortedHostFCFS;
-    private Map<Integer, SortedSet<PreemptiveHost>> priorityToSortedHostAvailabilityAware;
+    private Map<Integer, PriorityQueue<PreemptiveHost>> priorityToSortedHostFCFS;
+    private Map<Integer, PriorityQueue<PreemptiveHost>> priorityToSortedHostAvailabilityAware;
     private Map<Integer, Double> priorityToSLOTarget = new HashMap<Integer, Double>();
 
     public WorstFitAvailabilityAwareVmAllocationPolicy(List<PreemptiveHost> hostList) {
@@ -41,8 +37,8 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
             PreemptiveHostComparator comparatorFCFS = new PreemptiveHostComparator(priority);
             PriorityAndAvailabilityBasedPreemptiveHostComparator comparatorAvailabilityAware = new PriorityAndAvailabilityBasedPreemptiveHostComparator(priority);
 
-            getPriorityToSortedHostFCFS().put(priority, new TreeSet<>(comparatorFCFS));
-            getPriorityToSortedHostAvailabilityAware().put(priority, new TreeSet<>(comparatorAvailabilityAware));
+            getPriorityToSortedHostFCFS().put(priority, new PriorityQueue(comparatorFCFS));
+            getPriorityToSortedHostAvailabilityAware().put(priority, new PriorityQueue(comparatorAvailabilityAware));
         }
 
         for (PreemptiveHost host : hostList) {
@@ -66,7 +62,7 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
         for (int priority = 0; priority < numberOfPriorities; priority++) {
 
             PriorityAndAvailabilityBasedPreemptiveHostComparator comparatorAvailabilityAware = new PriorityAndAvailabilityBasedPreemptiveHostComparator(priority);
-            getPriorityToSortedHostAvailabilityAware().put(priority, new TreeSet<>(comparatorAvailabilityAware));
+            getPriorityToSortedHostAvailabilityAware().put(priority, new PriorityQueue(comparatorAvailabilityAware));
 
         }
 
@@ -146,10 +142,10 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
             @TODO or in the next time to choose the way of select the host.
             */
             if (pVm.getCurrentAvailability(simulationTimeUtil.clock()) > getSLOTarget(pVm.getPriority())) {
-                firstHost = getPriorityToSortedHostFCFS().get(pVm.getPriority()).first();
+                firstHost = getPriorityToSortedHostFCFS().get(pVm.getPriority()).peek();
 
             } else {
-                firstHost = getPriorityToSortedHostAvailabilityAware().get(pVm.getPriority()).first();
+                firstHost = getPriorityToSortedHostAvailabilityAware().get(pVm.getPriority()).peek();
             }
 
             if (firstHost.isSuitableForVm(pVm)) {
@@ -202,11 +198,11 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
         }
     }
 
-    private Map<Integer, SortedSet<PreemptiveHost>> getPriorityToSortedHostFCFS() {
+    private Map<Integer, PriorityQueue<PreemptiveHost>> getPriorityToSortedHostFCFS() {
         return this.priorityToSortedHostFCFS;
     }
 
-    private Map<Integer, SortedSet<PreemptiveHost>> getPriorityToSortedHostAvailabilityAware() {
+    private Map<Integer, PriorityQueue<PreemptiveHost>> getPriorityToSortedHostAvailabilityAware() {
         return this.priorityToSortedHostAvailabilityAware;
     }
 
