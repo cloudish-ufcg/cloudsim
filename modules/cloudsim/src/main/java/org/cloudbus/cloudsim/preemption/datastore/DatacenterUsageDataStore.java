@@ -11,7 +11,6 @@ import java.util.Properties;
 
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.preemption.DatacenterInfo;
-import org.cloudbus.cloudsim.preemption.UsageEntry;
 
 public class DatacenterUsageDataStore extends DataStore {
 
@@ -35,12 +34,18 @@ public class DatacenterUsageDataStore extends DataStore {
 							+ "time REAL NOT NULL, "
 							+ "vmsRunning INTEGER, "
 							+ "vmsRunningP0 INTEGER, "
+							+ "resourcesRunningP0 REAL, "
 							+ "vmsRunningP1 INTEGER, "
+							+ "resourcesRunningP1 REAL, "
 							+ "vmsRunningP2 INTEGER, "
+							+ "resourcesRunningP2 REAL, "
 							+ "vmsForScheduling INTEGER, "
 							+ "vmsForSchedulingP0 INTEGER, "
+							+ "resourcesWaitingP0 REAL, "
 							+ "vmsForSchedulingP1 INTEGER, "
+							+ "resourcesWaitingP1 REAL, "
 							+ "vmsForSchedulingP2 INTEGER, "
+							+ "resourcesWaitingP2 REAL, "
 							+ "PRIMARY KEY (time)"
 							+ ")");
 		} catch (Exception e) {
@@ -52,7 +57,7 @@ public class DatacenterUsageDataStore extends DataStore {
 	}
 	
 	private static final String INSERT_DATACENTER_INFO_SQL = "INSERT INTO " + DATACENTER_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	public boolean addDatacenterInfo(List<DatacenterInfo> datacenterInfo) {
 		if (datacenterInfo == null) {
@@ -80,13 +85,19 @@ public class DatacenterUsageDataStore extends DataStore {
 			for (DatacenterInfo info : datacenterInfo) {
 				insertMemberStatement.setDouble(1, info.getTime());
 				insertMemberStatement.setInt(2, info.getVmsRunning());
-				insertMemberStatement.setInt(3, info.getUsageByPriority0());
-				insertMemberStatement.setInt(4, info.getUsageByPriority1());
-				insertMemberStatement.setInt(5, info.getUsageByPriority2());
-				insertMemberStatement.setInt(6, info.getVmsForScheduling());
-				insertMemberStatement.setInt(7, info.getVmsForSchedulingP0());
-				insertMemberStatement.setInt(8, info.getVmsForSchedulingP1());
-				insertMemberStatement.setInt(9, info.getVmsForSchedulingP2());
+				insertMemberStatement.setInt(3, info.getVmsRunningP0());
+				insertMemberStatement.setDouble(4, info.getResourcesRunningP0());
+				insertMemberStatement.setInt(5, info.getVmsRunningP1());
+				insertMemberStatement.setDouble(6, info.getResourcesRunningP1());
+				insertMemberStatement.setInt(7, info.getVmsRunningP2());
+				insertMemberStatement.setDouble(8, info.getResourcesRunningP2());
+				insertMemberStatement.setInt(9, info.getVmsForScheduling());
+				insertMemberStatement.setInt(10, info.getVmsForSchedulingP0());
+				insertMemberStatement.setDouble(11, info.getResourcesWaitingP0());
+				insertMemberStatement.setInt(12, info.getVmsForSchedulingP1());
+				insertMemberStatement.setDouble(13, info.getResourcesWaitingP1());
+				insertMemberStatement.setInt(14, info.getVmsForSchedulingP2());
+				insertMemberStatement.setDouble(15, info.getResourcesWaitingP2());
 				insertMemberStatement.addBatch();
 			}
 			
@@ -143,9 +154,18 @@ public class DatacenterUsageDataStore extends DataStore {
 			while (rs.next()) {
 				entries.add(new DatacenterInfo(rs.getDouble("time"), rs
 						.getInt("vmsRunning"), rs.getInt("vmsRunningP0"), rs
-						.getInt("vmsRunningP1"), rs.getInt("vmsRunningP2"), rs
-						.getInt("vmsForScheduling"), rs.getInt("vmsForSchedulingP0"),
-						rs.getInt("vmsForSchedulingP1"), rs.getInt("vmsForSchedulingP2")));
+						.getDouble("resourcesRunningP0"), rs
+						.getInt("vmsRunningP1"), rs
+						.getDouble("resourcesRunningP1"), rs
+						.getInt("vmsRunningP2"), rs
+						.getDouble("resourcesRunningP2"), rs
+						.getInt("vmsForScheduling"), rs
+						.getInt("vmsForSchedulingP0"), rs
+						.getDouble("resourcesWaitingP0"), rs
+						.getInt("vmsForSchedulingP1"), rs
+						.getDouble("resourcesWaitingP1"), rs
+						.getInt("vmsForSchedulingP2"), rs
+						.getDouble("resourcesWaitingP2")));
 			}
 			return entries;
 		} catch (SQLException e) {
@@ -180,9 +200,18 @@ public class DatacenterUsageDataStore extends DataStore {
 		while (rs.next()) {
 			datacenterInfoList.add(new DatacenterInfo(rs.getDouble("time"), rs
 					.getInt("vmsRunning"), rs.getInt("vmsRunningP0"), rs
-					.getInt("vmsRunningP1"), rs.getInt("vmsRunningP2"), rs
-					.getInt("vmsForScheduling"), rs.getInt("vmsForSchedulingP0"),
-					rs.getInt("vmsForSchedulingP1"), rs.getInt("vmsForSchedulingP2")));
+					.getDouble("resourcesRunningP0"), rs
+					.getInt("vmsRunningP1"), rs
+					.getDouble("resourcesRunningP1"), rs
+					.getInt("vmsRunningP2"), rs
+					.getDouble("resourcesRunningP2"), rs
+					.getInt("vmsForScheduling"), rs
+					.getInt("vmsForSchedulingP0"), rs
+					.getDouble("resourcesWaitingP0"), rs
+					.getInt("vmsForSchedulingP1"), rs
+					.getDouble("resourcesWaitingP1"), rs
+					.getInt("vmsForSchedulingP2"), rs
+					.getDouble("resourcesWaitingP2")));
 		}
 
 		return datacenterInfoList;

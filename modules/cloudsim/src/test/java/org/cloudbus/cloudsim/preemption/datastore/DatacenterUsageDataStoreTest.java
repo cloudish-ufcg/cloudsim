@@ -24,13 +24,13 @@ public class DatacenterUsageDataStoreTest {
 
     private static final double TIME = 5.2;
     private static final int VMS_RUNNING = 59;
-    private static final int USAGE_BY_PRIORITY_0 = 40;
-    private static final int USAGE_BY_PRIORITY_1 = 15;
-    private static final int USAGE_BY_PRIORITY_2 = 4;
+    private static final int VMS_RUNNING_P0 = 40;
+    private static final int VMS_RUNNING_P1 = 15;
+    private static final int VMS_RUNNING_P2 = 4;
     private static final int VMS_FOR_SCHEDULING = 12;
-    private static final int VMS_FOR_SCHEDULING_P_0 = 1;
-    private static final int VMS_FOR_SCHEDULING_P_1 = 3;
-    private static final int VMS_FOR_SCHEDULING_P_2 = 8;
+    private static final int VMS_FOR_SCHEDULING_P0 = 1;
+    private static final int VMS_FOR_SCHEDULING_P1 = 3;
+    private static final int VMS_FOR_SCHEDULING_P2 = 8;
 
     private DatacenterInfo info1, info2, info3;
     private List<DatacenterInfo> datacenterInfoList1, datacenterInfoList2, datacenterInfoList3, datacenterInfoList4, datacenterInfoList5;
@@ -51,13 +51,13 @@ public class DatacenterUsageDataStoreTest {
         datacenterInfoList3 = new ArrayList<>();
         datacenterInfoList4 = new ArrayList<>();
 
-        info1 = new DatacenterInfo(TIME, VMS_RUNNING, USAGE_BY_PRIORITY_0, USAGE_BY_PRIORITY_1,
-                USAGE_BY_PRIORITY_2, VMS_FOR_SCHEDULING, VMS_FOR_SCHEDULING_P_0, VMS_FOR_SCHEDULING_P_1, VMS_FOR_SCHEDULING_P_2);
-        info2 = new DatacenterInfo(TIME + 5.4, VMS_RUNNING + 27, USAGE_BY_PRIORITY_0 + 27, USAGE_BY_PRIORITY_1,
-                USAGE_BY_PRIORITY_2, VMS_FOR_SCHEDULING + 30, VMS_FOR_SCHEDULING_P_0, VMS_FOR_SCHEDULING_P_1, VMS_FOR_SCHEDULING_P_2 + 30);
+        info1 = new DatacenterInfo(TIME, VMS_RUNNING, VMS_RUNNING_P0, VMS_RUNNING_P1,
+                VMS_RUNNING_P2, VMS_FOR_SCHEDULING, VMS_FOR_SCHEDULING_P0, VMS_FOR_SCHEDULING_P1, VMS_FOR_SCHEDULING_P2);
+        info2 = new DatacenterInfo(TIME + 5.4, VMS_RUNNING + 27, VMS_RUNNING_P0 + 27, VMS_RUNNING_P1,
+                VMS_RUNNING_P2, VMS_FOR_SCHEDULING + 30, VMS_FOR_SCHEDULING_P0, VMS_FOR_SCHEDULING_P1, VMS_FOR_SCHEDULING_P2 + 30);
 
-        info3 = new DatacenterInfo(TIME - 2.3, VMS_RUNNING + 27, USAGE_BY_PRIORITY_0, USAGE_BY_PRIORITY_1 + 27,
-                USAGE_BY_PRIORITY_2, VMS_FOR_SCHEDULING - 1, VMS_FOR_SCHEDULING_P_0, VMS_FOR_SCHEDULING_P_1, VMS_FOR_SCHEDULING_P_2 - 1);
+        info3 = new DatacenterInfo(TIME - 2.3, VMS_RUNNING + 27, VMS_RUNNING_P0, VMS_RUNNING_P1 + 27,
+                VMS_RUNNING_P2, VMS_FOR_SCHEDULING - 1, VMS_FOR_SCHEDULING_P0, VMS_FOR_SCHEDULING_P1, VMS_FOR_SCHEDULING_P2 - 1);
 
         // list 1 with one element
         datacenterInfoList1.add(info1);
@@ -132,17 +132,17 @@ public class DatacenterUsageDataStoreTest {
         Assert.assertEquals(expectedList, datacenterDataStore.getAllDatacenterInfo());
 
         // creating new datacenter infos and lists with them to insert in DB
-        DatacenterInfo info4 = new DatacenterInfo(TIME + 10.1, VMS_RUNNING + 27, USAGE_BY_PRIORITY_0 + 27, USAGE_BY_PRIORITY_1,
-                USAGE_BY_PRIORITY_2, VMS_FOR_SCHEDULING - 1, VMS_FOR_SCHEDULING_P_0, VMS_FOR_SCHEDULING_P_1, VMS_FOR_SCHEDULING_P_2 - 1);
+        DatacenterInfo info4 = new DatacenterInfo(TIME + 10.1, VMS_RUNNING + 27, VMS_RUNNING_P0 + 27, VMS_RUNNING_P1,
+                VMS_RUNNING_P2, VMS_FOR_SCHEDULING - 1, VMS_FOR_SCHEDULING_P0, VMS_FOR_SCHEDULING_P1, VMS_FOR_SCHEDULING_P2 - 1);
 
-        DatacenterInfo info5 = new DatacenterInfo(TIME + 10.4, VMS_RUNNING + 27, USAGE_BY_PRIORITY_0 + 27, USAGE_BY_PRIORITY_1,
-                USAGE_BY_PRIORITY_2, VMS_FOR_SCHEDULING - 1, VMS_FOR_SCHEDULING_P_0, VMS_FOR_SCHEDULING_P_1, VMS_FOR_SCHEDULING_P_2 - 1);
+        DatacenterInfo info5 = new DatacenterInfo(TIME + 10.4, VMS_RUNNING + 27, VMS_RUNNING_P0 + 27, VMS_RUNNING_P1,
+                VMS_RUNNING_P2, VMS_FOR_SCHEDULING - 1, VMS_FOR_SCHEDULING_P0, VMS_FOR_SCHEDULING_P1, VMS_FOR_SCHEDULING_P2 - 1);
 
-        DatacenterInfo info6 = new DatacenterInfo(TIME + 8.4, VMS_RUNNING + 27, USAGE_BY_PRIORITY_0 + 27, USAGE_BY_PRIORITY_1,
-                USAGE_BY_PRIORITY_2, VMS_FOR_SCHEDULING - 1, VMS_FOR_SCHEDULING_P_0, VMS_FOR_SCHEDULING_P_1, VMS_FOR_SCHEDULING_P_2 - 1);
+        DatacenterInfo info6 = new DatacenterInfo(TIME + 8.4, VMS_RUNNING + 27, VMS_RUNNING_P0 + 27, VMS_RUNNING_P1,
+                VMS_RUNNING_P2, VMS_FOR_SCHEDULING - 1, VMS_FOR_SCHEDULING_P0, VMS_FOR_SCHEDULING_P1, VMS_FOR_SCHEDULING_P2 - 1);
 
-        DatacenterInfo info7 = new DatacenterInfo(TIME + 9.7, VMS_RUNNING + 27, USAGE_BY_PRIORITY_0 + 27, USAGE_BY_PRIORITY_1,
-                USAGE_BY_PRIORITY_2, VMS_FOR_SCHEDULING - 1, VMS_FOR_SCHEDULING_P_0, VMS_FOR_SCHEDULING_P_1, VMS_FOR_SCHEDULING_P_2 - 1);
+        DatacenterInfo info7 = new DatacenterInfo(TIME + 9.7, VMS_RUNNING + 27, VMS_RUNNING_P0 + 27, VMS_RUNNING_P1,
+                VMS_RUNNING_P2, VMS_FOR_SCHEDULING - 1, VMS_FOR_SCHEDULING_P0, VMS_FOR_SCHEDULING_P1, VMS_FOR_SCHEDULING_P2 - 1);
 
         List<DatacenterInfo> datacenterInfoList6 = new ArrayList<>();
         List<DatacenterInfo> datacenterInfoList7 = new ArrayList<>();
@@ -170,10 +170,28 @@ public class DatacenterUsageDataStoreTest {
         Assert.assertEquals(7, datacenterDataStore.getAllDatacenterInfo().size());
 
     }
+	
+	@Test
+	public void testDatacenterWithMoreInformation() {
+		datacenterDataStore = new DatacenterUsageDataStore(properties);
 
+		info1 = new DatacenterInfo(TIME, VMS_RUNNING, VMS_RUNNING_P0, 10.5, VMS_RUNNING_P1, 5.7,
+                VMS_RUNNING_P2, 4.6, VMS_FOR_SCHEDULING, VMS_FOR_SCHEDULING_P0, 3.3, VMS_FOR_SCHEDULING_P1, 4.4, VMS_FOR_SCHEDULING_P2, 6.7);
+		
+        info2 = new DatacenterInfo(TIME + 5.4, VMS_RUNNING + 27, VMS_RUNNING_P0 + 27, 20.5, VMS_RUNNING_P1, 5.7,
+                VMS_RUNNING_P2,  4.6, VMS_FOR_SCHEDULING + 30, VMS_FOR_SCHEDULING_P0, 3.1, VMS_FOR_SCHEDULING_P1, 7.8, VMS_FOR_SCHEDULING_P2 + 30, 5.7);
 
-
-
-
-
+        List<DatacenterInfo> info = new ArrayList<DatacenterInfo>();
+        info.add(info1);
+        info.add(info2);
+        
+        Assert.assertTrue(datacenterDataStore.addDatacenterInfo(info));
+        
+        List<DatacenterInfo> expectedInfo = new ArrayList<DatacenterInfo>();
+        expectedInfo.add(info1);
+        expectedInfo.add(info2);
+        
+        Assert.assertEquals(expectedInfo, datacenterDataStore.getAllDatacenterInfo());
+		
+	}
 }
