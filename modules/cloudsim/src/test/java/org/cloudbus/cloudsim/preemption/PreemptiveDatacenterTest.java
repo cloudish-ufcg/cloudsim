@@ -1582,8 +1582,13 @@ public class PreemptiveDatacenterTest {
 
         host = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
                 peList1), new FCFSBasedPreemptionPolicy(properties));
-        datacenter.getHostList().remove(0);
-        datacenter.getHostList().add(host);
+
+        List<PreemptiveHost> newHostList = new ArrayList<PreemptiveHost>();
+        newHostList.add(host);
+        preemptableVmAllocationPolicy = new WorstFitPriorityBasedVmAllocationPolicy(newHostList);
+
+        datacenter.setVmAllocationPolicy(preemptableVmAllocationPolicy);
+
         datacenter.getVmAllocationPolicy().setSimulationTimeUtil(timeUtil);
 
         //asserting host on data center and host total capacity
@@ -1602,7 +1607,7 @@ public class PreemptiveDatacenterTest {
         populateVmLists(numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1);
 
         //allocating vms with submit time 0
-        executingSimularionRuntime0(ACCEPTABLE_DIFFERENCE, hostCpuCapacity, numberOfVms, vmP0S0, vmP1S0, vmP2S0);
+        executingSimulationRuntime0(ACCEPTABLE_DIFFERENCE, hostCpuCapacity, numberOfVms, vmP0S0, vmP1S0, vmP2S0);
 
         //allocating vms with submit time 1
         executingSimulationRuntime1(ACCEPTABLE_DIFFERENCE, numberOfVms, vmP0S0, vmP1S0, vmP2S0, vmP0S1);
@@ -1678,6 +1683,9 @@ public class PreemptiveDatacenterTest {
         double subtime = 0;
         double cpuReq = 0.5;
 
+
+        // creating vms model P0S0, total of vms 6603
+        // with cpu total requisition of 3301.5
 
         for (int i = 0; i < numberOfVms; i++) {
 
@@ -1911,16 +1919,19 @@ public class PreemptiveDatacenterTest {
             datacenter.processEvent(event);
         }
 
+        System.out.println(datacenter.getVmsForScheduling().size());
+        System.out.println(datacenter.getVmsRunning().size());
+
         //testing capacity of host
         //TODO discuss about imprecision on results
-        //TODO results can be different because of backfilling and vms of priority 1 and 2 can not be preempted reallocated at same time
+        //TODO results can be different because of backfilling and vms with priority 1 and 2 can not be preempted reallocated at same time
         Assert.assertEquals(0.55, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(0.55, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(0.55, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(0.55, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
         //testing size of lists
-        //TODO results can be different because of backfilling and vms of priority 1 and 2 can not be preempted reallocated at same time
+        //TODO results can be different because of backfilling and vms with priority 1 and 2 can not be preempted reallocated at same time
         Assert.assertEquals(14307, datacenter.getVmsForScheduling().size()); //14305
         Assert.assertEquals(12105, datacenter.getVmsRunning().size()); //12107
 
@@ -1929,10 +1940,10 @@ public class PreemptiveDatacenterTest {
     }
 
     @SuppressWarnings("unchecked")
-	private void executingSimularionRuntime0(double ACCEPTABLE_DIFFERENCE, double hostCpuCapacity, int numberOfVms, List<Vm> vmP0S0, List<Vm> vmP1S0, List<Vm> vmP2S0) {
+	private void executingSimulationRuntime0(double ACCEPTABLE_DIFFERENCE, double hostCpuCapacity, int numberOfVms, List<Vm> vmP0S0, List<Vm> vmP1S0, List<Vm> vmP2S0) {
         // start time on 0 and mock the hostSelector to return desired host
         Mockito.when(timeUtil.clock()).thenReturn(0d);
-        Mockito.when(hostSelector.select(Mockito.any(SortedSet.class), Mockito.any(Vm.class))).thenReturn(host);
+        //Mockito.when(hostSelector.select(Mockito.any(SortedSet.class), Mockito.any(Vm.class))).thenReturn(host);
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
 
         //allocate 6603 vms os priority 0, submit time 0, and Cpu requisition of 0.5
@@ -1941,6 +1952,7 @@ public class PreemptiveDatacenterTest {
             Mockito.when(event.getData()).thenReturn(vmP0S0.get(i));
             datacenter.processEvent(event);
         }
+
 
         //testing capacity of host
         Assert.assertEquals(hostCpuCapacity - 3301.5, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);

@@ -13,11 +13,21 @@ public class PriorityAndTTVBasedPreemptableVmComparator implements
 	private SimulationTimeUtil simulationTimeUtil;
 	
 	public PriorityAndTTVBasedPreemptableVmComparator(Map<Integer, Double> sloTargets, SimulationTimeUtil simulationTimeUtil) {
-		// TODO check input args
+		checkInput(sloTargets, simulationTimeUtil);
+
 		this.sloTargets = sloTargets;
 		this.simulationTimeUtil = simulationTimeUtil;
 	}
-	
+
+	private void checkInput(Map<Integer, Double> sloTargets, SimulationTimeUtil simulationTimeUtil) {
+		if (sloTargets == null || sloTargets.isEmpty()){
+			throw new IllegalArgumentException("sloTarget map can not be null or empty");
+
+		} else if (simulationTimeUtil == null){
+			throw new IllegalArgumentException("simulationTimeUtil must not be null");
+		}
+	}
+
 	@Override
 	public int compare(PreemptableVm vm1, PreemptableVm vm2) {
 		if (vm1.equals(vm2)) {

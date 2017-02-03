@@ -36,13 +36,28 @@ public class PriorityAndTTVBasedPreemptableVmComparatorTest {
         sloTargets.put(2, 0.5);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testNullSLOTargetMap(){
+        PriorityAndTTVBasedPreemptableVmComparator comparator = new PriorityAndTTVBasedPreemptableVmComparator(null, Mockito.mock(SimulationTimeUtil.class));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testNullSimulationTimeUtil(){
+        PriorityAndTTVBasedPreemptableVmComparator comparator = new PriorityAndTTVBasedPreemptableVmComparator(sloTargets, null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEmptySLOTargetMap(){
+        PriorityAndTTVBasedPreemptableVmComparator comparator = new PriorityAndTTVBasedPreemptableVmComparator(new HashMap<Integer, Double>(), Mockito.mock(SimulationTimeUtil.class));
+    }
+
     @Test
     public void testComparatorForDifferentPriorities(){
         SimulationTimeUtil simulationTimeUtil = Mockito.mock(SimulationTimeUtil.class);
         Mockito.when(simulationTimeUtil.clock()).thenReturn(5d);
 
 		PriorityAndTTVBasedPreemptableVmComparator comparator = new PriorityAndTTVBasedPreemptableVmComparator(
-				new HashMap<Integer, Double>(), simulationTimeUtil);
+				sloTargets, simulationTimeUtil);
 
         vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime);
         vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 1, runtime);
