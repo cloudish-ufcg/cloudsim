@@ -1,11 +1,12 @@
 package org.cloudbus.cloudsim.preemption;
 
-public class GreedNoRejectionAdmissionController implements AdmissionController {
+import java.util.Map;
+
+public class NoRejectionAdmissionController implements AdmissionController {
 
 	@Override
-	public void calculateQuota() {
+	public void calculateQuota(Map<Integer, Double> admittedRequests) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override

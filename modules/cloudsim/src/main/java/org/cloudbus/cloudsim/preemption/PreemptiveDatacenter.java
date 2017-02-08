@@ -96,7 +96,7 @@ public class PreemptiveDatacenter extends Datacenter {
 			PreemptableVmAllocationPolicy vmAllocationPolicy,
 			List<Storage> storageList,
 			double schedulingInterval, Properties properties) throws Exception {
-		this(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval, properties, new GreedNoRejectionAdmissionController());
+		this(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval, properties, new NoRejectionAdmissionController());
 	}
 	
 	public PreemptiveDatacenter(
@@ -455,7 +455,7 @@ public class PreemptiveDatacenter extends Datacenter {
 						resourcesWaitingP0, vmsForSchedulingP1,
 						resourcesWaitingP1, vmsForSchedulingP2,
 						resourcesWaitingP2));
-		
+
 		// creating next event if the are more vms to be concluded
 		if ((!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) && !endOfSimulation) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
