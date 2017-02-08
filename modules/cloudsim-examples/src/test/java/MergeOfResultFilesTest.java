@@ -255,9 +255,9 @@ public class MergeOfResultFilesTest {
                         .prepareStatement(INSERT_CLOUDLET_SQL);
                 insertMemberStatement.setDouble(1, datacenterInfo.getTime());
                 insertMemberStatement.setInt(2, datacenterInfo.getVmsRunning());
-                insertMemberStatement.setInt(3, datacenterInfo.getUsageByPriority0());
-                insertMemberStatement.setInt(4, datacenterInfo.getUsageByPriority1());
-                insertMemberStatement.setInt(5, datacenterInfo.getUsageByPriority2());
+                insertMemberStatement.setInt(3, datacenterInfo.getVmsRunningP0());
+                insertMemberStatement.setInt(4, datacenterInfo.getVmsRunningP1());
+                insertMemberStatement.setInt(5, datacenterInfo.getVmsRunningP2());
                 insertMemberStatement.setInt(6, datacenterInfo.getVmsForScheduling());
                 insertMemberStatement.setInt(7, datacenterInfo.getVmsForSchedulingP0());
                 insertMemberStatement.setInt(8, datacenterInfo.getVmsForSchedulingP1());

@@ -378,16 +378,22 @@ public class PreemptiveDatacenter extends Datacenter {
 		int vmsRunningP0 = 0;
 		int vmsRunningP1 = 0;
 		int vmsRunningP2 = 0;
+		double resourcesRunningP0 = 0;
+		double resourcesRunningP1 = 0;
+		double resourcesRunningP2 = 0;
 		int vmsRunning = getVmsRunning().size();
 		int vmsForScheduling = getVmsForScheduling().size();
 		
 		for (PreemptableVm vm : getVmsRunning()) {
 			if (vm.getPriority() == 0) {
 				vmsRunningP0++;
+				resourcesRunningP0 += vm.getMips();
 			} else if (vm.getPriority() == 1) {
 				vmsRunningP1++;
+				resourcesRunningP1 += vm.getMips();
 			} else if (vm.getPriority() == 2) {
 				vmsRunningP2++;
+				resourcesRunningP2 += vm.getMips();
 			} else {
 				System.out.println("#VMs with invalid priority "
 						+ vm.getPriority());
@@ -397,14 +403,20 @@ public class PreemptiveDatacenter extends Datacenter {
 		int vmsForSchedulingP0 = 0;
 		int vmsForSchedulingP1 = 0;
 		int vmsForSchedulingP2 = 0;
+		double resourcesWaitingP0 = 0;
+		double resourcesWaitingP1 = 0;
+		double resourcesWaitingP2 = 0;
 		
 		for (PreemptableVm vm : getVmsForScheduling()) {
 			if (vm.getPriority() == 0) {
 				vmsForSchedulingP0++;
+				resourcesWaitingP0 += vm.getMips();
 			} else if (vm.getPriority() == 1) {
 				vmsForSchedulingP1++;
+				resourcesWaitingP1 += vm.getMips();
 			} else if (vm.getPriority() == 2) {
 				vmsForSchedulingP2++;
+				resourcesWaitingP2 += vm.getMips();
 			} else {
 				System.out.println("#VMs with invalid priority "
 						+ vm.getPriority());
@@ -413,9 +425,12 @@ public class PreemptiveDatacenter extends Datacenter {
 
 		getDatacenterInfo().add(
 				new DatacenterInfo(simulationTimeUtil.clock(), vmsRunning,
-						vmsRunningP0, vmsRunningP1, vmsRunningP2,
+						vmsRunningP0, resourcesRunningP0, vmsRunningP1,
+						resourcesRunningP1, vmsRunningP2, resourcesRunningP2,
 						vmsForScheduling, vmsForSchedulingP0,
-						vmsForSchedulingP1, vmsForSchedulingP2));
+						resourcesWaitingP0, vmsForSchedulingP1,
+						resourcesWaitingP1, vmsForSchedulingP2,
+						resourcesWaitingP2));
 		
 		// creating next event if the are more vms to be concluded
 		if ((!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) && !endOfSimulation) {
