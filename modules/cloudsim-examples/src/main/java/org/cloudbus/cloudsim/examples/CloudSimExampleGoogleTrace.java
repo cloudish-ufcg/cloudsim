@@ -37,6 +37,7 @@ import org.cloudbus.cloudsim.preemption.UsageEntry;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitPriorityBasedVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
@@ -234,7 +235,7 @@ public class CloudSimExampleGoogleTrace {
         		preemptionPolicy = (PreemptionPolicy) createInstance("preemption_policy_class", properties);
         	} else {
         		Log.printLine("Creating a hosts with defatult preemption policy FCFS based .");
-        		preemptionPolicy = new FCFSBasedPreemptionPolicy(properties);
+        		preemptionPolicy = new VmAvailabilityBasedPreemptionPolicy(properties);
         	}
         	
             List<Pe> peList1 = new ArrayList<Pe>();

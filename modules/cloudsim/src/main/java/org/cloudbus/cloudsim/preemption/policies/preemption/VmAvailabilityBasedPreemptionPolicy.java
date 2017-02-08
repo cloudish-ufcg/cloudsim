@@ -16,8 +16,8 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 
     public static final String SLO_TARGET_PREFIX_PROP = "slo_availability_target_priority_";
 
-    private Map<Integer, Double> priorityToSLOTarget = new HashMap<Integer, Double>();
-    private Map<Integer, Map<Integer, PreemptableVm>> priorityToRunningVms = new HashMap<Integer, Map<Integer, PreemptableVm>>();
+    protected Map<Integer, Double> priorityToSLOTarget = new HashMap<Integer, Double>();
+    protected Map<Integer, Map<Integer, PreemptableVm>> priorityToRunningVms = new HashMap<Integer, Map<Integer, PreemptableVm>>();
 
     public VmAvailabilityBasedPreemptionPolicy(Properties properties) {
         this(properties, new SimulationTimeUtil());
