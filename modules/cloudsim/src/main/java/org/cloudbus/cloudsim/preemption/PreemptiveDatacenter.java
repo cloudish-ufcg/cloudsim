@@ -87,6 +87,8 @@ public class PreemptiveDatacenter extends Datacenter {
 	private boolean makeCheckpoint = false;
 	private Properties properties;
 	private static double lastProcessTime;
+	private AdmissionController admController;
+	private Map<Integer, Double> admittedRequests;
 	
 	public PreemptiveDatacenter(
 			String name,
@@ -94,12 +96,34 @@ public class PreemptiveDatacenter extends Datacenter {
 			PreemptableVmAllocationPolicy vmAllocationPolicy,
 			List<Storage> storageList,
 			double schedulingInterval, Properties properties) throws Exception {
+		this(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval, properties, new GreedNoRejectionAdmissionController());
+	}
+	
+	public PreemptiveDatacenter(
+			String name,
+			DatacenterCharacteristics characteristics,
+			PreemptableVmAllocationPolicy vmAllocationPolicy,
+			List<Storage> storageList,
+			double schedulingInterval, Properties properties, AdmissionController admController) throws Exception {
 		super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
 		
 		this.hostUsageDataStore = new HostUsageDataStore(properties);
 		this.datacenterDataStore = new DatacenterUsageDataStore(properties);
 		this.properties = properties;
-		
+		this.admController = admController;
+		this.admittedRequests = new HashMap<Integer, Double>();
+	
+		if (properties.getProperty("number_of_priorities") != null) {
+			int numberOfPriorities = Integer.parseInt(properties.getProperty("number_of_priorities"));
+			if (numberOfPriorities <= 0) {
+				throw new IllegalArgumentException("The number of priorities must be a positive integer.");
+			}
+			
+			for (int priority = 0; priority < numberOfPriorities; priority++) {
+				admittedRequests.put(priority, 0d);
+			}
+		}
+
         double hostUsageStoringIntervalSize = properties
                 .getProperty("utilization_storing_interval_size") == null ? DEFAULT_UTILIZATION_STORING_INTERVAL_SIZE
                 : Integer.parseInt(properties.getProperty("utilization_storing_interval_size"));
@@ -505,7 +529,13 @@ public class PreemptiveDatacenter extends Datacenter {
 	protected void processVmCreate(SimEvent ev, boolean ack) {
 		PreemptableVm vm = (PreemptableVm) ev.getData();
 
-		allocateHostForVm(ack, vm, null, false);
+		if (admController.accept(vm)) {
+			getAdmittedRequests().put(vm.getPriority(), admittedRequests.get(vm.getPriority()) + vm.getMips());
+			allocateHostForVm(ack, vm, null, false);
+		} else {
+			Log.printConcatLine(simulationTimeUtil.clock(),
+					": VM #", vm.getId(), " was not accepted by Admission Controler.");
+		}		
 	}
 
 	protected boolean allocateHostForVm(boolean ack, PreemptableVm vm, PreemptiveHost host, boolean isBackfilling) {
@@ -654,7 +684,7 @@ public class PreemptiveDatacenter extends Datacenter {
 			if (getVmsRunning().remove(vm)) {		
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 						vm.getId(), " will be terminated.");
-				
+								
 				PreemptiveHost host = (PreemptiveHost) vm.getHost();
 				getVmAllocationPolicy().deallocateHostForVm(vm);
 			
@@ -662,8 +692,9 @@ public class PreemptiveDatacenter extends Datacenter {
 					sendNow(vm.getUserId(), CloudSimTags.VM_DESTROY_ACK, vm);
 				}
 
-				//updating host utilization
+				//updating host utilization				
 				host.updateUsage(simulationTimeUtil.clock());
+				getAdmittedRequests().put(vm.getPriority(), admittedRequests.get(vm.getPriority()) - vm.getMips());
 							
 				if (!getVmsForScheduling().isEmpty() && !nextEventIsDestroy()) {
 					allocatingWaitingQueue();
@@ -813,4 +844,10 @@ public class PreemptiveDatacenter extends Datacenter {
 			double allocateWaitingQueueIntervalSize) {
 		this.allocateWaitingQueueIntervalSize = allocateWaitingQueueIntervalSize;
 	}
+
+	public Map<Integer, Double> getAdmittedRequests() {
+		return admittedRequests;
+	}
+	
+	
 }
