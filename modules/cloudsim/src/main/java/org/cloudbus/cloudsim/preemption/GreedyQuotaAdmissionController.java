@@ -44,11 +44,33 @@ public class GreedyQuotaAdmissionController implements AdmissionController {
         double quota = getQuotaByPriority().get(vm.getPriority());
 
         if (vm.getMips() <= quota) {
+            reduceQuota(vm);
             return true;
 
         } else {
             return false;
         }
+    }
+
+    private void reduceQuota(PreemptableVm vm) {
+
+        int vmPriority = vm.getPriority();
+        double mipsRequested = vm.getMips();
+        double actualQuota = getQuotaByPriority().get(vmPriority);
+        double newQuota = actualQuota - mipsRequested;
+
+        getQuotaByPriority().put(vmPriority, newQuota);
+    }
+
+    @Override
+    public void release(PreemptableVm vm) {
+
+        int vmPriority = vm.getPriority();
+        double mipsToRelease = vm.getMips();
+        double actualQuota = getQuotaByPriority().get(vmPriority);
+        double newQuota = mipsToRelease + actualQuota;
+
+        getQuotaByPriority().put(vmPriority, newQuota);
     }
 
     public Map<Integer, Double> getQuotaByPriority() {

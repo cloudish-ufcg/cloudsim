@@ -8,4 +8,6 @@ public interface AdmissionController {
 	
 	public boolean accept(PreemptableVm vm);
 
+	public void release(PreemptableVm vm);
+
 }

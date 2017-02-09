@@ -6,12 +6,17 @@ public class NoRejectionAdmissionController implements AdmissionController {
 
 	@Override
 	public void calculateQuota(Map<Integer, Double> admittedRequests) {
-		// TODO Auto-generated method stub
+
 	}
 
 	@Override
 	public boolean accept(PreemptableVm vm) {
 		return true;
+	}
+
+	@Override
+	public void release(PreemptableVm vm) {
+
 	}
 
 }

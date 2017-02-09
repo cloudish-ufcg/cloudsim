@@ -700,7 +700,8 @@ public class PreemptiveDatacenter extends Datacenter {
 				//updating host utilization				
 				host.updateUsage(simulationTimeUtil.clock());
 				getAdmittedRequests().put(vm.getPriority(), admittedRequests.get(vm.getPriority()) - vm.getMips());
-							
+				getAdmController().release(vm);
+
 				if (!getVmsForScheduling().isEmpty() && !nextEventIsDestroy()) {
 					allocatingWaitingQueue();
 				}
@@ -853,6 +854,9 @@ public class PreemptiveDatacenter extends Datacenter {
 	public Map<Integer, Double> getAdmittedRequests() {
 		return admittedRequests;
 	}
-	
-	
+
+	public AdmissionController getAdmController() {
+		return admController;
+	}
+
 }
