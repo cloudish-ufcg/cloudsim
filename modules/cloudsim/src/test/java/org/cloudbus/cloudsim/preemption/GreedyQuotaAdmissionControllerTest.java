@@ -1,6 +1,8 @@
 package org.cloudbus.cloudsim.preemption;
 
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,19 +14,155 @@ import static org.junit.Assert.*;
  */
 public class GreedyQuotaAdmissionControllerTest {
 
-    public GreedyQuotaAdmissionController admController;
-    public Map<Integer, Double> sloTargets;
+    private GreedyQuotaAdmissionController admController;
+    private Map<Integer, Double> sloTargets;
+    private static final double ACCEPTABLE_DIFFERENCE = 0.000001;
+
+    private static final int PROD = 0;
+    private static final int BATCH = 1;
+    private static final int  FREE = 2;
 
 
     @Before
     public void setUp() {
 
         sloTargets = new HashMap<Integer, Double>();
-        sloTargets.put(new Integer(0), new Double(1));
-        sloTargets.put(new Integer(1), new Double(0.9));
-        sloTargets.put(new Integer(2), new Double(0.5));
+        sloTargets.put(new Integer(PROD), new Double(1));
+        sloTargets.put(new Integer(BATCH), new Double(0.9));
+        sloTargets.put(new Integer(FREE), new Double(0.5));
 
-        admController = new GreedyQuotaAdmissionController(6603.5, sloTargets, 1);
+        admController = new GreedyQuotaAdmissionController(100, sloTargets, 1);
+    }
+
+    @Test
+    public void testCalculateQuota01(){
+
+        Map<Integer, Double> admitedRequests = new HashMap<Integer, Double>();
+
+        admitedRequests.put(PROD, 0d);
+        admitedRequests.put(BATCH, 0d);
+        admitedRequests.put(FREE, 0d);
+
+        admController.calculateQuota(admitedRequests);
+        Assert.assertEquals(100, admController.getQuotaByPriority().get(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(90, admController.getQuotaByPriority().get(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(50, admController.getQuotaByPriority().get(2), ACCEPTABLE_DIFFERENCE);
+
+    }
+
+    @Test
+    public void testCalculateQuota02(){
+
+        Map<Integer, Double> admitedRequests = new HashMap<Integer, Double>();
+
+        admitedRequests.put(PROD, 10.0);
+        admitedRequests.put(BATCH, 10.0);
+        admitedRequests.put(FREE, 10.0);
+
+        admController.calculateQuota(admitedRequests);
+
+        Assert.assertEquals(90, admController.getQuotaByPriority().get(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(72, admController.getQuotaByPriority().get(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(35, admController.getQuotaByPriority().get(2), ACCEPTABLE_DIFFERENCE);
+    }
+
+    @Test
+    public void testCalculateQuota03(){
+
+        Map<Integer, Double> admitedRequests = new HashMap<Integer, Double>();
+
+        admitedRequests.put(PROD, 0d);
+        admitedRequests.put(BATCH, 20.0);
+        admitedRequests.put(FREE, 10.0);
+
+        admController.calculateQuota(admitedRequests);
+
+        Assert.assertEquals(100, admController.getQuotaByPriority().get(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(72, admController.getQuotaByPriority().get(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(35, admController.getQuotaByPriority().get(2), ACCEPTABLE_DIFFERENCE);
+
+        admitedRequests.put(PROD, 0d);
+        admitedRequests.put(BATCH, 0d);
+        admitedRequests.put(FREE, 30.0);
+
+        admController.calculateQuota(admitedRequests);
+
+        Assert.assertEquals(100, admController.getQuotaByPriority().get(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(90, admController.getQuotaByPriority().get(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(35, admController.getQuotaByPriority().get(2), ACCEPTABLE_DIFFERENCE);
+
+        admitedRequests.put(PROD, 30.0);
+        admitedRequests.put(BATCH, 0d);
+        admitedRequests.put(FREE, 0d);
+
+        admController.calculateQuota(admitedRequests);
+
+        Assert.assertEquals(70, admController.getQuotaByPriority().get(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(63, admController.getQuotaByPriority().get(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(35, admController.getQuotaByPriority().get(2), ACCEPTABLE_DIFFERENCE);
+
+        admitedRequests.put(PROD, 20.0);
+        admitedRequests.put(BATCH, 0d);
+        admitedRequests.put(FREE, 10.0);
+
+        admController.calculateQuota(admitedRequests);
+
+        Assert.assertEquals(80, admController.getQuotaByPriority().get(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(72, admController.getQuotaByPriority().get(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(35, admController.getQuotaByPriority().get(2), ACCEPTABLE_DIFFERENCE);
+    }
+
+    @Test
+    public void calculateQuota04(){
+
+        Map<Integer, Double> admitedRequests = new HashMap<Integer, Double>();
+
+        admitedRequests.put(PROD, 0.5);
+        admitedRequests.put(BATCH, 20.0);
+        admitedRequests.put(FREE, 10.0);
+
+        admController.calculateQuota(admitedRequests);
+
+        Assert.assertEquals(99.5, admController.getQuotaByPriority().get(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(71.55, admController.getQuotaByPriority().get(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(34.75, admController.getQuotaByPriority().get(2), ACCEPTABLE_DIFFERENCE);
+
+        admitedRequests.put(PROD, 0.0625);
+        admitedRequests.put(BATCH, 0.03125);
+        admitedRequests.put(FREE, 0.01250);
+
+        admController.calculateQuota(admitedRequests);
+
+        Assert.assertEquals(99.9375, admController.getQuotaByPriority().get(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(89.915625, admController.getQuotaByPriority().get(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(49.946875, admController.getQuotaByPriority().get(2), ACCEPTABLE_DIFFERENCE);
+
+        admitedRequests.put(PROD, 0.625);
+        admitedRequests.put(BATCH, 0.03125);
+        admitedRequests.put(FREE, 0.01250);
+
+        admController.calculateQuota(admitedRequests);
+
+        Assert.assertEquals(99.375, admController.getQuotaByPriority().get(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(89.409375, admController.getQuotaByPriority().get(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(49.665625, admController.getQuotaByPriority().get(2), ACCEPTABLE_DIFFERENCE);
+    }
+
+
+    @Test
+    public void testAccept(){
+
+        int id = 0;
+        int userId = 0;
+        double cpuReq = 99;
+        double memReq = 0;
+        double submitTime = 0;
+        int priority = 0;
+        double runtime = 10;
+
+        PreemptableVm vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Assert.assertTrue(admController.accept(vm));
+
     }
 
 }

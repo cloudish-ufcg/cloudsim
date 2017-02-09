@@ -10,14 +10,14 @@ public class GreedyQuotaAdmissionController implements AdmissionController {
 
     private double datacenterCapacity;
     private Map<Integer, Double> sloTargets;
-    private Map<Integer, Double> quota;
-    private double confidanceLevel;
+    private Map<Integer, Double> quotaByPriority;
+    private double confidanceFactor;
 
     public GreedyQuotaAdmissionController(double datacenterCapacity, Map<Integer, Double> sloTargets, double confidenceLevel){
         setDatacenterCapacity(datacenterCapacity);
         setSloTargets(sloTargets);
-        setQuota(sloTargets);
-        setConfidanceLevel(confidenceLevel);
+        setConfidanceFactor(confidenceLevel);
+        setStartQuotaByPriority(sloTargets);
     }
 
     @Override
@@ -27,21 +27,21 @@ public class GreedyQuotaAdmissionController implements AdmissionController {
 
             double allocatedResources = 0d;
 
-            for (int i = 0; i < priority; i++) {
-                allocatedResources += admittedRequests.get(priority);
+            for (int i = 0; i <= priority; i++) {
+                allocatedResources += admittedRequests.get(i);
             }
 
-            double capacity = getDatacenterCapacity() - calculateCapacity(allocatedResources);
-            double actualQuota = (capacity / getSloTargets().get(priority)) * getConfidanceLevel();
+            double capacity = calculateCapacity(allocatedResources);
+            double actualQuota = (capacity * getSloTargets().get(priority)) * getConfidanceFactor();
 
-            getQuota().put(priority, new Double(actualQuota));
+            getQuotaByPriority().put(priority, new Double(actualQuota));
         }
     }
 
     @Override
     public boolean accept(PreemptableVm vm) {
 
-        double quota = getQuota().get(vm.getPriority());
+        double quota = getQuotaByPriority().get(vm.getPriority());
 
         if (vm.getMips() <= quota) {
             return true;
@@ -51,16 +51,16 @@ public class GreedyQuotaAdmissionController implements AdmissionController {
         }
     }
 
-    public Map<Integer, Double> getQuota() {
-        return quota;
+    public Map<Integer, Double> getQuotaByPriority() {
+        return quotaByPriority;
     }
 
-    public void setQuota(Map<Integer, Double> sloTargets) {
+    public void setQuotaByPriority(Map<Integer, Double> sloTargets) {
 
-        this.quota = new HashMap<Integer, Double>();
+        this.quotaByPriority = new HashMap<Integer, Double>();
 
         for (Integer priority : sloTargets.keySet()) {
-            quota.put(priority, 0d);
+            quotaByPriority.put(priority, 0d);
         }
     }
 
@@ -86,11 +86,24 @@ public class GreedyQuotaAdmissionController implements AdmissionController {
         this.sloTargets = sloTargets;
     }
 
-    public double getConfidanceLevel() {
-        return confidanceLevel;
+    public double getConfidanceFactor() {
+        return confidanceFactor;
     }
 
-    public void setConfidanceLevel(double confidanceLevel) {
-        this.confidanceLevel = confidanceLevel;
+    public void setConfidanceFactor(double confidanceFactor) {
+        this.confidanceFactor = confidanceFactor;
+    }
+
+    public void setStartQuotaByPriority(Map<Integer,Double> sloTargets) {
+
+        Map<Integer, Double> admittedRequests = new HashMap<Integer, Double>();
+        setQuotaByPriority(new HashMap<Integer, Double>());
+
+        for (Integer priority : sloTargets.keySet()) {
+            admittedRequests.put(priority, 0d);
+            getQuotaByPriority().put(priority, 0d);
+        }
+
+        calculateQuota(admittedRequests);
     }
 }
