@@ -103,6 +103,7 @@ public class PreemptiveDatacenterTest {
         Mockito.when(properties.getProperty("collect_datacenter_summary_info")).thenReturn("yes");
         Mockito.when(properties.getProperty("datacenter_storing_interval_size")).thenReturn("5");
         Mockito.when(properties.getProperty("datacenter_collect_info_interval_size")).thenReturn("5");
+        Mockito.when(properties.getProperty("number_of_priorities")).thenReturn("3");
 
         datacenter = new PreemptiveDatacenter("datacenter",
                 characteristics, preemptableVmAllocationPolicy,

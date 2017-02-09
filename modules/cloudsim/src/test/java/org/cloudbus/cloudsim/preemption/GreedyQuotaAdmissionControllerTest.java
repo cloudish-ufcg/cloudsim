@@ -150,7 +150,7 @@ public class GreedyQuotaAdmissionControllerTest {
 
 
     @Test
-    public void testAccept(){
+    public void testAccept01(){
 
         int id = 0;
         int userId = 0;
@@ -163,6 +163,150 @@ public class GreedyQuotaAdmissionControllerTest {
         PreemptableVm vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
         Assert.assertTrue(admController.accept(vm));
 
+        priority = 1;
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm));
+
+        priority = 2;
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm));
     }
 
+
+    @Test
+    public void testAccept02(){
+
+        int userId = 0;
+        double memReq = 0;
+        double submitTime = 0;
+        double runtime = 10;
+
+        int priority = 0;
+        PreemptableVm vm = new PreemptableVm(0, userId, 100, memReq, submitTime, priority, runtime);
+        PreemptableVm vm2 = new PreemptableVm(1, userId, 70, memReq, submitTime, priority, runtime);
+        PreemptableVm vm3 = new PreemptableVm(2, userId, 30, memReq, submitTime, priority, runtime);
+        Assert.assertTrue(admController.accept(vm));
+        Assert.assertTrue(admController.accept(vm2));
+        Assert.assertTrue(admController.accept(vm3));
+
+        priority = 1;
+        vm = new PreemptableVm(0, userId, 100, memReq, submitTime, priority, runtime);
+        vm2 = new PreemptableVm(1, userId, 70, memReq, submitTime, priority, runtime);
+        vm3 = new PreemptableVm(2, userId, 30, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm));
+        Assert.assertTrue(admController.accept(vm2));
+        Assert.assertTrue(admController.accept(vm3));
+
+        priority = 2;
+        vm = new PreemptableVm(0, userId, 100, memReq, submitTime, priority, runtime);
+        vm2 = new PreemptableVm(1, userId, 70, memReq, submitTime, priority, runtime);
+        vm3 = new PreemptableVm(2, userId, 30, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm));
+        Assert.assertFalse(admController.accept(vm2));
+        Assert.assertTrue(admController.accept(vm3));
+
+        Map<Integer, Double> admitedRequests = new HashMap<Integer, Double>();
+
+        admitedRequests.put(PROD, 0.5);
+        admitedRequests.put(BATCH, 20.0);
+        admitedRequests.put(FREE, 10.0);
+
+        admController.calculateQuota(admitedRequests);
+
+        Assert.assertEquals(99.5, admController.getQuotaByPriority().get(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(71.55, admController.getQuotaByPriority().get(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(34.75, admController.getQuotaByPriority().get(2), ACCEPTABLE_DIFFERENCE);
+
+        priority = 0;
+        vm = new PreemptableVm(0, userId, 100, memReq, submitTime, priority, runtime);
+        vm2 = new PreemptableVm(1, userId, 70, memReq, submitTime, priority, runtime);
+        vm3 = new PreemptableVm(2, userId, 30, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm));
+        Assert.assertTrue(admController.accept(vm2));
+        Assert.assertTrue(admController.accept(vm3));
+
+        priority = 1;
+        vm = new PreemptableVm(0, userId, 100, memReq, submitTime, priority, runtime);
+        vm2 = new PreemptableVm(1, userId, 70, memReq, submitTime, priority, runtime);
+        vm3 = new PreemptableVm(2, userId, 30, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm));
+        Assert.assertTrue(admController.accept(vm2));
+        Assert.assertTrue(admController.accept(vm3));
+
+        priority = 2;
+        vm = new PreemptableVm(0, userId, 100, memReq, submitTime, priority, runtime);
+        vm2 = new PreemptableVm(1, userId, 70, memReq, submitTime, priority, runtime);
+        vm3 = new PreemptableVm(2, userId, 30, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm));
+        Assert.assertFalse(admController.accept(vm2));
+        Assert.assertTrue(admController.accept(vm3));
+
+        admitedRequests.put(PROD, 0.0625);
+        admitedRequests.put(BATCH, 0.03125);
+        admitedRequests.put(FREE, 0.01250);
+
+        admController.calculateQuota(admitedRequests);
+
+        Assert.assertEquals(99.9375, admController.getQuotaByPriority().get(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(89.915625, admController.getQuotaByPriority().get(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(49.946875, admController.getQuotaByPriority().get(2), ACCEPTABLE_DIFFERENCE);
+
+        priority = 0;
+        vm = new PreemptableVm(0, userId, 99.94, memReq, submitTime, priority, runtime);
+        vm2 = new PreemptableVm(1, userId, 89.92, memReq, submitTime, priority, runtime);
+        vm3 = new PreemptableVm(2, userId, 49.95, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm));
+        Assert.assertTrue(admController.accept(vm2));
+        Assert.assertTrue(admController.accept(vm3));
+
+        priority = 1;
+        vm = new PreemptableVm(0, userId, 99.94, memReq, submitTime, priority, runtime);
+        vm2 = new PreemptableVm(1, userId, 89.92, memReq, submitTime, priority, runtime);
+        vm3 = new PreemptableVm(2, userId, 49.95, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm));
+        Assert.assertFalse(admController.accept(vm2));
+        Assert.assertTrue(admController.accept(vm3));
+
+        priority = 2;
+        vm = new PreemptableVm(0, userId, 99.94, memReq, submitTime, priority, runtime);
+        vm2 = new PreemptableVm(1, userId, 89.92, memReq, submitTime, priority, runtime);
+        vm3 = new PreemptableVm(2, userId, 49.95, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm));
+        Assert.assertFalse(admController.accept(vm2));
+        Assert.assertFalse(admController.accept(vm3));
+
+        admitedRequests.put(PROD, 0.625);
+        admitedRequests.put(BATCH, 0.03125);
+        admitedRequests.put(FREE, 0.01250);
+
+        admController.calculateQuota(admitedRequests);
+
+        Assert.assertEquals(99.375, admController.getQuotaByPriority().get(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(89.409375, admController.getQuotaByPriority().get(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(49.665625, admController.getQuotaByPriority().get(2), ACCEPTABLE_DIFFERENCE);
+
+        priority = 0;
+        vm = new PreemptableVm(0, userId, 99.37, memReq, submitTime, priority, runtime);
+        vm2 = new PreemptableVm(1, userId, 89.409375, memReq, submitTime, priority, runtime);
+        vm3 = new PreemptableVm(2, userId, 49.665625, memReq, submitTime, priority, runtime);
+        Assert.assertTrue(admController.accept(vm));
+        Assert.assertTrue(admController.accept(vm2));
+        Assert.assertTrue(admController.accept(vm3));
+
+        priority = 1;
+        vm = new PreemptableVm(0, userId, 99.37, memReq, submitTime, priority, runtime);
+        vm2 = new PreemptableVm(1, userId, 89.409375, memReq, submitTime, priority, runtime);
+        vm3 = new PreemptableVm(2, userId, 49.665625, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm));
+        Assert.assertTrue(admController.accept(vm2));
+        Assert.assertTrue(admController.accept(vm3));
+
+        priority = 2;
+        vm = new PreemptableVm(0, userId, 99.37, memReq, submitTime, priority, runtime);
+        vm2 = new PreemptableVm(1, userId, 89.409375, memReq, submitTime, priority, runtime);
+        vm3 = new PreemptableVm(2, userId, 49.665625, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm));
+        Assert.assertFalse(admController.accept(vm2));
+        Assert.assertTrue(admController.accept(vm3));
+    }
 }

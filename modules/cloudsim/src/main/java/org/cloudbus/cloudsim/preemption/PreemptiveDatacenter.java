@@ -530,7 +530,12 @@ public class PreemptiveDatacenter extends Datacenter {
 		PreemptableVm vm = (PreemptableVm) ev.getData();
 
 		if (admController.accept(vm)) {
-			getAdmittedRequests().put(vm.getPriority(), admittedRequests.get(vm.getPriority()) + vm.getMips());
+
+			int priority = vm.getPriority();
+			double admittedRequest = admittedRequests.get(vm.getPriority());
+			double actualAdmittedRequest = admittedRequest + + vm.getMips();
+			getAdmittedRequests().put(priority, actualAdmittedRequest);
+
 			allocateHostForVm(ack, vm, null, false);
 		} else {
 			Log.printConcatLine(simulationTimeUtil.clock(),
