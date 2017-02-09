@@ -3,12 +3,7 @@ package org.cloudbus.cloudsim.preemption;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
-import java.util.SortedSet;
+import java.util.*;
 
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Host;
@@ -39,6 +34,9 @@ import org.mockito.Mockito;
 public class PreemptiveDatacenterTest {
 
     private static final double ACCEPTABLE_DIFFERENCE = 0.000001;
+    private static final int PROD = 0;
+    private static final int BATCH = 1;
+    private static final int FREE = 2;
 
     private PreemptiveDatacenter datacenter;
     private SimEvent event;
@@ -49,6 +47,7 @@ public class PreemptiveDatacenterTest {
     private String datacenterFile;
     private String datacenterUrl;
     private Properties properties;
+    private Map<Integer, Double> admittedResquests;
 
     @SuppressWarnings("unchecked")
     @Before
@@ -113,6 +112,21 @@ public class PreemptiveDatacenterTest {
 
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
         Assert.assertTrue(datacenter.getVmsRunning().isEmpty());
+
+        admittedResquests = new HashMap<Integer, Double>();
+        admittedResquests.put(PROD, 0d);
+        admittedResquests.put(BATCH, 0d);
+        admittedResquests.put(FREE, 0d);
+
+        validateAdmitedRequests();
+    }
+
+    private void validateAdmitedRequests() {
+        for (Integer priority : admittedResquests.keySet()) {
+            Assert.assertEquals(admittedResquests.get(priority),
+                                datacenter.getAdmittedRequests().get(priority),
+                                ACCEPTABLE_DIFFERENCE);
+        }
     }
 
     @After
@@ -140,6 +154,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), vm0.getMips() + admittedResquests.get(vm0.getPriority()));
+        validateAdmitedRequests();
     }
 
     @Test
@@ -162,6 +180,9 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), vm0.getMips() + admittedResquests.get(vm0.getPriority()));
+        validateAdmitedRequests();
 
         PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 1.0, 0, priority, runtime);
 
@@ -184,6 +205,9 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm1.getPriority(), vm1.getMips() + admittedResquests.get(vm1.getPriority()));
+        validateAdmitedRequests();
     }
 
     @Test
@@ -207,6 +231,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), vm0.getMips() + admittedResquests.get(vm0.getPriority()));
+        validateAdmitedRequests();
+
         PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 1.0, 0, priority, runtime);
 
         // allocating second vm
@@ -225,6 +253,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm1.getPriority(), vm1.getMips() + admittedResquests.get(vm1.getPriority()));
+        validateAdmitedRequests();
 
         PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 1.0, 0, priority, runtime);
 
@@ -254,6 +286,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm2.getPriority(), vm2.getMips() + admittedResquests.get(vm2.getPriority()));
+        validateAdmitedRequests();
     }
 
 
@@ -277,6 +313,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), vm0.getMips() + admittedResquests.get(vm0.getPriority()));
+        validateAdmitedRequests();
+
         //Destroy Vm0
         Mockito.when(timeUtil.clock()).thenReturn(runtime);
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
@@ -291,6 +331,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), admittedResquests.get(vm0.getPriority()) - vm0.getMips());
+        validateAdmitedRequests();
     }
 
     @Test
@@ -314,6 +358,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), admittedResquests.get(vm0.getPriority()) + vm0.getMips());
+        validateAdmitedRequests();
+
         PreemptableVm vm1 = new PreemptableVm(1, 1, 5.1, 1.0, 0, priority, runtime + 0.1);
 
         // allocating second vm
@@ -335,6 +383,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), admittedResquests.get(vm1.getPriority()) + vm1.getMips());
+        validateAdmitedRequests();
+
         //destroying vm0
         Mockito.when(timeUtil.clock()).thenReturn(runtime);
 
@@ -354,6 +406,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), admittedResquests.get(vm0.getPriority()) - vm0.getMips());
+        validateAdmitedRequests();
     }
 
     @Test
@@ -378,6 +434,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), admittedResquests.get(vm0.getPriority()) + vm0.getMips());
+        validateAdmitedRequests();
+
         PreemptableVm vm1 = new PreemptableVm(1, 1, 4.9, 1.0, 0, priority, runtime);
 
         // allocating second vm
@@ -398,6 +458,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm1.getPriority(), admittedResquests.get(vm1.getPriority()) + vm1.getMips());
+        validateAdmitedRequests();
 
         PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 1.0, 0, priority, runtime);
 
@@ -427,6 +491,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm2.getPriority(), admittedResquests.get(vm2.getPriority()) + vm2.getMips());
+        validateAdmitedRequests();
 
         //destroying vm0
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
@@ -449,6 +517,9 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), admittedResquests.get(vm0.getPriority()) - vm0.getMips());
+        validateAdmitedRequests();
     }
 
     @Test
@@ -471,6 +542,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), admittedResquests.get(vm0.getPriority()) + vm0.getMips());
+        validateAdmitedRequests();
+
         PreemptableVm vm1 = new PreemptableVm(1, 1, 4.9, 1.0, 0, priority, runtime);
 
         // allocating second vm
@@ -492,6 +567,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm1.getPriority(), admittedResquests.get(vm1.getPriority()) + vm1.getMips());
+        validateAdmitedRequests();
+
         PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 1.0, 0, priority, runtime);
 
         // checking and simulating host selector
@@ -509,6 +588,11 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(2, datacenter.getVmsRunning().size());
         Assert.assertEquals(vm0, datacenter.getVmsRunning().first());
         Assert.assertEquals(vm1, datacenter.getVmsRunning().last());
+
+        // checking admited request values
+        admittedResquests.put(vm2.getPriority(), admittedResquests.get(vm2.getPriority()) + vm2.getMips());
+        validateAdmitedRequests();
+
 
         PreemptableVm vm3 = new PreemptableVm(3, 1, 0.1, 1.0, 0, priority, runtime);
 
@@ -543,6 +627,11 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm3.getPriority(), admittedResquests.get(vm3.getPriority()) + vm3.getMips());
+        validateAdmitedRequests();
+
+
         //destroying vm0
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
         Mockito.when(hostSelector.select(preemptableVmAllocationPolicy.getPriorityToSortedHost().get(priority), vm2)).thenReturn(host);
@@ -572,6 +661,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), admittedResquests.get(vm0.getPriority()) - vm0.getMips());
+        validateAdmitedRequests();
     }
 
     @Test
@@ -638,6 +731,11 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm3.getPriority(), admittedResquests.get(vm3.getPriority()) + vm3.getMips());
+        validateAdmitedRequests();
+
+
         // allocating vm2 with priority 2
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
         Mockito.when(event.getData()).thenReturn(vm2);
@@ -665,6 +763,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm2.getPriority(), admittedResquests.get(vm2.getPriority()) + vm2.getMips());
+        validateAdmitedRequests();
+
         // allocating vm1 with priority 1 to preempt vm2
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
         Mockito.when(event.getData()).thenReturn(vm1);
@@ -691,6 +793,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm1.getPriority(), admittedResquests.get(vm1.getPriority()) + vm1.getMips());
+        validateAdmitedRequests();
 
         // allocating vm0 with priority 0 to preempt vm1
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -722,6 +828,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), admittedResquests.get(vm0.getPriority()) + vm0.getMips());
+        validateAdmitedRequests();
+
         // finishing vm0 to reallocate vm1
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.5);
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
@@ -750,6 +860,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm0.getPriority(), admittedResquests.get(vm0.getPriority()) - vm0.getMips());
+        validateAdmitedRequests();
+
         // finishing vm1 to reallocate vm2
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
@@ -776,6 +890,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm1.getPriority(), admittedResquests.get(vm1.getPriority()) - vm1.getMips());
+        validateAdmitedRequests();
 
         // finishing vm2
         Mockito.when(timeUtil.clock()).thenReturn(runtime + 0.1);
@@ -804,6 +922,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm2.getPriority(), admittedResquests.get(vm2.getPriority()) - vm2.getMips());
+        validateAdmitedRequests();
+
         // finishing vm3 to return to initial state
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
         Mockito.when(event.getData()).thenReturn(vm3);
@@ -826,6 +948,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm3.getPriority(), admittedResquests.get(vm3.getPriority()) - vm3.getMips());
+        validateAdmitedRequests();
     }
 
     @Test
@@ -851,6 +977,10 @@ public class PreemptiveDatacenterTest {
 
         Assert.assertEquals(vm0P0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm0P0.getNumberOfPreemptions(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm0P0.getPriority(), admittedResquests.get(vm0P0.getPriority()) + vm0P0.getMips());
+        validateAdmitedRequests();
 
         PreemptableVm vm1P1 = new PreemptableVm(1, 1, 2, 1.0, 0, 1, runtime);
 
@@ -879,6 +1009,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm1P1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1P1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1P1.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm1P1.getPriority(), admittedResquests.get(vm1P1.getPriority()) + vm1P1.getMips());
+        validateAdmitedRequests();
 
         // allocating vm priority 2
         PreemptableVm vm2P2 = new PreemptableVm(2, 1, 2, 1.0, 0, 2, runtime);
@@ -911,6 +1045,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm2P2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2P2.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm2P2.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm2P2.getPriority(), admittedResquests.get(vm2P2.getPriority()) + vm2P2.getMips());
+        validateAdmitedRequests();
 
         // allocating vm priority 0
         PreemptableVm vm3P0 = new PreemptableVm(3, 1, 3, 1.0, 0, 0, runtime);
@@ -948,6 +1086,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3P0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3P0.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm3P0.getPriority(), admittedResquests.get(vm3P0.getPriority()) + vm3P0.getMips());
+        validateAdmitedRequests();
+
         // destroying vm0P0
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
@@ -981,6 +1123,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3P0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3P0.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm0P0.getPriority(), admittedResquests.get(vm0P0.getPriority()) - vm0P0.getMips());
+        validateAdmitedRequests();
     }
 
     @Test
@@ -1013,6 +1159,10 @@ public class PreemptiveDatacenterTest {
             Assert.assertEquals(10 - (i + 1),
                     host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
+            // checking admited request values
+            admittedResquests.put(vmP2.getPriority(), admittedResquests.get(vmP2.getPriority()) + vmP2.getMips());
+            validateAdmitedRequests();
+
             vmsP2.add(vmP2);
         }
 
@@ -1043,6 +1193,10 @@ public class PreemptiveDatacenterTest {
                     host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
             Assert.assertEquals(0, host.getAvailableMipsByPriority(2),
                     ACCEPTABLE_DIFFERENCE);
+
+            // checking admited request values
+            admittedResquests.put(vmP1.getPriority(), admittedResquests.get(vmP1.getPriority()) + vmP1.getMips());
+            validateAdmitedRequests();
 
             vmsP1.add(vmP1);
 
@@ -1119,6 +1273,10 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(0, host.getAvailableMipsByPriority(2),
                 ACCEPTABLE_DIFFERENCE);
 
+        // checking admited request values
+        admittedResquests.put(vmP0.getPriority(), admittedResquests.get(vmP0.getPriority()) + vmP0.getMips());
+        validateAdmitedRequests();
+
         // destroying vm priority 1
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
@@ -1158,6 +1316,11 @@ public class PreemptiveDatacenterTest {
 
         }
 
+        // checking admited request values
+            admittedResquests.put(vmsP1.get(0).getPriority(),
+                                admittedResquests.get(vmsP1.get(0).getPriority()) - vmsP1.get(0).getMips());
+        validateAdmitedRequests();
+
         // destroying vm priority 1
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
         Mockito.when(event.getData()).thenReturn(vmsP1.get(1));
@@ -1194,6 +1357,11 @@ public class PreemptiveDatacenterTest {
             }
 
         }
+
+        // checking admited request values
+        admittedResquests.put(vmsP1.get(1).getPriority(),
+                admittedResquests.get(vmsP1.get(1).getPriority()) - vmsP1.get(1).getMips());
+        validateAdmitedRequests();
 
         // destroying vm priority 0
         Mockito.when(timeUtil.clock()).thenReturn(runtime - 0.1);
@@ -1252,6 +1420,11 @@ public class PreemptiveDatacenterTest {
             Assert.assertTrue(datacenter.getVmsForScheduling().contains(
                     vmsP2.get(i)));
         }
+
+        // checking admited request values
+        admittedResquests.put(vmP0.getPriority(),
+                admittedResquests.get(vmP0.getPriority()) - vmP0.getMips());
+        validateAdmitedRequests();
     }
 
     @Test
@@ -1287,6 +1460,11 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm0P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm0P0.getNumberOfBackfillingChoice(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm0P0.getPriority(),
+                admittedResquests.get(vm0P0.getPriority()) + vm0P0.getMips());
+        validateAdmitedRequests();
+
         cpuReq = 2;
         PreemptableVm vm1P1 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 1, runtime);
 
@@ -1316,6 +1494,11 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm1P1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1P1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1P1.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm1P1.getPriority(),
+                admittedResquests.get(vm1P1.getPriority()) + vm1P1.getMips());
+        validateAdmitedRequests();
 
         cpuReq = 3;
         PreemptableVm vm2P2 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 2, runtime);
@@ -1350,6 +1533,11 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm2P2.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm2P2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2P2.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm2P2.getPriority(),
+                admittedResquests.get(vm2P2.getPriority()) + vm2P2.getMips());
+        validateAdmitedRequests();
 
         // allocation one more VM with priority 0
         cpuReq = 6;
@@ -1393,6 +1581,11 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3P0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3P0.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm3P0.getPriority(),
+                admittedResquests.get(vm3P0.getPriority()) + vm3P0.getMips());
+        validateAdmitedRequests();
+
         // destroying vm0P0
         Mockito.when(
                 hostSelector.select(preemptableVmAllocationPolicy.getPriorityToSortedHost().get(0), vm3P0)).thenReturn(host);
@@ -1430,6 +1623,11 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3P0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3P0.getNumberOfMigrations(), 0);
 
+        // checking admited request values
+        admittedResquests.put(vm0P0.getPriority(),
+                admittedResquests.get(vm0P0.getPriority()) - vm0P0.getMips());
+        validateAdmitedRequests();
+
         // destroying vm0P1
         Mockito.when(timeUtil.clock()).thenReturn(runtime);
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY);
@@ -1462,6 +1660,11 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm3P0.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm3P0.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm3P0.getNumberOfMigrations(), 0);
+
+        // checking admited request values
+        admittedResquests.put(vm1P1.getPriority(),
+                admittedResquests.get(vm1P1.getPriority()) - vm1P1.getMips());
+        validateAdmitedRequests();
     }
 
     @Test
