@@ -17,7 +17,7 @@ public class GreedyQuotaAdmissionController implements AdmissionController {
         setDatacenterCapacity(datacenterCapacity);
         setSloTargets(sloTargets);
         setConfidanceFactor(confidenceLevel);
-        setStartQuotaByPriority(sloTargets);
+        startQuotaByPriority(sloTargets);
     }
 
     @Override
@@ -32,7 +32,7 @@ public class GreedyQuotaAdmissionController implements AdmissionController {
             }
 
             double capacity = calculateCapacity(allocatedResources);
-            double actualQuota = (capacity * getSloTargets().get(priority)) * getConfidanceFactor();
+            double actualQuota = (capacity / getSloTargets().get(priority)) * getConfidanceFactor();
 
             getQuotaByPriority().put(priority, new Double(actualQuota));
         }
@@ -94,7 +94,7 @@ public class GreedyQuotaAdmissionController implements AdmissionController {
         this.confidanceFactor = confidanceFactor;
     }
 
-    public void setStartQuotaByPriority(Map<Integer,Double> sloTargets) {
+    public void startQuotaByPriority(Map<Integer,Double> sloTargets) {
 
         Map<Integer, Double> admittedRequests = new HashMap<Integer, Double>();
         setQuotaByPriority(new HashMap<Integer, Double>());
