@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
@@ -27,7 +28,9 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.preemption.AdmissionController;
 import org.cloudbus.cloudsim.preemption.DatacenterInfo;
+import org.cloudbus.cloudsim.preemption.GreedyQuotaAdmissionController;
 import org.cloudbus.cloudsim.preemption.PreemptiveDatacenter;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.Task;
@@ -276,10 +279,17 @@ public class CloudSimExampleGoogleTrace {
         		Log.printLine("Creating a hosts with defatult vm_allocation_policy_class WorstFitPriorityBased.");
         		vmAllocationPolicy = new  WorstFitPriorityBasedVmAllocationPolicy(hostList);
         	}
+
+			Map<Integer, Double> sloTargets = VmAvailabilityBasedPreemptionPolicy
+					.getSLOAvailabilityTargets(properties);
+			
+			//TODO make admission controller be configurable
+			AdmissionController admController = new GreedyQuotaAdmissionController(
+					totalMipsCapacity, sloTargets, 1);
             
 			datacenter = new PreemptiveDatacenter(name, characteristics,
                     vmAllocationPolicy,
-                    storageList, 0, properties);
+                    storageList, 0, properties, admController);
         } catch (Exception e) {
             e.printStackTrace();
         }
