@@ -578,9 +578,9 @@ public class PreemptiveDatacenter extends Datacenter {
 			allocateHostForVm(ack, vm, null, false);
 		} else {
 			Log.printConcatLine(simulationTimeUtil.clock(),
-					": VM #", vm.getId(), " was not accepted by Admission Controler.");
+					": VM #", vm.getId(), " - ", vm.getPriority(), " was not accepted by Admission Controler.");
 			System.out.println(simulationTimeUtil.clock() + 
-					": VM #" + vm.getId() + " was not accepted by Admission Controler.");
+					": VM #" + vm.getId() + " - " + vm.getPriority() + " was not accepted by Admission Controler.");
 		}		
 	}
 
