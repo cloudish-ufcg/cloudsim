@@ -57,6 +57,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	public static final int MAKE_DATACENTER_CHECKPOINT_EVENT = DATACENTER_BASE + 5;
 	public static final int INITIALIZE_FROM_CHECKPOINT_EVENT = DATACENTER_BASE + 6;
 	public static final int TRY_TO_ALLOCATE_WAITING_QUEUE_EVENT = DATACENTER_BASE + 7;
+	public static final int UPDATE_QUOTAS_EVENT = DATACENTER_BASE + 8;
 	
 	// default interval sizes 
 	// TODO review this default values, maybe it should be in microseconds
@@ -64,6 +65,8 @@ public class PreemptiveDatacenter extends Datacenter {
 	private static final int DEFAULT_DATACENTER_INFO_STORING_INTERVAL_SIZE = 1440; // one day in minutes
 	private static final int DEFAULT_DATACENTER_COLLECT_INFO_INTERVAL_SIZE = 5; // in minutes
 	private static final int DEFAULT_CHECKPOINT_INTERVAL_SIZE = 1440; // one day in minutes
+	private static final int DEFAULT_UPDATE_QUOTA_INTERVAL_SIZE = 5;
+
 
 	PreemptableVmAllocationPolicy vmAllocationPolicy;
 	
@@ -82,6 +85,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	private double datacenterStoringInfoIntervalSize;
 	private double checkpointIntervalSize;
 	private double allocateWaitingQueueIntervalSize = INVALID_INTERVAL_SIZE; 
+	private double updateQuotaIntervalSize;
 
 	private boolean collectDatacenterInfo = false;
 	private boolean makeCheckpoint = false;
@@ -169,6 +173,14 @@ public class PreemptiveDatacenter extends Datacenter {
 
 			setDatacenterCollectInfoIntervalSize(datacenterCollectInfoIntervalSize);
 		}
+		
+		if (properties.getProperty("update_quota_interval_size") != null) {
+			double updateQuotaIntervalSize = properties
+					.getProperty("update_quota_interval_size") == null ? DEFAULT_UPDATE_QUOTA_INTERVAL_SIZE
+							: Double.parseDouble(properties.getProperty("update_quota_interval_size"));
+
+			setUpdateQuotaIntervalSize(updateQuotaIntervalSize);
+		}
         
 	}
 	
@@ -207,6 +219,10 @@ public class PreemptiveDatacenter extends Datacenter {
 				storeDatacenterInfo(false);
 				break;
 				
+			case UPDATE_QUOTAS_EVENT:
+				updateQuotas();
+				break;
+				
 			case MAKE_DATACENTER_CHECKPOINT_EVENT:
 				makeCheckpoint();
 				break;
@@ -225,7 +241,21 @@ public class PreemptiveDatacenter extends Datacenter {
 		}
 	}
 
-    private void tryToAllocateWaitingQueue() {
+    private void updateQuotas() {
+		getAdmController().calculateQuota(getAdmittedRequests());
+		
+		// scheduling next update quota event
+		Log.printConcatLine(simulationTimeUtil.clock(),
+				": Scheduling next update quota event will be in ",
+				getCheckpointIntervalSize(), " time units.");
+		
+		// this method allow the quota event to be ran before destroy events (serial = -1)
+		sendPriorityEvent(getId(), getUpdateQuotaIntervalSize(),
+			PreemptiveDatacenter.UPDATE_QUOTAS_EVENT, null, -1);
+		
+	}
+
+	private void tryToAllocateWaitingQueue() {
     	if (firstProcessNow()) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
 					": First processing at this time. Pre processing and updating last process time to ", simulationTimeUtil.clock());
@@ -254,7 +284,11 @@ public class PreemptiveDatacenter extends Datacenter {
 					+ " waitingVms on checkpoint.");
 
 			getVmsForScheduling().addAll(waitingVms);
-
+			
+			for (PreemptableVm vm : waitingVms) {
+				getAdmittedRequests().put(vm.getPriority(), admittedRequests.get(vm.getPriority()) + vm.getMips());
+			}
+			
 			for (PreemptableVm vm: runningVms){
 				vm.setStartExec(simulationTimeUtil.clock());
 				PreemptiveHost host = mapOfHosts.get(vm.getLastHostId());
@@ -277,6 +311,8 @@ public class PreemptiveDatacenter extends Datacenter {
 				sendFirst(getId(), remainingTime, CloudSimTags.VM_DESTROY_ACK, vm);
 
 				host.updateUsage(simulationTimeUtil.clock());
+				
+				getAdmittedRequests().put(vm.getPriority(), admittedRequests.get(vm.getPriority()) + vm.getMips());
 
 				getVmsRunning().add(vm);
 
@@ -331,6 +367,9 @@ public class PreemptiveDatacenter extends Datacenter {
 		send(getId(), getHostUsageStoringIntervalSize(),
 				PreemptiveDatacenter.STORE_HOST_UTILIZATION_EVENT);
 		
+		// creating the first update quota event
+		sendPriorityEvent(getId(), getUpdateQuotaIntervalSize(),
+				PreemptiveDatacenter.UPDATE_QUOTAS_EVENT, null, -1);
 		
 		// creating the first datacenter store event
 		if (collectDatacenterInfo) {
@@ -347,7 +386,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		// periodically trying to allocate waiting queue
 		if (getAllocateWaitingQueueIntervalSize() != INVALID_INTERVAL_SIZE) {
 			send(getId(), getAllocateWaitingQueueIntervalSize(), PreemptiveDatacenter.TRY_TO_ALLOCATE_WAITING_QUEUE_EVENT);
-		}
+		}		
 	}
 
 	private void terminateSimulation() {
@@ -529,12 +568,12 @@ public class PreemptiveDatacenter extends Datacenter {
 	protected void processVmCreate(SimEvent ev, boolean ack) {
 		PreemptableVm vm = (PreemptableVm) ev.getData();
 
-		if (admController.accept(vm)) {
+		if (admController.accept(vm, getAdmittedRequests())) {
 
+			// updating the admitted requests for specific priority
 			int priority = vm.getPriority();
-			double admittedRequest = admittedRequests.get(vm.getPriority());
-			double actualAdmittedRequest = admittedRequest + + vm.getMips();
-			getAdmittedRequests().put(priority, actualAdmittedRequest);
+			double currentAdmitted = admittedRequests.get(vm.getPriority());
+			getAdmittedRequests().put(priority, currentAdmitted + vm.getMips());
 
 			allocateHostForVm(ack, vm, null, false);
 		} else {
@@ -627,7 +666,37 @@ public class PreemptiveDatacenter extends Datacenter {
 
 		scheduleFirst(entityId, delay, cloudSimTag, data);
 	}
+	
+	protected void sendPriorityEvent(int entityId, double delay, int cloudSimTag, Object data, long serial) {
+		if (entityId < 0) {
+			Log.printConcatLine(getName(), ".send(): Error - "
+					+ "invalid entity id ", entityId);
+			return;
+		}
 
+		// if delay is -ve, then it doesn't make sense. So resets to 0.0
+		if (delay < 0) {
+			delay = 0;
+		}
+
+		if (Double.isInfinite(delay)) {
+			throw new IllegalArgumentException(
+					"The specified delay is infinite value");
+		}
+
+		int srcId = getId();
+		if (entityId != srcId) {// only delay messages between different
+								// entities
+			delay += getNetworkDelay(srcId, entityId);
+		}
+		
+		if (!CloudSim.running()) {
+			return;
+		}
+		
+		CloudSim.send(getId(), entityId, delay, cloudSimTag, data, serial);
+	}
+	
 	private boolean tryingAllocateOnHost(PreemptableVm vm, PreemptiveHost host) {
 		if (host == null) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
@@ -699,8 +768,11 @@ public class PreemptiveDatacenter extends Datacenter {
 
 				//updating host utilization				
 				host.updateUsage(simulationTimeUtil.clock());
-				getAdmittedRequests().put(vm.getPriority(), admittedRequests.get(vm.getPriority()) - vm.getMips());
-				getAdmController().release(vm);
+				
+				// updating the admitted resources
+				getAdmittedRequests().put(
+						vm.getPriority(),
+						getAdmittedRequests().get(vm.getPriority())	- vm.getMips());
 
 				if (!getVmsForScheduling().isEmpty() && !nextEventIsDestroy()) {
 					allocatingWaitingQueue();
@@ -836,6 +908,14 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	public void setCheckpointIntervalSize(double checkpointIntervalSize) {
 		this.checkpointIntervalSize = checkpointIntervalSize;
+	}
+	
+	private double getUpdateQuotaIntervalSize() {
+		return updateQuotaIntervalSize;
+	}
+	
+	public void setUpdateQuotaIntervalSize(double updateQuotaIntervalSize) {
+		this.updateQuotaIntervalSize = updateQuotaIntervalSize;
 	}
 
 	public void setHostUsageDataStore(HostUsageDataStore hostUsageDataStore) {

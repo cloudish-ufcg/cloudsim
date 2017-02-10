@@ -609,6 +609,27 @@ public class CloudSim {
 		SimEvent e = new SimEvent(SimEvent.SEND, clock + delay, src, dest, tag, data);
 		future.addEvent(e);
 	}
+	
+	
+	/**
+	 * TODO This method helps in creation of different priorities of events
+	 * 
+	 * @param src
+	 * @param dest
+	 * @param delay
+	 * @param tag
+	 * @param data
+	 * @param eventSerial
+	 */
+	public static void send(int src, int dest, double delay, int tag, Object data, long eventSerial) {
+		if (delay < 0) {
+			throw new IllegalArgumentException("Send delay can't be negative.");
+		}
+
+		SimEvent e = new SimEvent(SimEvent.SEND, clock + delay, src, dest, tag, data);
+		e.setSerial(eventSerial);
+		future.addEvent(e);
+	}
 
 	/**
 	 * Used to send an event from one entity to another, with priority in the queue.

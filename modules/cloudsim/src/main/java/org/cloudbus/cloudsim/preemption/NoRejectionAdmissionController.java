@@ -10,13 +10,9 @@ public class NoRejectionAdmissionController implements AdmissionController {
 	}
 
 	@Override
-	public boolean accept(PreemptableVm vm) {
+	public boolean accept(PreemptableVm vm,
+			Map<Integer, Double> admittedRequests) {
 		return true;
-	}
-
-	@Override
-	public void release(PreemptableVm vm) {
-
 	}
 
 }

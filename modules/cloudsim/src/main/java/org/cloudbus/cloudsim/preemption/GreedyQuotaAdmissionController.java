@@ -3,93 +3,58 @@ package org.cloudbus.cloudsim.preemption;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
+
 /**
  * Created by Alessandro Lia Fook Santos on 08/02/17.
  */
 public class GreedyQuotaAdmissionController implements AdmissionController {
 
-    private double datacenterCapacity;
+    private static final int DECIMAL_ACCURACY = 9;
+
+	private double datacenterCapacity;
     private Map<Integer, Double> sloTargets;
-    private Map<Integer, Double> quotaByPriority;
+    private Map<Integer, Double> priorityToQuotas;
     private double confidanceFactor;
 
     public GreedyQuotaAdmissionController(double datacenterCapacity, Map<Integer, Double> sloTargets, double confidenceLevel){
         setDatacenterCapacity(datacenterCapacity);
         setSloTargets(sloTargets);
         setConfidanceFactor(confidenceLevel);
-        startQuotaByPriority(sloTargets);
+        initializeQuotas();
     }
 
     @Override
     public void calculateQuota(Map<Integer, Double> admittedRequests) {
 
-        for (Integer priority: sloTargets.keySet()) {
+        for (Integer priority: getSloTargets().keySet()) {
 
-            double allocatedResources = 0d;
+            double greaterPrioritiesResources = 0d;
 
-            for (int i = 0; i <= priority; i++) {
-                allocatedResources += admittedRequests.get(i);
+            for (int i = 0; i < priority; i++) {
+                greaterPrioritiesResources += admittedRequests.get(i);
             }
 
-            double capacity = calculateCapacity(allocatedResources);
-            double actualQuota = (capacity / getSloTargets().get(priority)) * getConfidanceFactor();
+            double classCapacity = getDatacenterCapacity() - greaterPrioritiesResources;
+            double classQuota = (classCapacity / getSloTargets().get(priority)) * getConfidanceFactor();
 
-            getQuotaByPriority().put(priority, new Double(actualQuota));
+            getPriorityToQuotas().put(priority, DecimalUtil.format(classQuota, DECIMAL_ACCURACY));
         }
     }
 
     @Override
-    public boolean accept(PreemptableVm vm) {
+    public boolean accept(PreemptableVm vm, Map<Integer, Double> admittedRequests) {
+        double currentQuota = getPriorityToQuotas().get(vm.getPriority());
 
-        double quota = getQuotaByPriority().get(vm.getPriority());
-
-        if (vm.getMips() <= quota) {
-            reduceQuota(vm);
+        if (admittedRequests.get(vm.getPriority()) + vm.getMips() <= currentQuota) {
             return true;
-
-        } else {
-            return false;
-        }
+        } 
+        return false;
     }
 
-    private void reduceQuota(PreemptableVm vm) {
-
-        int vmPriority = vm.getPriority();
-        double mipsRequested = vm.getMips();
-        double actualQuota = getQuotaByPriority().get(vmPriority);
-        double newQuota = actualQuota - mipsRequested;
-
-        getQuotaByPriority().put(vmPriority, newQuota);
+    public Map<Integer, Double> getPriorityToQuotas() {
+        return priorityToQuotas;
     }
-
-    @Override
-    public void release(PreemptableVm vm) {
-
-        int vmPriority = vm.getPriority();
-        double mipsToRelease = vm.getMips();
-        double actualQuota = getQuotaByPriority().get(vmPriority);
-        double newQuota = mipsToRelease + actualQuota;
-
-        getQuotaByPriority().put(vmPriority, newQuota);
-    }
-
-    public Map<Integer, Double> getQuotaByPriority() {
-        return quotaByPriority;
-    }
-
-    public void setQuotaByPriority(Map<Integer, Double> sloTargets) {
-
-        this.quotaByPriority = new HashMap<Integer, Double>();
-
-        for (Integer priority : sloTargets.keySet()) {
-            quotaByPriority.put(priority, 0d);
-        }
-    }
-
-    private double calculateCapacity(double allocatedResources){
-        return getDatacenterCapacity() - allocatedResources;
-    }
-
 
     public double getDatacenterCapacity() {
         return datacenterCapacity;
@@ -116,14 +81,15 @@ public class GreedyQuotaAdmissionController implements AdmissionController {
         this.confidanceFactor = confidanceFactor;
     }
 
-    public void startQuotaByPriority(Map<Integer,Double> sloTargets) {
+    public void initializeQuotas() {
 
         Map<Integer, Double> admittedRequests = new HashMap<Integer, Double>();
-        setQuotaByPriority(new HashMap<Integer, Double>());
 
-        for (Integer priority : sloTargets.keySet()) {
+        priorityToQuotas = new HashMap<Integer, Double>();
+        
+        for (Integer priority : getSloTargets().keySet()) {
             admittedRequests.put(priority, 0d);
-            getQuotaByPriority().put(priority, 0d);
+            getPriorityToQuotas().put(priority, 0d);
         }
 
         calculateQuota(admittedRequests);
