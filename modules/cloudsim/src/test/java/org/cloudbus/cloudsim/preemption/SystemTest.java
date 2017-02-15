@@ -90,7 +90,7 @@ public class SystemTest {
         Mockito.when(properties.getProperty("checkpoint_interval_size")).thenReturn("300000000");
         Mockito.when(properties.getProperty("checkpoint_dir")).thenReturn(datacenterOutputUrl);
         Mockito.when(properties.getProperty("preemption_policy_class")).thenReturn("org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy");
-        Mockito.when(properties.getProperty("end_of_simulation")).thenReturn("600000000");
+        Mockito.when(properties.getProperty("end_of_simulation_time")).thenReturn("600000000");
         Mockito.when(properties.getProperty("update_quota_interval_size")).thenReturn("600000000");
 
         // creating host

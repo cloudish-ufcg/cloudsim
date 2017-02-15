@@ -28,16 +28,7 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.core.CloudSim;
-import org.cloudbus.cloudsim.preemption.AdmissionController;
-import org.cloudbus.cloudsim.preemption.DatacenterInfo;
-import org.cloudbus.cloudsim.preemption.GreedyQuotaAdmissionController;
-import org.cloudbus.cloudsim.preemption.PreemptiveDatacenter;
-import org.cloudbus.cloudsim.preemption.PreemptiveHost;
-import org.cloudbus.cloudsim.preemption.Task;
-import org.cloudbus.cloudsim.preemption.TaskState;
-import org.cloudbus.cloudsim.preemption.TraceDatacenterBroker;
-import org.cloudbus.cloudsim.preemption.UsageEntry;
-import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
+import org.cloudbus.cloudsim.preemption.*;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
@@ -251,6 +242,8 @@ public class CloudSimExampleGoogleTrace {
             hostList.add(host);
         }
 
+
+
         String arch = "x86"; // system architecture
         String os = "Linux"; // operating system
         String vmm = "Xen";
@@ -276,20 +269,30 @@ public class CloudSimExampleGoogleTrace {
         		Log.printLine("Creating a hosts with VmAllocationPolicy " + properties.getProperty("vm_allocation_policy_class"));
         		vmAllocationPolicy = (PreemptableVmAllocationPolicy) createInstance("vm_allocation_policy_class", properties, hostList);
         	} else {
-        		Log.printLine("Creating a hosts with defatult vm_allocation_policy_class WorstFitPriorityBased.");
+        		Log.printLine("Creating a hosts with default vm_allocation_policy_class WorstFitPriorityBased.");
         		vmAllocationPolicy = new  WorstFitPriorityBasedVmAllocationPolicy(hostList);
         	}
 
 			Map<Integer, Double> sloTargets = VmAvailabilityBasedPreemptionPolicy
 					.getSLOAvailabilityTargets(properties);
-			
+
+            AdmissionController admissionController;
+            Double confidenceLevel = Double.parseDouble(properties.getProperty("confidence_level"));
+
+            if (properties.getProperty("admission_controller_class") != null){
+                Log.printLine("Creating an admission controller with AdmissionController " + properties.getProperty("admission_controller_class"));
+                admissionController = (AdmissionController) createInstance("admission_controller_class", properties, totalMipsCapacity, sloTargets, confidenceLevel);
+            } else {
+                Log.printLine("Creating admission controller with default admission_controller_class NoRejectionAdmissionController.");
+                admissionController = new NoRejectionAdmissionController();
+            }
 			//TODO make admission controller be configurable
-			AdmissionController admController = new GreedyQuotaAdmissionController(
-					totalMipsCapacity, sloTargets, 1);
+//			AdmissionController admController = new GreedyQuotaAdmissionController(
+//					totalMipsCapacity, sloTargets, 1);
             
 			datacenter = new PreemptiveDatacenter(name, characteristics,
                     vmAllocationPolicy,
-                    storageList, 0, properties, admController);
+                    storageList, 0, properties, admissionController);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -414,6 +417,11 @@ public class CloudSimExampleGoogleTrace {
         System.out.println("========== % Fulfillment SLO (priority 1) is " + dft.format((fulfillmentP1 / count1)) + " =========");
         System.out.println("========== % Fulfillment SLO (priority 2) is " + dft.format((fulfillmentP2 / count2)) + " =========");
 
+    }
+
+    private static Object createInstance(String propName, Properties properties, double totalMipsCapacity, Map<Integer,Double> sloTargets, double confidenceLevel) throws Exception {
+        return Class.forName(properties.getProperty(propName)).getConstructor(Double.TYPE, Map.class, Double.TYPE)
+                .newInstance(totalMipsCapacity, sloTargets, confidenceLevel);
     }
     
     private static Object createInstance(String propName, Properties properties) throws Exception {
