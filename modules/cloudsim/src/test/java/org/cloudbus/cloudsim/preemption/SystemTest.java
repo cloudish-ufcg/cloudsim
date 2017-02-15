@@ -46,7 +46,7 @@ public class SystemTest {
     @Before
     public void setUp() throws Exception {
 
-        Log.disable();
+        //Log.disable();
 
         event = Mockito.mock(SimEvent.class);
 
@@ -90,7 +90,8 @@ public class SystemTest {
         Mockito.when(properties.getProperty("checkpoint_interval_size")).thenReturn("300000000");
         Mockito.when(properties.getProperty("checkpoint_dir")).thenReturn(datacenterOutputUrl);
         Mockito.when(properties.getProperty("preemption_policy_class")).thenReturn("org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy");
-
+        Mockito.when(properties.getProperty("end_of_simulation")).thenReturn("600000000");
+        Mockito.when(properties.getProperty("update_quota_interval_size")).thenReturn("600000000");
 
         // creating host
         List<Pe> peList1 = new ArrayList<Pe>();
@@ -134,6 +135,7 @@ public class SystemTest {
         new File(datacenterOutputFile).delete();
     }
 
+
     @Test
     public void testSystemSingleHostWithTrace() {
 
@@ -159,6 +161,7 @@ public class SystemTest {
 
     //testing the operation of the system for a single host
     //TODO processBackfiling is called more than once at same time because of method processEventForAllVms()
+
     @Test
     public void testSystemSingleHost() {
 

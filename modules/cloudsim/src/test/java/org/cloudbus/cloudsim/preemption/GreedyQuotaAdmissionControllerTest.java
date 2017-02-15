@@ -158,14 +158,14 @@ public class GreedyQuotaAdmissionControllerTest {
         int priority = 0;
         double runtime = 10;
 
-        Map<Integer, Double> admitedRequests = new HashMap<Integer, Double>();
+        Map<Integer, Double> admittedRequests = new HashMap<Integer, Double>();
 
-        admitedRequests.put(PROD, 0d);
-        admitedRequests.put(BATCH, 0d);
-        admitedRequests.put(FREE, 0d);
+        admittedRequests.put(PROD, 0d);
+        admittedRequests.put(BATCH, 0d);
+        admittedRequests.put(FREE, 0d);
         
         PreemptableVm vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
-        Assert.assertTrue(admController.accept(vm, admitedRequests));
+        Assert.assertTrue(admController.accept(vm, admittedRequests));
 
         //checking values of quotaByPriority
         Assert.assertEquals(100, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
@@ -173,15 +173,15 @@ public class GreedyQuotaAdmissionControllerTest {
         Assert.assertEquals(200, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
 
         // updating admitted requests
-        admitedRequests.put(PROD, 99d);
-        admitedRequests.put(BATCH, 0d);
-        admitedRequests.put(FREE, 0d);
+        admittedRequests.put(PROD, 99d);
+        admittedRequests.put(BATCH, 0d);
+        admittedRequests.put(FREE, 0d);
         
         priority = 1;
         cpuReq = 111.111112111;
         // Quota for priority 1 is 100 / 0.9 = 111,111111111
         vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
-        Assert.assertFalse(admController.accept(vm, admitedRequests));
+        Assert.assertFalse(admController.accept(vm, admittedRequests));
 
         //checking values of quotaByPriority
         Assert.assertEquals(100, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
@@ -191,7 +191,7 @@ public class GreedyQuotaAdmissionControllerTest {
         cpuReq = 111.111111111;
         // Quota for priority 1 is 100 / 0.9 = 111,111111111
         vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
-        Assert.assertTrue(admController.accept(vm, admitedRequests));
+        Assert.assertTrue(admController.accept(vm, admittedRequests));
 
         //checking values of quotaByPriority
         Assert.assertEquals(100, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
@@ -199,16 +199,16 @@ public class GreedyQuotaAdmissionControllerTest {
         Assert.assertEquals(200, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
 
         // updating admitted requests
-        admitedRequests.put(PROD, 99d);
-        admitedRequests.put(BATCH, 111.111111111);
-        admitedRequests.put(FREE, 0d);
+        admittedRequests.put(PROD, 99d);
+        admittedRequests.put(BATCH, 111.111111111);
+        admittedRequests.put(FREE, 0d);
 
         
         priority = 2;
         cpuReq = 200.0000001;
         // Quota for priority 2 is 100 / 0.5 = 200
         vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
-        Assert.assertFalse(admController.accept(vm, admitedRequests));
+        Assert.assertFalse(admController.accept(vm, admittedRequests));
 
         //checking values of quotaByPriority
         Assert.assertEquals(100, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
@@ -218,7 +218,12 @@ public class GreedyQuotaAdmissionControllerTest {
         cpuReq = 199.00000009;
         // Quota for priority 2 is 100 / 0.5 = 200
         vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
-        Assert.assertTrue(admController.accept(vm, admitedRequests));
+        Assert.assertTrue(admController.accept(vm, admittedRequests));
+
+        cpuReq = 200;
+        // Quota for priority 2 is 100 / 0.5 = 200
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Assert.assertTrue(admController.accept(vm, admittedRequests));
 
         //checking values of quotaByPriority
         Assert.assertEquals(100, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
@@ -226,491 +231,76 @@ public class GreedyQuotaAdmissionControllerTest {
         Assert.assertEquals(200, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
     }
 
-
     @Test
-    public void testRelease01() {
-    	
-        Map<Integer, Double> admitedRequests = new HashMap<Integer, Double>();
-
-        admitedRequests.put(PROD, 0d);
-        admitedRequests.put(BATCH, 0d);
-        admitedRequests.put(FREE, 0d);
-
+    public void testAccept2(){
         int id = 0;
         int userId = 0;
-        double cpuReq = 99;
+        double cpuReq = 50;
         double memReq = 0;
         double submitTime = 0;
         int priority = 0;
         double runtime = 10;
 
-        PreemptableVm vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Map<Integer, Double> admittedRequests = new HashMap<Integer, Double>();
 
-        Assert.assertTrue(admController.accept(vm, admitedRequests));
+        // updating admitted requests
+        admittedRequests.put(PROD, 50d);
+        admittedRequests.put(BATCH, 20d);
+        admittedRequests.put(FREE, 10d);
+
+        admController.calculateQuota(admittedRequests);
+
+        //checking values of quotaByPriority
         Assert.assertEquals(100, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(55.555555556, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(60, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
+
+        // quota is 100, requested is 50 and admitted is 50 too
+        PreemptableVm vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Assert.assertTrue(admController.accept(vm, admittedRequests));
+
+        cpuReq = 49.999999999;
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Assert.assertTrue(admController.accept(vm, admittedRequests));
+
+        cpuReq = 50.0000000001;
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm, admittedRequests));
+
+
+        // priority 1
+
+        priority = 1;
+        cpuReq = 35.555555556;
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Assert.assertTrue(admController.accept(vm, admittedRequests));
+
+        cpuReq = 35.555555555;
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Assert.assertTrue(admController.accept(vm, admittedRequests));
+
+        cpuReq = 35.555555557;
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm, admittedRequests));
+
+
+        // priority 2
+
+        priority = 2;
+        cpuReq = 50;
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Assert.assertTrue(admController.accept(vm, admittedRequests));
+
+        cpuReq = 49.999999999;
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Assert.assertTrue(admController.accept(vm, admittedRequests));
+
+        cpuReq = 50.0000000001;
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        Assert.assertFalse(admController.accept(vm, admittedRequests));
+
     }
 
-//    @Test
-//    public void testAcceptAndRelease() {
-//
-//        Map<Integer, Double> admitedRequests = new HashMap<Integer, Double>();
-//
-//        admitedRequests.put(PROD, 0d);
-//        admitedRequests.put(BATCH, 0d);
-//        admitedRequests.put(FREE, 0d);
-//
-//        int userId = 0;
-//        double memReq = 0;
-//        double submitTime = 0;
-//        double runtime = 10;
-//
-//        int priority = 0;
-//        PreemptableVm vm = new PreemptableVm(0, userId, 100, memReq, submitTime, priority, runtime);
-//        PreemptableVm vm2 = new PreemptableVm(1, userId, 70, memReq, submitTime, priority, runtime);
-//        PreemptableVm vm3 = new PreemptableVm(2, userId, 30, memReq, submitTime, priority, runtime);
-//
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(100, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(111.111111111, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(200, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm));
-//
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(111.111111111, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(200, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertFalse(admController.accept(vm2));
-//        Assert.assertFalse(admController.accept(vm3));
-//
-//        admController.release(vm);
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(100, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(111.111111111, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(200, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm2));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(30, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(111.111111111, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(200, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm3));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(111.111111111, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(200, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        priority = 1;
-//        vm = new PreemptableVm(0, userId, 100, memReq, submitTime, priority, runtime);
-//        vm2 = new PreemptableVm(1, userId, 111, memReq, submitTime, priority, runtime);
-//        vm3 = new PreemptableVm(2, userId, 111.2, memReq, submitTime, priority, runtime);
-//
-//        Assert.assertTrue(admController.accept(vm));
-//
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(11.111111111, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(200, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertFalse(admController.accept(vm2));
-//        Assert.assertFalse(admController.accept(vm3));
-//
-//        admController.release(vm);
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(111.111111111, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(200, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm2));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(0.111111111, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(200, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertFalse(admController.accept(vm3));
-//
-//        priority = 2;
-//        vm = new PreemptableVm(0, userId, 200, memReq, submitTime, priority, runtime);
-//        vm2 = new PreemptableVm(1, userId, 150, memReq, submitTime, priority, runtime);
-//        vm3 = new PreemptableVm(2, userId, 200.0001, memReq, submitTime, priority, runtime);
-//
-//        Assert.assertTrue(admController.accept(vm));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(0.111111111, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(0, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertFalse(admController.accept(vm2));
-//        Assert.assertFalse(admController.accept(vm3));
-//
-//        admController.release(vm);
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(0.111111111, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(200, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm2));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(0.111111111, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(50, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertFalse(admController.accept(vm3));
-//
-//    }
-//
-//    @Test
-//    public void testAcceptAndRelease02() {
-//
-//
-//        Map<Integer, Double> admittedRequests = new HashMap<Integer, Double>();
-//
-//        admittedRequests.put(PROD, 0.5);
-//        admittedRequests.put(BATCH, 20.0);
-//        admittedRequests.put(FREE, 10.0);
-//
-//        admController.calculateQuota(admittedRequests);
-//
-//        Assert.assertEquals(99.5, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(88.333333333, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(139, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        int userId = 0;
-//        double memReq = 0;
-//        double submitTime = 0;
-//        double runtime = 10;
-//        int priority = 0;
-//
-//        PreemptableVm vm = new PreemptableVm(0, userId, 100, memReq, submitTime, priority, runtime);
-//        PreemptableVm vm2 = new PreemptableVm(1, userId, 99.4, memReq, submitTime, priority, runtime);
-//        PreemptableVm vm3 = new PreemptableVm(2, userId, 99.5, memReq, submitTime, priority, runtime);
-//
-//        Assert.assertFalse(admController.accept(vm));
-//
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.5, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(88.333333333, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(139, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm2));
-//
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0.1, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(88.333333333, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(139, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertFalse(admController.accept(vm3));
-//
-//        admController.release(vm2);
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.5, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(88.333333333, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(139, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm3));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(88.333333333, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(139, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//
-//        priority = 1;
-//        vm = new PreemptableVm(0, userId, 100, memReq, submitTime, priority, runtime);
-//        vm2 = new PreemptableVm(1, userId, 88.323333333, memReq, submitTime, priority, runtime);
-//        vm3 = new PreemptableVm(2, userId, 88.333333333, memReq, submitTime, priority, runtime);
-//
-//        Assert.assertFalse(admController.accept(vm));
-//
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(88.333333333, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(139, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm2));
-//
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(0.01, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(139, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertFalse(admController.accept(vm3));
-//
-//        admController.release(vm2);
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(88.333333333, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(139, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm3));
-//
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(139, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        priority = 2;
-//        vm = new PreemptableVm(0, userId, 140, memReq, submitTime, priority, runtime);
-//        vm2 = new PreemptableVm(1, userId, 139.001, memReq, submitTime, priority, runtime);
-//        vm3 = new PreemptableVm(2, userId, 139, memReq, submitTime, priority, runtime);
-//
-//        Assert.assertFalse(admController.accept(vm));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(139, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertFalse(admController.accept(vm2));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(139, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm3));
-//
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//    }
-//
-//    @Test
-//    public void testAcceptAndRelease03() {
-//
-//
-//        Map<Integer, Double> admittedRequests = new HashMap<Integer, Double>();
-//
-//        int userId = 0;
-//        double memReq = 0;
-//        double submitTime = 0;
-//        double runtime = 10;
-//
-//        admittedRequests.put(PROD, 0.0625);
-//        admittedRequests.put(BATCH, 0.03125);
-//        admittedRequests.put(FREE, 0.01250);
-//
-//        admController.calculateQuota(admittedRequests);
-//
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.9375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(111.006944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(199.7875, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        int priority = 0;
-//        PreemptableVm vm = new PreemptableVm(0, userId, 99.9376, memReq, submitTime, priority, runtime);
-//        PreemptableVm vm2 = new PreemptableVm(1, userId, 99.9375, memReq, submitTime, priority, runtime);
-//        PreemptableVm vm3 = new PreemptableVm(2, userId, 0.000001, memReq, submitTime, priority, runtime);
-//
-//        Assert.assertFalse(admController.accept(vm));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.9375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(111.006944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(199.7875, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm2));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(111.006944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(199.7875, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertFalse(admController.accept(vm3));
-//
-//        admController.release(vm2);
-//
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.9375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(111.006944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(199.7875, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm3));
-//
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.937499, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(111.006944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(199.7875, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        priority = 1;
-//        vm = new PreemptableVm(0, userId, 111.006944445, memReq, submitTime, priority, runtime);
-//        vm2 = new PreemptableVm(1, userId, 111.006944444, memReq, submitTime, priority, runtime);
-//        vm3 = new PreemptableVm(2, userId, 50, memReq, submitTime, priority, runtime);
-//
-//        Assert.assertFalse(admController.accept(vm));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.937499, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(111.006944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(199.7875, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm2));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.937499, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(199.7875, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertFalse(admController.accept(vm3));
-//
-//        admController.release(vm2);
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.937499, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(111.006944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(199.7875, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm3));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.937499, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(61.006944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(199.7875, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        priority = 2;
-//        vm = new PreemptableVm(0, userId, 199.7876, memReq, submitTime, priority, runtime);
-//        vm2 = new PreemptableVm(1, userId, 199.7875, memReq, submitTime, priority, runtime);
-//        vm3 = new PreemptableVm(2, userId, 20, memReq, submitTime, priority, runtime);
-//
-//        Assert.assertFalse(admController.accept(vm));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.937499, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(61.006944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(199.7875, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm2));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.937499, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(61.006944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(0d, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertFalse(admController.accept(vm3));
-//
-//        admController.release(vm2);
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.937499, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(61.006944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(199.7875, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm3));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.937499, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(61.006944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(179.7875, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//    }
-//
-//    @Test
-//    public void testAcceptAndRelease04() {
-//
-//        Map<Integer, Double> admittedRequests = new HashMap<Integer, Double>();
-//
-//        int userId = 0;
-//        double memReq = 0;
-//        double submitTime = 0;
-//        double runtime = 10;
-//
-//        admittedRequests.put(PROD, 0.625);
-//        admittedRequests.put(BATCH, 0.03125);
-//        admittedRequests.put(FREE, 0.01250);
-//
-//        admController.calculateQuota(admittedRequests);
-//
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(110.381944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(198.6625, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        int priority = 0;
-//
-//        PreemptableVm vm = new PreemptableVm(0, userId, 99.37, memReq, submitTime, priority, runtime);
-//        PreemptableVm vm2 = new PreemptableVm(1, userId, 89.409375, memReq, submitTime, priority, runtime);
-//        PreemptableVm vm3 = new PreemptableVm(2, userId, 49.665625, memReq, submitTime, priority, runtime);
-//
-//        Assert.assertTrue(admController.accept(vm));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(0.005, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(110.381944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(198.6625, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertFalse(admController.accept(vm2));
-//        Assert.assertFalse(admController.accept(vm3));
-//
-//        admController.release(vm);
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(110.381944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(198.6625, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm2));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(9.965625, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(110.381944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(198.6625, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertFalse(admController.accept(vm3));
-//
-//        admController.release(vm2);
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(99.375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(110.381944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(198.6625, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//
-//        Assert.assertTrue(admController.accept(vm3));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(49.709375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(110.381944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(198.6625, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        priority = 1;
-//        vm = new PreemptableVm(0, userId, 110.381944445, memReq, submitTime, priority, runtime);
-//        vm2 = new PreemptableVm(1, userId, 89.409375, memReq, submitTime, priority, runtime);
-//        vm3 = new PreemptableVm(2, userId, 49.665625, memReq, submitTime, priority, runtime);
-//
-//        Assert.assertFalse(admController.accept(vm));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(49.709375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(110.381944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(198.6625, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm2));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(49.709375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(20.972569444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(198.6625, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertFalse(admController.accept(vm3));
-//
-//        admController.release(vm2);
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(49.709375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(110.381944444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(198.6625, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm3));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(49.709375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(60.716319444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(198.6625, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        priority = 2;
-//        vm = new PreemptableVm(0, userId, 198.6626, memReq, submitTime, priority, runtime);
-//        vm2 = new PreemptableVm(1, userId, 200, memReq, submitTime, priority, runtime);
-//        vm3 = new PreemptableVm(2, userId, 49.665625, memReq, submitTime, priority, runtime);
-//
-//        Assert.assertFalse(admController.accept(vm));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(49.709375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(60.716319444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(198.6625, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertFalse(admController.accept(vm2));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(49.709375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(60.716319444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(198.6625, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        Assert.assertTrue(admController.accept(vm3));
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(49.709375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(60.716319444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(148.996875, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//
-//        admController.release(vm3);
-//        //checking values of quotaByPriority
-//        Assert.assertEquals(49.709375, admController.getPriorityToQuotas().get(PROD), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(60.716319444, admController.getPriorityToQuotas().get(BATCH), ACCEPTABLE_DIFFERENCE);
-//        Assert.assertEquals(198.6625, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
-//    }
+
+
 }

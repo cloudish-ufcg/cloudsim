@@ -247,11 +247,16 @@ public class PreemptiveDatacenter extends Datacenter {
 		// scheduling next update quota event
 		Log.printConcatLine(simulationTimeUtil.clock(),
 				": Scheduling next update quota event will be in ",
-				getCheckpointIntervalSize(), " time units.");
-		
-		// this method allow the quota event to be ran before destroy events (serial = -1)
-		sendPriorityEvent(getId(), getUpdateQuotaIntervalSize(),
-			PreemptiveDatacenter.UPDATE_QUOTAS_EVENT, null, -1);
+				getUpdateQuotaIntervalSize(), " time units.");
+
+		double endOfSimulation = Integer.parseInt(properties.getProperty("end_of_simulation"));
+
+		if (simulationTimeUtil.clock() + getUpdateQuotaIntervalSize() < endOfSimulation){
+			// this method allow the quota event to be ran before destroy events (serial = -1)
+			sendPriorityEvent(getId(), getUpdateQuotaIntervalSize(),
+					PreemptiveDatacenter.UPDATE_QUOTAS_EVENT, null, -1);
+		}
+
 		
 	}
 
