@@ -87,3 +87,9 @@ utilization_database_url=jdbc:sqlite:/path/to/utilization.sqlite3
 # interval to calculate quota for classes (in seconds)
 #update_quota_interval_size=300
 
+#admissionController class
+#admission_controller_class=org.cloudbus.cloudsim.preemption.GreedyQuotaAdmissionController
+
+#confidence level
+confidence_level=1
+
