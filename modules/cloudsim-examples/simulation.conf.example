@@ -4,38 +4,33 @@ logging=no
 # trace file info
 input_trace_database_url=jdbc:sqlite:/path/to/trace.sqlite3
 
-# trace file from checkpoint
-checkpoint_file_url=jdbc:sqlite:/path/to/checkpoint.sqlite3
-
-# whould like to initialize from checkpoint (yes or no) ?
-init_from_checkpoint = yes
 
 #simulation info
 
-#minimum time you are interested to submit vms (in microseconds)
+#minimum time you are interested to submit vms (in seconds)
 #minimum_interested_time=
 
-#maximum time you are interested to submit vms (in microseconds)
-#maximum_interested_time=
+#maximum time you are interested to submit vms (in seconds)
+#maximum_interested_time=2506184
 
 number_of_hosts=12500
 total_cpu_capacity=6603.25
 
-#interval size (in minutes) to submit vms
-loading_interval_size=5
+#interval size (in seconds) to submit vms
+loading_interval_size=600
 
-#interval size (in minutes) for dumping already finished vms
-storing_interval_size=5
+#interval size (in seconds) for dumping already finished vms
+storing_interval_size=300
 output_tasks_database_url=jdbc:sqlite:/path/to/tasks.sqlite3
 
 #resource utilization info
 utilization_database_url=jdbc:sqlite:/path/to/utilization.sqlite3
 
-# interval size (in minutes) for dumping
-#utilization_storing_interval_size=1440
+# interval size (in seconds) for dumping
+#utilization_storing_interval_size=86400
 
-# time (in microseconds) that you wish to terminate the simulation
-#end_of_simulation_time=
+# time (in seconds) that you wish to terminate the simulation
+#end_of_simulation_time=2506184
 
 # datacenter info
 #collect_datacenter_summary_info=yes
@@ -45,18 +40,50 @@ utilization_database_url=jdbc:sqlite:/path/to/utilization.sqlite3
 
 # checkpoint info
 #make_checkpoint=yes
-# interval size in minutes
-#checkpoint_interval_size=
+# interval size in seconds
+#checkpoint_interval_size=86400
 #checkpoint_dir=/path/to/directory/
 
 #init from checkpoint info
+
+# whould like to initialize from checkpoint (yes or no) ?
 #init_from_checkpoint=yes
 
 #time when the events should start from
+#first_task_id=60000000
 #init_from_time=1800000000
 #checkpoint data url to set the initial environment
 #checkpoint_file_url=jdbc:sqlite:/path/to/database
 
+
+
+# simulation characteristics
+
+# PS: FCFSBasedPreemptionPolicy must be used with WorstFitPriorityBasedVmAllocationPolicy only
+# PS 2: VmAvailabilityBasedPreemptionPolicy and TTVBasedPreemptionPolicy must be used with WorstFitAvailabilityAwareVmAllocationPolicy only
+
 #Preemption policy properties
 #preemption_policy_class=org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy
+#preemption_policy_class=org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy
+#preemption_policy_class=org.cloudbus.cloudsim.preemption.policies.preemption.TTVBasedPreemptionPolicy
+
 #number_of_priorities=3
+
+# services levels objectives targets
+#slo_availability_target_priority_0=1
+#slo_availability_target_priority_1=0.9
+#slo_availability_target_priority_2=0.5
+
+# allocation policies
+
+#vm_allocation_policy_class=org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitPriorityBasedVmAllocationPolicy
+#vm_allocation_policy_class=org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitAvailabilityAwareVmAllocationPolicy
+
+
+
+
+#admission controller info
+
+# interval to calculate quota for classes (in seconds)
+#update_quota_interval_size=300
+
