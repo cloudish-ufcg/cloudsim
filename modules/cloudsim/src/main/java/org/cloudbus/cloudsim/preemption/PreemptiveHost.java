@@ -139,22 +139,48 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 		return ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips();
 	}
 	
-	public List<UsageEntry> getUsageEntries() {
+	public List<UsageEntry> getUsageEntries(double clock) {
 		List<UsageEntry> usageEntries = new LinkedList<UsageEntry>();
-		for (UsageInfo usageInfo : getUsageMap().values()) {
-			usageEntries.addAll(usageInfo.getUsageEntries());
+
+		List<UsageInfo> usageInfos = getUsageInfos();
+		resetUsageMap();
+
+		for (UsageInfo usageInfo : usageInfos) {
+
+			if (usageInfo.getTime() < clock) {
+				usageEntries.addAll(usageInfo.getUsageEntries());
+
+			} else {
+				putUsageInfo(usageInfo);
+			}
 		}
 		return usageEntries;
 	}
-	
+
+	public List<UsageInfo> getUsageInfos() {
+
+		List<UsageInfo> usageInfos = new LinkedList<>();
+		usageInfos.addAll(getUsageMap().values());
+
+		return usageInfos;
+	}
+
+	public void putUsageInfo(UsageInfo usageInfo) {
+		getUsageMap().put(usageInfo.getTime(), usageInfo);
+	}
+
+	public void resetUsageMap() {
+		getUsageMap().clear();
+	}
+
 	private void setUsageMap(Map<Double, UsageInfo> usageMap) {
 		this.usageMap = usageMap;
 	}
-	
+
 	protected Map<Double, UsageInfo> getUsageMap() {
 		return usageMap;
 	}
-	
+
 	public void updateUsage(double time) {
 		getUsageMap().put( time,
 				new UsageInfo(getId(), time, preemptionPolicy
@@ -163,10 +189,6 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 						getAvailableMips()));
 	}
 
-	public void resetUsageMap() {
-		getUsageMap().clear();
-	}
-	
 	public PreemptionPolicy getPreemptionPolicy() {
 		return preemptionPolicy;
 	}

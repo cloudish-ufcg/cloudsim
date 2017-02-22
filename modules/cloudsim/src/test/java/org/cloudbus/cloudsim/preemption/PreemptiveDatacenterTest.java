@@ -1800,6 +1800,8 @@ public class PreemptiveDatacenterTest {
 
         host.getUsageMap().put(1.0, info);
 
+        Mockito.when(timeUtil.clock()).thenReturn(2.0);
+
         datacenter.processEvent(event);
 
         Mockito.verify(hostUsage, times(1)).addUsageEntries(list);
@@ -1835,6 +1837,8 @@ public class PreemptiveDatacenterTest {
 
         host.getUsageMap().put(1.0, info);
         host2.getUsageMap().put(1.0, info2);
+
+        Mockito.when(timeUtil.clock()).thenReturn(2.0);
 
         datacenter.processEvent(event);
 

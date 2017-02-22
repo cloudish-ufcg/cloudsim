@@ -529,14 +529,12 @@ public class PreemptiveDatacenter extends Datacenter {
 	private void storeHostUtilization(boolean endOfSimulation) {
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Storing host usage into database.");
 
-		List<UsageEntry> usageEntries = new ArrayList<UsageEntry>();
+		List<UsageEntry> usageEntries = new LinkedList<UsageEntry>();
 		
 		for (Host host : getHostList()) {
-			PreemptiveHost gHost = (PreemptiveHost) host;
 
-			usageEntries.addAll(gHost.getUsageEntries());
-						
-			gHost.resetUsageMap();
+			PreemptiveHost gHost = (PreemptiveHost) host;
+			usageEntries.addAll(gHost.getUsageEntries(this.simulationTimeUtil.clock()));
 		}
 		
 		Log.printConcatLine(simulationTimeUtil.clock(), ":", usageEntries.size()," will be stored into database now.");
