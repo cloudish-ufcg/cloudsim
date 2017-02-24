@@ -1844,7 +1844,6 @@ public class PreemptiveDatacenterTest {
 
         Mockito.verify(hostUsage, times(1)).addUsageEntries(list);
         Mockito.verify(hostUsage, times(0)).addUsageEntries(new ArrayList<UsageEntry>());
-
     }
 
     @Test

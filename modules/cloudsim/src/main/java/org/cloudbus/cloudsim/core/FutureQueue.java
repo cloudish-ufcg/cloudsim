@@ -8,10 +8,7 @@
 
 package org.cloudbus.cloudsim.core;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * This class implements the future event queue used by {@link CloudSim}. 
@@ -28,7 +25,7 @@ import java.util.TreeSet;
 public class FutureQueue {
 
 	/** The sorted set of events. */
-	private final SortedSet<SimEvent> sortedSet = new TreeSet<SimEvent>();
+	private final TreeSet<SimEvent> sortedSet = new TreeSet<>();
 
 	/** A incremental number used for {@link SimEvent#serial} event attribute.
          */
@@ -42,6 +39,11 @@ public class FutureQueue {
 	 */
 	public void addEvent(SimEvent newEvent) {
 		newEvent.setSerial(serial++);
+		sortedSet.add(newEvent);
+	}
+
+	public void addEvent(SimEvent newEvent, long serial) {
+		newEvent.setSerial(serial);
 		sortedSet.add(newEvent);
 	}
 
@@ -100,4 +102,11 @@ public class FutureQueue {
 		sortedSet.clear();
 	}
 
+	public SimEvent peek(){
+		return sortedSet.first();
+	}
+
+	public SimEvent poll(){
+		return sortedSet.pollFirst();
+	}
 }

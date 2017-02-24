@@ -242,6 +242,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	}
 
     private void updateQuotas() {
+		Log.print("Update quota is occurring in time " + simulationTimeUtil.clock());
 		getAdmController().calculateQuota(getAdmittedRequests());
 		
 		// scheduling next update quota event
@@ -256,8 +257,6 @@ public class PreemptiveDatacenter extends Datacenter {
 			sendPriorityEvent(getId(), getUpdateQuotaIntervalSize(),
 					PreemptiveDatacenter.UPDATE_QUOTAS_EVENT, null, -1);
 		}
-
-		
 	}
 
 	private void tryToAllocateWaitingQueue() {
@@ -569,6 +568,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	 */
 	@Override
 	protected void processVmCreate(SimEvent ev, boolean ack) {
+
 		PreemptableVm vm = (PreemptableVm) ev.getData();
 
 		if (admController.accept(vm, getAdmittedRequests())) {
@@ -582,9 +582,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		} else {
 			Log.printConcatLine(simulationTimeUtil.clock(),
 					": VM #", vm.getId(), " - ", vm.getPriority(), " was not accepted by Admission Controler.");
-			System.out.println(simulationTimeUtil.clock() + 
-					": VM #" + vm.getId() + " - " + vm.getPriority() + " was not accepted by Admission Controler.");
-		}		
+		}
 	}
 
 	protected boolean allocateHostForVm(boolean ack, PreemptableVm vm, PreemptiveHost host, boolean isBackfilling) {
@@ -636,7 +634,8 @@ public class PreemptiveDatacenter extends Datacenter {
 			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 					vm.getId(), " will be destroyed in ", remainingTime,
 					" microseconds.");
-			sendFirst(getId(), remainingTime, CloudSimTags.VM_DESTROY_ACK, vm);			
+
+			sendFirst(getId(), remainingTime, CloudSimTags.VM_DESTROY_ACK, vm);
 			
 		}
 		return result;
@@ -758,7 +757,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	@Override
 	protected void processVmDestroy(SimEvent ev, boolean ack) {
 		PreemptableVm vm = (PreemptableVm) ev.getData();
-		
+
 		if (vm.achievedRuntime(simulationTimeUtil.clock())) {
 			if (getVmsRunning().remove(vm)) {		
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
@@ -810,7 +809,7 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	private void allocatingWaitingQueue() {	
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to allocate the VMs in waiting queue.");
-		
+
 		boolean isBackfilling = false;
 		
 		ArrayList<PreemptableVm> waitingQueue = new ArrayList<PreemptableVm>(getVmsForScheduling());

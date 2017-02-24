@@ -46,7 +46,7 @@ public class SystemTest {
     @Before
     public void setUp() throws Exception {
 
-        //Log.disable();
+//        Log.disable();
 
         event = Mockito.mock(SimEvent.class);
 

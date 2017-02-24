@@ -165,9 +165,19 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		}
 		return getActualRuntime(currentTime) / (currentTime - getSubmitTime());
 	}
-	
+
 	@Override
 	public String toString() {
-		return String.valueOf(getId());
+		return "PreemptableVm{" +
+				"priority=" + priority +
+				", submitTime=" + submitTime +
+				", runtime=" + runtime +
+				", startExec=" + startExec +
+				", actualRuntime=" + actualRuntime +
+				", numberOfPreemptions=" + numberOfPreemptions +
+				", numberOfBackfillingChoice=" + numberOfBackfillingChoice +
+				", numberOfMigrations=" + numberOfMigrations +
+				", lastHostId=" + lastHostId +
+				'}';
 	}
 }

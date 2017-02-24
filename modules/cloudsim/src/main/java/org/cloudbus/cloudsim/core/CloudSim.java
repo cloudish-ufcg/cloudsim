@@ -8,10 +8,8 @@
 
 package org.cloudbus.cloudsim.core;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -525,32 +523,26 @@ public class CloudSim {
 				ent.run();
 			}
 		}
-				
+
 		// If there are more future events then deal with them
 		if (future.size() > 0) {
-			List<SimEvent> toRemove = new ArrayList<SimEvent>();
-			Iterator<SimEvent> fit = future.iterator();
-			queue_empty = false;
-			SimEvent first = fit.next();
-			processEvent(first);
-			future.remove(first);
 
-			fit = future.iterator();
+			queue_empty = false;
+			SimEvent first = future.peek();
 
 			// Check if next events are at same time...
-			boolean trymore = fit.hasNext();
+			boolean trymore = (future.size() > 0);
 			while (trymore) {
-				SimEvent next = fit.next();
+				SimEvent next = future.peek();
+
 				if (next.eventTime() == first.eventTime()) {
+					next = future.poll();
 					processEvent(next);
-					toRemove.add(next);
-					trymore = fit.hasNext();
+					trymore = (future.size() > 0);
 				} else {
 					trymore = false;
 				}
 			}
-
-			future.removeAll(toRemove);
 
 		} else {
 			queue_empty = true;
@@ -628,7 +620,7 @@ public class CloudSim {
 
 		SimEvent e = new SimEvent(SimEvent.SEND, clock + delay, src, dest, tag, data);
 		e.setSerial(eventSerial);
-		future.addEvent(e);
+		future.addEvent(e, eventSerial);
 	}
 
 	/**
