@@ -129,9 +129,9 @@ public class InputTraceDataStore extends DataStore {
 					//TODO review it
 					Task task = new Task(nextTaskId,
 							results.getDouble("submitTime"),
-							DecimalUtil.format(results.getDouble("runtime"), PreemptiveHost.DECIMAL_ACCURACY),
-							DecimalUtil.format(results.getDouble("cpuReq"), PreemptiveHost.DECIMAL_ACCURACY),
-							DecimalUtil.format(results.getDouble("memReq"), PreemptiveHost.DECIMAL_ACCURACY),
+							DecimalUtil.format(results.getDouble("runtime")),
+							DecimalUtil.format(results.getDouble("cpuReq")),
+							DecimalUtil.format(results.getDouble("memReq")),
 							convertPriorityToPriorityClass(results.getInt("priority")));
 					
 					googleTasks.add(task);

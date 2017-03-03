@@ -174,7 +174,7 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 //		getPriorityToVms().get(vm.getPriority()).add(vm);
         double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority());
         getPriorityToInUseMips().put(vm.getPriority(),
-                DecimalUtil.format(priorityCurrentUse + vm.getMips(), DECIMAL_ACCURACY));
+                DecimalUtil.format(priorityCurrentUse + vm.getMips()));
 
     }
 
@@ -191,7 +191,7 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
         double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority());
 
         getPriorityToInUseMips().put(vm.getPriority(),
-                DecimalUtil.format(priorityCurrentUse - vm.getMips(), DECIMAL_ACCURACY));
+                DecimalUtil.format(priorityCurrentUse - vm.getMips()));
 
     }
 

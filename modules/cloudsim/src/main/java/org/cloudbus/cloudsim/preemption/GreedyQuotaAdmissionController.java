@@ -10,7 +10,6 @@ import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
  */
 public class GreedyQuotaAdmissionController implements AdmissionController {
 
-    private static final int DECIMAL_ACCURACY = 9;
 
 	private double datacenterCapacity;
     private Map<Integer, Double> sloTargets;
@@ -38,7 +37,7 @@ public class GreedyQuotaAdmissionController implements AdmissionController {
             double classCapacity = getDatacenterCapacity() - greaterPrioritiesResources;
             double classQuota = (classCapacity / getSloTargets().get(priority)) * getConfidanceFactor();
 
-            getPriorityToQuotas().put(priority, DecimalUtil.format(classQuota, DECIMAL_ACCURACY));
+            getPriorityToQuotas().put(priority, DecimalUtil.format(classQuota));
         }
     }
 

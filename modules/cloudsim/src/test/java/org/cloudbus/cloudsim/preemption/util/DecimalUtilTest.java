@@ -1,43 +1,39 @@
 package org.cloudbus.cloudsim.preemption.util;
 
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.text.DecimalFormat;
 
 /**
  * Created by João Victor Mafra and Alessandro Lia Fook on 23/09/16.
  */
 public class DecimalUtilTest {
 
-    private static final int DECIMAL_ACCURACY = 15;
-    private static final double ACCEPTABLE_DIFERENCE = 0.0000000000000000000000000000000000001;
+    private static final double ACCEPTABLE_DIFERENCE = 0.0000000001;
 
     @Test
     public void testFormat1(){
-        double NUMBER = 0.53999999999999999997810;
-        // between 2 and 19, the result must be 0.54
-        for (int i = 2; i <= 19; i++){
-            Assert.assertEquals(0.54, DecimalUtil.format(NUMBER, i), ACCEPTABLE_DIFERENCE);
-        }
 
-        // accuracy 1
-        Assert.assertEquals(0.5, DecimalUtil.format(NUMBER, DECIMAL_ACCURACY - 14), ACCEPTABLE_DIFERENCE);
+        double NUMBER = 0.53999999710999999999999999999;
 
-        // accuracy 0
-        Assert.assertEquals(1, DecimalUtil.format(NUMBER, DECIMAL_ACCURACY - 15), ACCEPTABLE_DIFERENCE);
+        Assert.assertEquals(0.539999997, DecimalUtil.format(NUMBER), ACCEPTABLE_DIFERENCE);
 
-        // accuracy 20
-        Assert.assertEquals(0.5399999999999999999980, DecimalUtil.format(NUMBER, DECIMAL_ACCURACY + 5), ACCEPTABLE_DIFERENCE);
+        //Asserting limit of round
+        NUMBER = 0.539999999701010;
 
-        // accuracy 21
-        Assert.assertEquals(0.53999999999999999999790, DecimalUtil.format(NUMBER, DECIMAL_ACCURACY + 6), ACCEPTABLE_DIFERENCE);
+        Assert.assertEquals(0.54, DecimalUtil.format(NUMBER), ACCEPTABLE_DIFERENCE);
 
-        // accuracy 22
-        Assert.assertEquals(0.53999999999999999999780, DecimalUtil.format(NUMBER, DECIMAL_ACCURACY), ACCEPTABLE_DIFERENCE);
-        Assert.assertEquals(0.54, 0.53999999999999999999780, ACCEPTABLE_DIFERENCE);
+        //Asserting round half up
+        NUMBER = 0.5399999995701010;
 
-        // accuracy 23
-        Assert.assertEquals(0.53999999999999999999781, DecimalUtil.format(NUMBER, DECIMAL_ACCURACY + 8), ACCEPTABLE_DIFERENCE);
+        Assert.assertEquals(0.54, DecimalUtil.format(NUMBER), ACCEPTABLE_DIFERENCE);
+
+        //Asserting round hald down
+        NUMBER = 0.5399999994701010;
+
+        Assert.assertEquals(0.539999999, DecimalUtil.format(NUMBER), ACCEPTABLE_DIFERENCE);
     }
-
 }
