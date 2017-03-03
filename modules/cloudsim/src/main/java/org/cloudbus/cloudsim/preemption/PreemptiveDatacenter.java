@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Host;
@@ -115,7 +116,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		this.datacenterDataStore = new DatacenterUsageDataStore(properties);
 		this.properties = properties;
 		this.admController = admController;
-		this.admittedRequests = new HashMap<Integer, Double>();
+		this.admittedRequests = new THashMap<Integer, Double>();
 	
 		if (properties.getProperty("number_of_priorities") != null) {
 			int numberOfPriorities = Integer.parseInt(properties.getProperty("number_of_priorities"));
@@ -328,7 +329,7 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	private Map<Integer, PreemptiveHost> generateMapOfHosts(){
 		List<PreemptiveHost> hostList = getHostList();
-		Map<Integer, PreemptiveHost> mapOfHosts = new HashMap<>();
+		Map<Integer, PreemptiveHost> mapOfHosts = new THashMap<>();
 
 		for (PreemptiveHost host: hostList){
 			mapOfHosts.put(host.getId(), host);

@@ -2,6 +2,7 @@ package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
 import java.util.*;
 
+import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
@@ -19,7 +20,7 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
 
     private Map<Integer, PriorityQueue<PreemptiveHost>> priorityToSortedHostFCFS;
     private Map<Integer, PriorityQueue<PreemptiveHost>> priorityToSortedHostAvailabilityAware;
-    private Map<Integer, Double> priorityToSLOTarget = new HashMap<Integer, Double>();
+    private Map<Integer, Double> priorityToSLOTarget = new THashMap<Integer, Double>();
 
     public WorstFitAvailabilityAwareVmAllocationPolicy(List<PreemptiveHost> hostList) {
         super(hostList);
@@ -27,8 +28,8 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
 
         verifyHosts(hostList);
 
-        priorityToSortedHostFCFS = new HashMap<>();
-        priorityToSortedHostAvailabilityAware = new HashMap<>();
+        priorityToSortedHostFCFS = new THashMap<>();
+        priorityToSortedHostAvailabilityAware = new THashMap<>();
 
         int numberOfPriorities = hostList.get(0).getNumberOfPriorities();
 

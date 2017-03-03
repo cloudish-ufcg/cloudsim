@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
@@ -28,7 +29,7 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 				new BwProvisionerSimple(Integer.MAX_VALUE), Integer.MAX_VALUE,
 				peList, vmScheduler);
 		
-		setUsageMap(new HashMap<Double, UsageInfo>());
+		setUsageMap(new THashMap<Double, UsageInfo>());
 		setPreemptionPolicy(preemptionPolicy);
 		preemptionPolicy.setTotalMips(((VmSchedulerMipsBased) getVmScheduler())
 				.getTotalMips());
@@ -115,7 +116,7 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 		for (Integer priority : preemptionPolicy.getPriorityToInUseMips().keySet()) {
 			totalUsage += preemptionPolicy.getPriorityToInUseMips().get(priority);
 		}
-		return DecimalUtil.format(totalUsage, DECIMAL_ACCURACY);
+		return DecimalUtil.format(totalUsage);
 	}
 	
 	@Override

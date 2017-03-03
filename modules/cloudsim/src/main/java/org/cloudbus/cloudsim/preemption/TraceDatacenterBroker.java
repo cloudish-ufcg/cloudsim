@@ -17,6 +17,7 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.core.CloudSim;
@@ -88,7 +89,7 @@ public class TraceDatacenterBroker extends SimEntity {
         setTaskStoringIntervalSize(taskStoringIntervalSize);
 
         setDatacenterIdsList(new LinkedList<Integer>());
-        setDatacenterCharacteristicsList(new HashMap<Integer, DatacenterCharacteristics>());
+        setDatacenterCharacteristicsList(new THashMap<Integer, DatacenterCharacteristics>());
 
         inputTraceDataStore = new InputTraceDataStore(properties);
         taskDataStore = new TaskDataStore(properties);
@@ -285,7 +286,7 @@ public class TraceDatacenterBroker extends SimEntity {
      */
     protected void processResourceCharacteristicsRequest(SimEvent ev) {
         setDatacenterIdsList(CloudSim.getCloudResourceList());
-        setDatacenterCharacteristicsList(new HashMap<Integer, DatacenterCharacteristics>());
+        setDatacenterCharacteristicsList(new THashMap<Integer, DatacenterCharacteristics>());
 
         Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": Cloud Resource List received with ",
                 getDatacenterIdsList().size(), " resource(s)");
