@@ -1,6 +1,5 @@
 package org.cloudbus.cloudsim.preemption.util;
 
-import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
 import org.junit.Assert;
 import org.junit.Test;
