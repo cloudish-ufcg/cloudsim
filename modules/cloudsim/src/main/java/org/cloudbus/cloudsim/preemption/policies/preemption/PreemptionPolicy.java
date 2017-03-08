@@ -16,7 +16,7 @@ public abstract class PreemptionPolicy {
 	public static final int DEFAULT_NUMBER_OF_PRIORITIES = 3;
 
 	private Map<Integer, Double> priorityToInUseMips = new HashMap<Integer, Double>();
-	private Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new HashMap<Integer, SortedSet<PreemptableVm>>();	
+	protected Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new HashMap<Integer, SortedSet<PreemptableVm>>();
 	private int numberOfPriorities = DEFAULT_NUMBER_OF_PRIORITIES;
 	private double totalMips;
 	protected SimulationTimeUtil simulationTimeUtil;

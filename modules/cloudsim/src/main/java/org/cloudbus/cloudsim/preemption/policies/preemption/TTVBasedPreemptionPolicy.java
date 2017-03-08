@@ -4,32 +4,39 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.util.PriorityAndTTVBasedPreemptableVmComparator;
+import org.cloudbus.cloudsim.preemption.util.VmAvailabilityBasedPreemptableVmComparator;
 
 public class TTVBasedPreemptionPolicy extends VmAvailabilityBasedPreemptionPolicy {
 
 	public TTVBasedPreemptionPolicy(Properties properties) {
 		super(properties);
+		for (int priority = 0; priority < getNumberOfPriorities(); priority++) {
+
+			VmAvailabilityBasedPreemptableVmComparator comparator = new VmAvailabilityBasedPreemptableVmComparator(
+					getPriorityToSLOTarget().get(priority), simulationTimeUtil);
+			priorityToVms.put(priority, new TreeSet<PreemptableVm>(comparator));
+		}
 	}
 
 	@Override
-	public Vm nextVmForPreempting() {
-		for (int i = getNumberOfPriorities() - 1; i >= 0; i--) {
+	protected void refreshPriorityToVms() {
 
-			PriorityAndTTVBasedPreemptableVmComparator comparator = new PriorityAndTTVBasedPreemptableVmComparator(
-					priorityToSLOTarget, simulationTimeUtil);
+		if (getLastTimeSortedVms() != simulationTimeUtil.clock()) {
 
-			SortedSet<PreemptableVm> sortedSet = new TreeSet<PreemptableVm>(
-					comparator);
-			sortedSet.addAll(priorityToRunningVms.get(i).values());
+			for (int i = getNumberOfPriorities() - 1; i >= 0; i--) {
 
-			if (!sortedSet.isEmpty()) {
-				return sortedSet.last();
+				PriorityAndTTVBasedPreemptableVmComparator comparator = new PriorityAndTTVBasedPreemptableVmComparator(
+						priorityToSLOTarget, simulationTimeUtil);
+
+				SortedSet<PreemptableVm> sortedSet = new TreeSet<PreemptableVm>(
+						comparator);
+				sortedSet.addAll(priorityToRunningVms.get(i).values());
+
+				priorityToVms.put(i, sortedSet);
 			}
+			setLastTimeSortedVms(simulationTimeUtil.clock());
 		}
-		return null;
 	}
-
 }

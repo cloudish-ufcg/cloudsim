@@ -107,6 +107,12 @@
 		<artifactId>trove4j</artifactId>
 		<version>3.0.1</version>
 	</dependency>
+        <dependency>
+            <groupId>org.cloudbus.cloudsim</groupId>
+            <artifactId>modules</artifactId>
+            <version>4.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <reporting>
 	<plugins>
