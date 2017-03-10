@@ -196,7 +196,7 @@ public class PreemptiveDatacenter extends Datacenter {
 				storeHostUtilization(false);
 				
 			}
-		}, 1, 1, TimeUnit.MINUTES);
+		}, 5, 5, TimeUnit.MINUTES);
         
 	}
 	
