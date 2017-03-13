@@ -2,6 +2,7 @@ package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
 import java.util.*;
 
+import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
@@ -60,7 +61,7 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
 
         // environment with VmAvailabilityBasedPreemptionPolicy
 
-        priorityToSLOTarget = new HashMap<>();
+        priorityToSLOTarget = new THashMap<>();
         priorityToSLOTarget.put(0, 1.0);
         priorityToSLOTarget.put(1, 0.9);
         priorityToSLOTarget.put(2, 0.5);

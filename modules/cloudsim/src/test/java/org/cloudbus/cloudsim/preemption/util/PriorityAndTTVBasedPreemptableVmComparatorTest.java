@@ -3,6 +3,7 @@ package org.cloudbus.cloudsim.preemption.util;
 import java.util.*;
 
 import com.sun.xml.internal.ws.policy.AssertionSet;
+import gnu.trove.map.hash.THashMap;
 import junit.framework.Assert;
 
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
@@ -23,7 +24,7 @@ public class PriorityAndTTVBasedPreemptableVmComparatorTest {
 
     @Before
     public void setUp(){
-        sloTargets = new HashMap<>();
+        sloTargets = new THashMap<>();
 
         // setting sloTargets
         sloTargets.put(0, 1.0);
@@ -43,7 +44,7 @@ public class PriorityAndTTVBasedPreemptableVmComparatorTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testEmptySLOTargetMap(){
-        PriorityAndTTVBasedPreemptableVmComparator comparator = new PriorityAndTTVBasedPreemptableVmComparator(new HashMap<Integer, Double>(), Mockito.mock(SimulationTimeUtil.class));
+        PriorityAndTTVBasedPreemptableVmComparator comparator = new PriorityAndTTVBasedPreemptableVmComparator(new THashMap<Integer, Double>(), Mockito.mock(SimulationTimeUtil.class));
     }
 
     @Test

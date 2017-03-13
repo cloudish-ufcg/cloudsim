@@ -3,6 +3,7 @@ package org.cloudbus.cloudsim.preemption;
 import java.util.HashMap;
 import java.util.Map;
 
+import gnu.trove.map.hash.THashMap;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +25,7 @@ public class GreedyQuotaAdmissionControllerTest {
     @Before
     public void setUp() {
 
-        sloTargets = new HashMap<Integer, Double>();
+        sloTargets = new THashMap<Integer, Double>();
         sloTargets.put(new Integer(PROD), new Double(1));
         sloTargets.put(new Integer(BATCH), new Double(0.9));
         sloTargets.put(new Integer(FREE), new Double(0.5));
@@ -35,7 +36,7 @@ public class GreedyQuotaAdmissionControllerTest {
     @Test
     public void testCalculateQuota01(){
 
-        Map<Integer, Double> admitedRequests = new HashMap<Integer, Double>();
+        Map<Integer, Double> admitedRequests = new THashMap<Integer, Double>();
 
         admitedRequests.put(PROD, 0d);
         admitedRequests.put(BATCH, 0d);
@@ -51,7 +52,7 @@ public class GreedyQuotaAdmissionControllerTest {
     @Test
     public void testCalculateQuota02(){
 
-        Map<Integer, Double> admittedRequests = new HashMap<Integer, Double>();
+        Map<Integer, Double> admittedRequests = new THashMap<Integer, Double>();
 
         admittedRequests.put(PROD, 10.0);
         admittedRequests.put(BATCH, 10.0);
@@ -67,7 +68,7 @@ public class GreedyQuotaAdmissionControllerTest {
     @Test
     public void testCalculateQuota03(){
 
-        Map<Integer, Double> admitedRequests = new HashMap<Integer, Double>();
+        Map<Integer, Double> admitedRequests = new THashMap<Integer, Double>();
 
         admitedRequests.put(PROD, 0d);
         admitedRequests.put(BATCH, 20.0);
@@ -114,7 +115,7 @@ public class GreedyQuotaAdmissionControllerTest {
     @Test
     public void calculateQuota04(){
 
-        Map<Integer, Double> admitedRequests = new HashMap<Integer, Double>();
+        Map<Integer, Double> admitedRequests = new THashMap<Integer, Double>();
 
         admitedRequests.put(PROD, 0.5);
         admitedRequests.put(BATCH, 20.0);
@@ -158,7 +159,7 @@ public class GreedyQuotaAdmissionControllerTest {
         int priority = 0;
         double runtime = 10;
 
-        Map<Integer, Double> admittedRequests = new HashMap<Integer, Double>();
+        Map<Integer, Double> admittedRequests = new THashMap<Integer, Double>();
 
         admittedRequests.put(PROD, 0d);
         admittedRequests.put(BATCH, 0d);
@@ -241,7 +242,7 @@ public class GreedyQuotaAdmissionControllerTest {
         int priority = 0;
         double runtime = 10;
 
-        Map<Integer, Double> admittedRequests = new HashMap<Integer, Double>();
+        Map<Integer, Double> admittedRequests = new THashMap<Integer, Double>();
 
         // updating admitted requests
         admittedRequests.put(PROD, 50d);
