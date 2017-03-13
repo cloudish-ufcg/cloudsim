@@ -56,7 +56,7 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
 
     public void preProcess() {
 
-        priorityToSortedHostAvailabilityAware = new HashMap<>();
+        priorityToSortedHostAvailabilityAware = new THashMap<>();
 
         int numberOfPriorities = ((PreemptiveHost) getHostList().get(0)).getNumberOfPriorities();
 

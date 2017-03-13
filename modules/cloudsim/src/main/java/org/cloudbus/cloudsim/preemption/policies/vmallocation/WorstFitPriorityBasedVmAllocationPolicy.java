@@ -2,6 +2,7 @@ package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
 import java.util.*;
 
+import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
@@ -24,7 +25,7 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 		}
 
 		setSimulationTimeUtil(new SimulationTimeUtil());
-		priorityToSortedHost = new HashMap<>();
+		priorityToSortedHost = new THashMap<>();
 		int numberOfPriorities = hosts.get(0).getNumberOfPriorities();
 
 		for (int priority = 0; priority < numberOfPriorities; priority++) {

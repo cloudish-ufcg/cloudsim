@@ -3,6 +3,7 @@ package org.cloudbus.cloudsim.preemption;
 import java.util.HashMap;
 import java.util.Map;
 
+import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
 
 /**
@@ -82,9 +83,9 @@ public class GreedyQuotaAdmissionController implements AdmissionController {
 
     public void initializeQuotas() {
 
-        Map<Integer, Double> admittedRequests = new HashMap<Integer, Double>();
+        Map<Integer, Double> admittedRequests = new THashMap<Integer, Double>();
 
-        priorityToQuotas = new HashMap<Integer, Double>();
+        priorityToQuotas = new THashMap<Integer, Double>();
         
         for (Integer priority : getSloTargets().keySet()) {
             admittedRequests.put(priority, 0d);

@@ -6,6 +6,7 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
@@ -16,8 +17,8 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 
     public static final String SLO_TARGET_PREFIX_PROP = "slo_availability_target_priority_";
 
-    protected Map<Integer, Double> priorityToSLOTarget = new HashMap<Integer, Double>();
-    protected Map<Integer, Map<Integer, PreemptableVm>> priorityToRunningVms = new HashMap<Integer, Map<Integer, PreemptableVm>>();
+    protected Map<Integer, Double> priorityToSLOTarget = new THashMap<Integer, Double>();
+    protected Map<Integer, Map<Integer, PreemptableVm>> priorityToRunningVms = new THashMap<Integer, Map<Integer, PreemptableVm>>();
 
     public VmAvailabilityBasedPreemptionPolicy(Properties properties) {
         this(properties, new SimulationTimeUtil());
