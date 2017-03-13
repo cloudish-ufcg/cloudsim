@@ -59,7 +59,6 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 		return false;
 	}
 
-
     @Override
     public int hashCode() {
         return getId();
@@ -71,8 +70,10 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 
 	@Override
 	public boolean isSuitableForVm(Vm vm) {
+
 		if (vm == null) {
 			return false;
+
 		} else if (getVmScheduler().getAvailableMips() >= vm.getMips()) {
 			return true;
 		} 
@@ -112,11 +113,7 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 	}
 	
 	public double getTotalUsage() {
-		double totalUsage = 0;
-		for (Integer priority : preemptionPolicy.getPriorityToInUseMips().keySet()) {
-			totalUsage += preemptionPolicy.getPriorityToInUseMips().get(priority);
-		}
-		return DecimalUtil.format(totalUsage);
+		return DecimalUtil.format(((VmSchedulerMipsBased)getVmScheduler()).getMipsInUse());
 	}
 	
 	@Override
@@ -132,6 +129,7 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 	}
 	
 	public double getAvailableMipsByPriority(int priority) {
+
 		return preemptionPolicy.getAvailableMipsByPriority(priority);
 	}
 

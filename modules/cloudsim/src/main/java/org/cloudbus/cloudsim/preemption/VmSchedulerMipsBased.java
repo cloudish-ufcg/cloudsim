@@ -13,7 +13,6 @@ import java.util.List;
  */
 public class VmSchedulerMipsBased extends VmScheduler{
 
-
     double totalMips;
 
     /**
