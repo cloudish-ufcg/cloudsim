@@ -83,8 +83,9 @@ utilization_database_url=jdbc:sqlite:/path/to/utilization.sqlite3
 
 
 #admission controller info
+#update_quota_event_trigged=no
 
-# interval to calculate quota for classes (in seconds)
+#interval to calculate quota for classes (in seconds)
 #update_quota_interval_size=300
 
 #admissionController class

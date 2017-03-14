@@ -7,6 +7,7 @@ import gnu.trove.map.hash.THashMap;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  * Created by Alessandro Lia Fook Santos on 08/02/17.
@@ -164,7 +165,7 @@ public class GreedyQuotaAdmissionControllerTest {
         admittedRequests.put(PROD, 0d);
         admittedRequests.put(BATCH, 0d);
         admittedRequests.put(FREE, 0d);
-        
+
         PreemptableVm vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
         Assert.assertTrue(admController.accept(vm, admittedRequests));
 

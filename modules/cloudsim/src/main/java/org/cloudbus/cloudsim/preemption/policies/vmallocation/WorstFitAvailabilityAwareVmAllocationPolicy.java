@@ -50,8 +50,6 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
         }
 
         setPriorityToSLOTarget(hostList);
-
-
     }
 
     public void preProcess() {

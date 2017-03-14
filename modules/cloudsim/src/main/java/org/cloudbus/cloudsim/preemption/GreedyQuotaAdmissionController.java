@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import gnu.trove.map.hash.THashMap;
+import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
 
 /**
@@ -17,7 +18,8 @@ public class GreedyQuotaAdmissionController implements AdmissionController {
     private Map<Integer, Double> priorityToQuotas;
     private double confidanceFactor;
 
-    public GreedyQuotaAdmissionController(double datacenterCapacity, Map<Integer, Double> sloTargets, double confidenceLevel){
+    public GreedyQuotaAdmissionController(double datacenterCapacity, Map<Integer, Double> sloTargets,
+                                          double confidenceLevel) {
         setDatacenterCapacity(datacenterCapacity);
         setSloTargets(sloTargets);
         setConfidanceFactor(confidenceLevel);
@@ -27,19 +29,20 @@ public class GreedyQuotaAdmissionController implements AdmissionController {
     @Override
     public void calculateQuota(Map<Integer, Double> admittedRequests) {
 
-        for (Integer priority: getSloTargets().keySet()) {
+            for (Integer priority : getSloTargets().keySet()) {
 
-            double greaterPrioritiesResources = 0d;
+                double greaterPrioritiesResources = 0d;
 
-            for (int i = 0; i < priority; i++) {
-                greaterPrioritiesResources += admittedRequests.get(i);
+                for (int i = 0; i < priority; i++) {
+                    greaterPrioritiesResources += admittedRequests.get(i);
+                }
+
+                double classCapacity = getDatacenterCapacity() - greaterPrioritiesResources;
+                double classQuota = (classCapacity / getSloTargets().get(priority)) * getConfidanceFactor();
+
+                getPriorityToQuotas().put(priority, DecimalUtil.format(classQuota));
             }
 
-            double classCapacity = getDatacenterCapacity() - greaterPrioritiesResources;
-            double classQuota = (classCapacity / getSloTargets().get(priority)) * getConfidanceFactor();
-
-            getPriorityToQuotas().put(priority, DecimalUtil.format(classQuota));
-        }
     }
 
     @Override

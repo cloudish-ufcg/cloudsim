@@ -94,6 +94,7 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	private boolean collectDatacenterInfo = false;
 	private boolean makeCheckpoint = false;
+	private boolean calculateQuotaEventTrigged = false;
 	private Properties properties;
 	private static double lastProcessTime;
 	private AdmissionController admController;
@@ -180,15 +181,20 @@ public class PreemptiveDatacenter extends Datacenter {
 
 			setDatacenterCollectInfoIntervalSize(datacenterCollectInfoIntervalSize);
 		}
-		
-		if (properties.getProperty("update_quota_interval_size") != null) {
-			double updateQuotaIntervalSize = properties
-					.getProperty("update_quota_interval_size") == null ? DEFAULT_UPDATE_QUOTA_INTERVAL_SIZE
-							: Double.parseDouble(properties.getProperty("update_quota_interval_size"));
+		if(properties.getProperty("update_quota_event_trigged") != null
+				&& properties.getProperty("update_quota_event_trigged")
+				.equals("yes")) {
 
-			setUpdateQuotaIntervalSize(updateQuotaIntervalSize);
+			setCalculateQuotaEventTrigged(true);
+
+			if (properties.getProperty("update_quota_interval_size") != null) {
+				double updateQuotaIntervalSize = properties
+						.getProperty("update_quota_interval_size") == null ? DEFAULT_UPDATE_QUOTA_INTERVAL_SIZE
+						: Double.parseDouble(properties.getProperty("update_quota_interval_size"));
+
+				setUpdateQuotaIntervalSize(updateQuotaIntervalSize);
+			}
 		}
-		
 		
 		executor.scheduleAtFixedRate(new TimerTask() {
 			@Override
@@ -199,7 +205,11 @@ public class PreemptiveDatacenter extends Datacenter {
 		}, 5, 5, TimeUnit.MINUTES);
         
 	}
-	
+
+	private void setCalculateQuotaEventTrigged(boolean option) {
+		this.calculateQuotaEventTrigged = option;
+	}
+
 	@Override
 	protected void processOtherEvent(SimEvent ev) {
 
@@ -390,31 +400,32 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	private void scheduleDatacenterEvents() {
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Scheduling the first datacenter events.");
-		
+
 //		// creating the first utilization store event
 //		send(getId(), getHostUsageStoringIntervalSize(),
 //				PreemptiveDatacenter.STORE_HOST_UTILIZATION_EVENT);
-		
+
 		// creating the first update quota event
-		sendPriorityEvent(getId(), getUpdateQuotaIntervalSize(),
-				PreemptiveDatacenter.UPDATE_QUOTAS_EVENT, null, -1);
-		
+		if (getCalculateQuotaEventTrigged()) {
+			sendPriorityEvent(getId(), getUpdateQuotaIntervalSize(),
+					PreemptiveDatacenter.UPDATE_QUOTAS_EVENT, null, -1);
+		}
 		// creating the first datacenter store event
 		if (collectDatacenterInfo) {
 			send(getId(), getDatacenterCollectInfoIntervalSize(), PreemptiveDatacenter.COLLECT_DATACENTER_INFO_EVENT);
-			
+
 			send(getId(), getDatacenterStoringInfoIntervalSize(), PreemptiveDatacenter.STORE_DATACENTER_INFO_EVENT);
 		}
-		
+
 		// creating the first checkpoint event
 		if (makeCheckpoint) {
 			send(getId(), getCheckpointIntervalSize(), PreemptiveDatacenter.MAKE_DATACENTER_CHECKPOINT_EVENT);
 		}
-		
+
 		// periodically trying to allocate waiting queue
 		if (getAllocateWaitingQueueIntervalSize() != INVALID_INTERVAL_SIZE) {
 			send(getId(), getAllocateWaitingQueueIntervalSize(), PreemptiveDatacenter.TRY_TO_ALLOCATE_WAITING_QUEUE_EVENT);
-		}		
+		}
 	}
 
 	private void terminateSimulation() {
@@ -578,6 +589,10 @@ public class PreemptiveDatacenter extends Datacenter {
 		return hostUsageDataStore.getAllUsageEntries();
 	}
 
+	public void setAdmController(AdmissionController admController) {
+		this.admController = admController;
+	}
+
 	/**
 	 * Process the event for an User/Broker who wants to create a VM in this Datacenter. This
 	 * Datacenter will then send the status back to the User/Broker. It is important to note that
@@ -594,6 +609,10 @@ public class PreemptiveDatacenter extends Datacenter {
 	protected void processVmCreate(SimEvent ev, boolean ack) {
 
 		PreemptableVm vm = (PreemptableVm) ev.getData();
+
+		if (!getCalculateQuotaEventTrigged()) {
+			getAdmController().calculateQuota(getAdmittedRequests());
+		}
 
 		if (admController.accept(vm, getAdmittedRequests())) {
 
@@ -967,4 +986,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		return admController;
 	}
 
+	public boolean getCalculateQuotaEventTrigged() {
+		return calculateQuotaEventTrigged;
+	}
 }

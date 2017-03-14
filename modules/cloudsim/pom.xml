@@ -112,7 +112,13 @@
 			<artifactId>cloudsim</artifactId>
 			<version>4.0</version>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.cloudbus.cloudsim</groupId>
+            <artifactId>cloudsim-package</artifactId>
+            <version>4.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
     <reporting>
 	<plugins>
 	  <plugin>
