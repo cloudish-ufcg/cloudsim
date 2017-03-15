@@ -101,7 +101,7 @@ public class MergeOfResultFiles {
             properties.setProperty(HostUsageDataStore.DATABASE_URL_PROP, utilization.path_after);
 			inputDataStore = new HostUsageDataStore(properties);
 
-			loadAndStoreUsageEntries(time, inputDataStore.getMaxTraceTime(), inputDataStore, outputDataStore);
+			loadAndStoreUsageEntries(time, inputDataStore.getMaxTraceTime() + 1, inputDataStore, outputDataStore);
 
         } else if (parsedCommand.equals("datacenter")){
 
