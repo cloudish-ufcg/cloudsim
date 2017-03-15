@@ -116,6 +116,10 @@ public class CloudSimExampleGoogleTrace {
                     + " minutes");
 
             Log.printLine("CloudSimExample finished!");
+            
+            
+            System.exit(0);
+            
         } catch (Exception e) {
             e.printStackTrace();
             Log.printLine("The simulation has been terminated due to an unexpected error");

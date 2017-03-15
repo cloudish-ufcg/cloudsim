@@ -136,7 +136,7 @@ public class PreemptiveDatacenter extends Datacenter {
 			}
 		}
 
-        double hostUsageStoringIntervalSize = properties
+        int hostUsageStoringIntervalSize = properties
                 .getProperty("utilization_storing_interval_size") == null ? DEFAULT_UTILIZATION_STORING_INTERVAL_SIZE
                 : Integer.parseInt(properties.getProperty("utilization_storing_interval_size"));
         
@@ -202,7 +202,7 @@ public class PreemptiveDatacenter extends Datacenter {
 				storeHostUtilization(false);
 				
 			}
-		}, 5, 5, TimeUnit.MINUTES);
+		}, hostUsageStoringIntervalSize, hostUsageStoringIntervalSize, TimeUnit.MINUTES);
         
 	}
 
