@@ -3,7 +3,6 @@ import org.cloudbus.cloudsim.examples.MergeOfResultFiles;
 import org.cloudbus.cloudsim.preemption.DatacenterInfo;
 import org.cloudbus.cloudsim.preemption.TaskState;
 import org.cloudbus.cloudsim.preemption.UsageEntry;
-import org.cloudbus.cloudsim.preemption.datastore.DataStore;
 import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.HostUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.TaskDataStore;
@@ -11,7 +10,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.io.File;
@@ -57,16 +55,22 @@ public class MergeOfResultFilesTest {
 
     //DatacenterInfo characteristics
 
-    private double time;
     private static final int NUMBER_OF_DATACENTER_INFO = 20;
+    private double time;
     private static int VMS_RUNNING = 59;
-    private static final int USAGE_BY_PRIORITY_0 = 40;
-    private static final int USAGE_BY_PRIORITY_1 = 15;
-    private static final int USAGE_BY_PRIORITY_2 = 4;
+    private static final int VMS_RUNNING_P0 = 40;
+    private static final int VMS_RUNNING_P1 = 15;
+    private static final int VMS_RUNNING_P2 = 4;
     private static final int VMS_FOR_SCHEDULING = 12;
     private static final int VMS_FOR_SCHEDULING_P_0 = 1;
     private static final int VMS_FOR_SCHEDULING_P_1 = 3;
     private static final int VMS_FOR_SCHEDULING_P_2 = 8;
+    private double RESOURCES_RUNNING_P0 = 0.581111;
+    private double RESOURCES_RUNNING_P1 = 2000.00000009;
+    private double RESOURCES_RUNNING_P2 = 0d;
+    private double RESOURCES_WAITING_P0 = 123.99999;
+    private double RESOURCES_WAITING_P1 = 0.000000001;
+    private double RESOURCES_WAITING_P2 = 6000.99999999;
 
     private DatacenterInfo info;
     private List<DatacenterInfo> datacenterInfoList;
@@ -106,9 +110,10 @@ public class MergeOfResultFilesTest {
 
         for (int i = 0; i < NUMBER_OF_DATACENTER_INFO; i++) {
 
-            info = new DatacenterInfo(time + (5 * i), VMS_RUNNING, USAGE_BY_PRIORITY_0, USAGE_BY_PRIORITY_1,
-                    USAGE_BY_PRIORITY_2, VMS_FOR_SCHEDULING, VMS_FOR_SCHEDULING_P_0, VMS_FOR_SCHEDULING_P_1,
-                    VMS_FOR_SCHEDULING_P_2);
+            info = new DatacenterInfo(time + (5 * i), VMS_RUNNING, VMS_RUNNING_P0, RESOURCES_RUNNING_P0,
+                    VMS_RUNNING_P1, RESOURCES_RUNNING_P1, VMS_RUNNING_P2, RESOURCES_RUNNING_P2,
+                    VMS_FOR_SCHEDULING, VMS_FOR_SCHEDULING_P_0, RESOURCES_WAITING_P0, VMS_FOR_SCHEDULING_P_1,
+                    RESOURCES_WAITING_P1, VMS_FOR_SCHEDULING_P_2, RESOURCES_WAITING_P2);
 
             datacenterInfoList.add(info);
         }
@@ -236,18 +241,24 @@ public class MergeOfResultFilesTest {
                     + "time REAL NOT NULL, "
                     + "vmsRunning INTEGER, "
                     + "vmsRunningP0 INTEGER, "
+                    + "resourcesRunningP0 REAL, "
                     + "vmsRunningP1 INTEGER, "
+                    + "resourcesRunningP1 REAL, "
                     + "vmsRunningP2 INTEGER, "
+                    + "resourcesRunningP2 REAL, "
                     + "vmsForScheduling INTEGER, "
                     + "vmsForSchedulingP0 INTEGER, "
+                    + "resourcesWaitingP0 REAL, "
                     + "vmsForSchedulingP1 INTEGER, "
+                    + "resourcesWaitingP1 REAL, "
                     + "vmsForSchedulingP2 INTEGER, "
+                    + "resourcesWaitingP2 REAL, "
                     + "PRIMARY KEY (time)"
                     + ")");
             statement.close();
 
             String INSERT_CLOUDLET_SQL = "INSERT INTO datacenterusage"
-                    + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             // populating the database
             for (DatacenterInfo datacenterInfo: datacenterInfoList) {
@@ -256,12 +267,18 @@ public class MergeOfResultFilesTest {
                 insertMemberStatement.setDouble(1, datacenterInfo.getTime());
                 insertMemberStatement.setInt(2, datacenterInfo.getVmsRunning());
                 insertMemberStatement.setInt(3, datacenterInfo.getVmsRunningP0());
-                insertMemberStatement.setInt(4, datacenterInfo.getVmsRunningP1());
-                insertMemberStatement.setInt(5, datacenterInfo.getVmsRunningP2());
-                insertMemberStatement.setInt(6, datacenterInfo.getVmsForScheduling());
-                insertMemberStatement.setInt(7, datacenterInfo.getVmsForSchedulingP0());
-                insertMemberStatement.setInt(8, datacenterInfo.getVmsForSchedulingP1());
-                insertMemberStatement.setInt(9, datacenterInfo.getVmsForSchedulingP2());
+                insertMemberStatement.setDouble(4, datacenterInfo.getResourcesRunningP0());
+                insertMemberStatement.setInt(5, datacenterInfo.getVmsRunningP1());
+                insertMemberStatement.setDouble(6, datacenterInfo.getResourcesRunningP1());
+                insertMemberStatement.setInt(7, datacenterInfo.getVmsRunningP2());
+                insertMemberStatement.setDouble(8, datacenterInfo.getResourcesRunningP2());
+                insertMemberStatement.setInt(9, datacenterInfo.getVmsForScheduling());
+                insertMemberStatement.setInt(10, datacenterInfo.getVmsForSchedulingP0());
+                insertMemberStatement.setDouble(11, datacenterInfo.getResourcesWaitingP0());
+                insertMemberStatement.setInt(12, datacenterInfo.getVmsForSchedulingP1());
+                insertMemberStatement.setDouble(13, datacenterInfo.getResourcesWaitingP1());
+                insertMemberStatement.setInt(14, datacenterInfo.getVmsForSchedulingP2());
+                insertMemberStatement.setDouble(15, datacenterInfo.getResourcesWaitingP2());
                 insertMemberStatement.execute();
             }
             connection.close();
