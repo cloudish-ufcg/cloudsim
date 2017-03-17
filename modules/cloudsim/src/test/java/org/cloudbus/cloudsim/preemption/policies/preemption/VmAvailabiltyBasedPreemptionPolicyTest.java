@@ -314,9 +314,9 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		
 		Assert.assertEquals(10, policy.getPriorityToInUseMips().get(1), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(2, policy.getPriorityToVms().get(1).size());
-		Assert.assertEquals(vm0, policy.getPriorityToVms().get(1).first());
-		Assert.assertEquals(vm1, policy.getPriorityToVms().get(1).last());
-		
+		Assert.assertEquals(vm0, policy.getPriorityToVms().get(1).last());
+		Assert.assertEquals(vm1, policy.getPriorityToVms().get(1).first());
+
 		Assert.assertEquals(0, policy.getPriorityToInUseMips().get(2), ACCEPTABLE_DIFFERENCE);
 		Assert.assertTrue(policy.getPriorityToVms().get(2).isEmpty());
 		
@@ -372,8 +372,7 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// checking current vm availabilities
 		Assert.assertEquals(1, vm0.getCurrentAvailability(2), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(0, vm1.getCurrentAvailability(2), ACCEPTABLE_DIFFERENCE);
-		Assert.assertEquals(1, vm1.getAvailabilityWhileAllocating(2), ACCEPTABLE_DIFFERENCE);
-		
+
 		// allocating second VM
 		policy.allocating(vm1);
 		vm1.setStartExec(2);
@@ -384,9 +383,9 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 	
 		Assert.assertEquals(9.1, policy.getPriorityToInUseMips().get(1), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(2, policy.getPriorityToVms().get(1).size());
-		Assert.assertEquals(vm0, policy.getPriorityToVms().get(1).first());
-		Assert.assertEquals(vm1, policy.getPriorityToVms().get(1).last());
-		
+		Assert.assertEquals(vm0, policy.getPriorityToVms().get(1).last());
+		Assert.assertEquals(vm1, policy.getPriorityToVms().get(1).first());
+
 		Assert.assertEquals(0, policy.getPriorityToInUseMips().get(2), ACCEPTABLE_DIFFERENCE);
 		Assert.assertTrue(policy.getPriorityToVms().get(2).isEmpty());
 		

@@ -310,29 +310,29 @@ public class VmAvailabilityBasedPreemptableVmComparatorTest {
 		
 		// checking sort
 		Assert.assertEquals(5, sortedSet.size());
-		Assert.assertEquals(vm0, sortedSet.first());
-		Assert.assertEquals(vm4, sortedSet.last());
+		Assert.assertEquals(vm4, sortedSet.first());
+		Assert.assertEquals(vm3, sortedSet.last());
 		Assert.assertTrue(sortedSet.contains(vm1));
 		Assert.assertTrue(sortedSet.contains(vm2));
-		Assert.assertTrue(sortedSet.contains(vm3));
+		Assert.assertTrue(sortedSet.contains(vm0));
 		
-		// removing vm0 and vm3
-		sortedSet.remove(vm0);
+		// removing vm4 and vm3
+		sortedSet.remove(vm4);
 		sortedSet.remove(vm3);
 		
 		// checking sort
 		Assert.assertEquals(3, sortedSet.size());
-		Assert.assertEquals(vm1, sortedSet.first());
-		Assert.assertEquals(vm4, sortedSet.last());
-		Assert.assertTrue(sortedSet.contains(vm2));
+		Assert.assertEquals(vm0, sortedSet.first());
+		Assert.assertEquals(vm2, sortedSet.last());
+		Assert.assertTrue(sortedSet.contains(vm1));
 		
-		// removing vm2 and vm1
+		// removing vm2 and vm0
+		sortedSet.remove(vm0);
 		sortedSet.remove(vm2);
-		sortedSet.remove(vm1);
 		
 		// checking sort
 		Assert.assertEquals(1, sortedSet.size());
-		Assert.assertEquals(vm4, sortedSet.first());
-		Assert.assertEquals(vm4, sortedSet.last());
+		Assert.assertEquals(vm1, sortedSet.first());
+		Assert.assertEquals(vm1, sortedSet.last());
 	}
 }

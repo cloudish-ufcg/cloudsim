@@ -8,7 +8,9 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
+import org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitAvailabilityAwareVmAllocationPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitPriorityBasedVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.*;
@@ -72,26 +74,30 @@ public class SystemTest {
         datacenterOutputFile = "outputUtilizationTest.sqlite3";
         datacenterOutputUrl = "jdbc:sqlite:" + datacenterOutputFile;
 
-        properties = Mockito.mock(Properties.class);
+        properties = new Properties();
+        properties.setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
         // time in micro
-        Mockito.when(properties.getProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP)).thenReturn("3");
-        Mockito.when(properties.getProperty("logging")).thenReturn("yes");
-        Mockito.when(properties.getProperty("input_trace_database_url")).thenReturn(datacenterInputUrl);
-        Mockito.when(properties.getProperty("loading_interval_size")).thenReturn("300000000");
-        Mockito.when(properties.getProperty("storing_interval_size")).thenReturn("240000000");
-        Mockito.when(properties.getProperty("output_tasks_database_url")).thenReturn(datacenterOutputUrl);
-        Mockito.when(properties.getProperty("utilization_database_url")).thenReturn(datacenterOutputUrl);
-        Mockito.when(properties.getProperty("utilization_storing_interval_size")).thenReturn("480000000");
-        Mockito.when(properties.getProperty("datacenter_database_url")).thenReturn(datacenterOutputUrl);
-        Mockito.when(properties.getProperty("collect_datacenter_summary_info")).thenReturn("yes");
-        Mockito.when(properties.getProperty("datacenter_storing_interval_size")).thenReturn("300000000");
-        Mockito.when(properties.getProperty("datacenter_collect_info_interval_size")).thenReturn("240000000");
-        Mockito.when(properties.getProperty("make_checkpoint")).thenReturn("no");
-        Mockito.when(properties.getProperty("checkpoint_interval_size")).thenReturn("300000000");
-        Mockito.when(properties.getProperty("checkpoint_dir")).thenReturn(datacenterOutputUrl);
-        Mockito.when(properties.getProperty("preemption_policy_class")).thenReturn("org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy");
-        Mockito.when(properties.getProperty("end_of_simulation_time")).thenReturn("600000000");
-        Mockito.when(properties.getProperty("update_quota_interval_size")).thenReturn("600000000");
+        properties.setProperty("logging", "yes");
+        properties.setProperty("input_trace_database_url", datacenterInputUrl);
+        properties.setProperty("loading_interval_size", "300000000");
+        properties.setProperty("storing_interval_size", "240000000");
+        properties.setProperty("output_tasks_database_url", datacenterOutputUrl);
+        properties.setProperty("utilization_database_url", datacenterOutputUrl);
+        properties.setProperty("utilization_storing_interval_size", "480000000");
+        properties.setProperty("datacenter_database_url", datacenterOutputUrl);
+        properties.setProperty("collect_datacenter_summary_info", "yes");
+        properties.setProperty("datacenter_storing_interval_size", "300000000");
+        properties.setProperty("datacenter_collect_info_interval_size", "240000000");
+        properties.setProperty("make_checkpoint", "no");
+        properties.setProperty("checkpoint_interval_size", "300000000");
+        properties.setProperty("checkpoint_dir", datacenterOutputUrl);
+        properties.setProperty("preemption_policy_class", "org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy");
+        properties.setProperty("end_of_simulation_time", "600000000");
+        properties.setProperty("update_quota_interval_size", "600000000");
+        properties.setProperty("number_of_priorities", "3");
+        properties.setProperty("slo_availability_target_priority_0", "1");
+        properties.setProperty("slo_availability_target_priority_1", "0.9");
+        properties.setProperty("slo_availability_target_priority_2", "0.5");
 
         // creating host
         List<Pe> peList1 = new ArrayList<Pe>();
@@ -139,8 +145,8 @@ public class SystemTest {
     @Test
     public void testSystemSingleHostWithTrace() {
 
-        Mockito.when(properties.getProperty("number_of_hosts")).thenReturn("1");
-        Mockito.when(properties.getProperty("total_cpu_capacity")).thenReturn("6603.25");
+        properties.setProperty("number_of_hosts", "1");
+        properties.setProperty("total_cpu_capacity", "6603.25");
 
         // First step: Initialize the CloudSim package. It should be called
         // before creating any entities.
@@ -248,8 +254,8 @@ public class SystemTest {
 
     @Test
     public void testSystemMultipleHostWithTrace() {
-        Mockito.when(properties.getProperty("number_of_hosts")).thenReturn("3");
-        Mockito.when(properties.getProperty("total_cpu_capacity")).thenReturn("6603");
+        properties.setProperty("number_of_hosts", "3");
+        properties.setProperty("total_cpu_capacity", "6603");
 
         int num_user = 1; // number of grid users
         Calendar calendar = Calendar.getInstance();
@@ -1267,4 +1273,188 @@ public class SystemTest {
             Assert.assertEquals(0, task.getNumberOfBackfillingChoices());
         }
     }
+
+    @Test
+    public void testSystemSingleHostWithAvailableAwarePolicy() {
+
+        // First step: Initialize the CloudSim package. It should be called
+        // before creating any entities.
+        int num_user = 1; // number of grid users
+        Calendar calendar = Calendar.getInstance();
+        boolean trace_flag = false; // mean trace events
+
+        // Initialize the CloudSim library
+        CloudSim.init(num_user, calendar, trace_flag);
+        CloudSim.runStart();
+
+        // creating host
+        List<Pe> peList1 = new ArrayList<Pe>();
+        hostCapacity = 6603.25;
+        peList1.add(new Pe(0, new PeProvisionerSimple(hostCapacity)));
+
+        host = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
+                peList1), new VmAvailabilityBasedPreemptionPolicy(properties));
+
+        // creating list of hosts
+        List<PreemptiveHost> hostList = new ArrayList<PreemptiveHost>();
+        hostList.add(host);
+
+
+        preemptableVmAllocationPolicy = new WorstFitAvailabilityAwareVmAllocationPolicy(hostList);
+
+        // creating data center
+        try {
+            datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
+                    new LinkedList<Storage>(), 0, properties);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        //asserting host on data center and host total capacity
+        Assert.assertEquals(host, datacenter.getHostList().get(0));
+        Assert.assertEquals(hostCapacity, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        // creating vms model P0S0, total of vms 6603
+        // with cpu total requisition of 3301.5
+        populateVmLists();
+
+        submitEvents();
+        CloudSim.runClockTick();
+
+
+        advanceTime(0.0);
+        //allocating vms with submit time 0
+        testSimulationRuntime0();
+
+        advanceTime(1.0);
+        //allocating vms with submit time 1
+        testSimulationRuntime1();
+
+        advanceTime(2.0);
+        //       executing simulation at runtime 2
+        testSimulationRuntime2();
+
+
+        advanceTime(3.0);
+//        executing simulation to verify preemption and running of vms through running time of simulation
+        testSimulationRuntime3();
+
+        advanceTime(4.0);
+        testSimulationRuntime4();
+
+        advanceTime(5.0);
+        testSimulationRuntime5();
+
+        advanceTime(6.0);
+        testSimulationRuntime6();
+
+        advanceTime(7.0);
+        testSimulationRuntime7();
+
+        advanceTime(8.0);
+        testSimulationRuntime8();
+
+        verifyAvailabilityOfSingleHost();
+    }
+
+    @Test
+    // testing the operation of the system for more than one host
+    public void testSystemMultipleHostWithAvailabilitAware() {
+
+        hostCapacity = 2201;
+
+        List<Host> hostList = new ArrayList<>();
+        List<Pe> peList1 = new ArrayList<>();
+        peList1.add(new Pe(0, new PeProvisionerSimple(hostCapacity)));
+
+        PreemptiveHost host1 = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
+                peList1), new VmAvailabilityBasedPreemptionPolicy(properties));
+        PreemptiveHost host2 = new PreemptiveHost(2, peList1, new VmSchedulerMipsBased(
+                peList1), new VmAvailabilityBasedPreemptionPolicy(properties));
+        PreemptiveHost host3 = new PreemptiveHost(3, peList1, new VmSchedulerMipsBased(
+                peList1), new VmAvailabilityBasedPreemptionPolicy(properties));
+
+        hostList.add(host1);
+        hostList.add(host2);
+        hostList.add(host3);
+
+        List<PreemptiveHost> preemptiveHostList = new ArrayList<>();
+        for (Host host : hostList) {
+            preemptiveHostList.add((PreemptiveHost) host);
+        }
+
+        preemptableVmAllocationPolicy = new WorstFitAvailabilityAwareVmAllocationPolicy(preemptiveHostList);
+
+        Mockito.when(characteristics.getHostList()).thenReturn(hostList);
+
+        // First step: Initialize the CloudSim package. It should be called
+        // before creating any entities.
+        int num_user = 1; // number of grid users
+        Calendar calendar = Calendar.getInstance();
+        boolean trace_flag = false; // mean trace events
+
+        // Initialize the CloudSim library
+        CloudSim.init(num_user, calendar, trace_flag);
+        CloudSim.runStart();
+
+        // creating data center
+        try {
+            datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
+                    new LinkedList<Storage>(), 0, properties);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        //asserting hosts in datacenter and host total capacity
+        Assert.assertEquals(host1.getId(), datacenter.getHostList().get(0).getId());
+        Assert.assertEquals(host2.getId(), datacenter.getHostList().get(1).getId());
+        Assert.assertEquals(host3.getId(), datacenter.getHostList().get(2).getId());
+
+        for (int i = 0; i < 3; i++) {
+            Assert.assertEquals(hostCapacity, datacenter.getHostList().get(i).getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+        }
+
+        // creating vms model P0S0, total of vms 6603
+        // with cpu total requisition of 3301.5
+        populateVmLists();
+
+        submitEvents();
+        CloudSim.runClockTick();
+
+        advanceTime(0.0);
+        //allocating vms with submit time 0
+        executingSimulationMultipleHostsRuntime0();
+
+        advanceTime(1.0);
+        //allocating vms with submit time 1
+        executingSimulationMultipleHostRuntime1();
+
+        advanceTime(2.0);
+//        //executing simulation at runtime 2
+        executingSimulationMultipleHostsRuntime2();
+
+        advanceTime(3.0);
+//        //executing simulation to verify preemption and running of vms through running time of simulation
+        executingSimulationMultipleHostsRuntime3();
+
+        advanceTime(4.0);
+        executingSimulationMultipleHostsRuntime4();
+
+        advanceTime(5.0);
+        executingSimulationMultipleHostsRuntime5();
+
+        advanceTime(6.0);
+        executingSimulationMultipleHostsRuntime6();
+
+        advanceTime(7.0);
+        executingSimulationMultipleHostsRuntime7();
+
+        advanceTime(8.0);
+        executingSimulationMultipleHostsRuntime8();
+
+//        // verify expected availability for the vms
+        verifyAvailabilityOfMultipleHosts();
+    }
+
+
 }
