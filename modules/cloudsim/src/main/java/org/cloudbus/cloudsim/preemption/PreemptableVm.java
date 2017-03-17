@@ -2,6 +2,7 @@ package org.cloudbus.cloudsim.preemption;
 
 import org.cloudbus.cloudsim.CloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.Vm;
+import org.cloudbus.cloudsim.core.CloudSim;
 
 public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 
@@ -158,18 +159,12 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		}
 		return getActualRuntime(currentTime) / (currentTime - getSubmitTime());
 	}
-	
-	public double getAvailabilityWhileAllocating(double currentTime) {
-		if (currentTime == getSubmitTime()) {
-			return 1;
-		}
-		return getActualRuntime(currentTime) / (currentTime - getSubmitTime());
-	}
 
 	@Override
 	public String toString() {
 		return "PreemptableVm{" +
-				"priority=" + priority +
+				"id=" + getId() +
+				", priority=" + priority +
 				", submitTime=" + submitTime +
 				", runtime=" + runtime +
 				", startExec=" + startExec +
@@ -178,6 +173,8 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 				", numberOfBackfillingChoice=" + numberOfBackfillingChoice +
 				", numberOfMigrations=" + numberOfMigrations +
 				", lastHostId=" + lastHostId +
-				'}';
+				", cpuReq=" + getMips() +
+				", availability=" + getCurrentAvailability(CloudSim.clock()) +
+				"}\n";
 	}
 }
