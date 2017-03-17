@@ -23,7 +23,7 @@ public class PriorityAndAvailabilityBasedVmComparator implements
 		} else if (vm1.getCurrentAvailability(simulationTimeUtil.clock()) < vm2
 				.getCurrentAvailability(simulationTimeUtil.clock())) {
 			return -1;
-		} else if (vm1.getCurrentAvailability(simulationTimeUtil.clock()) < vm2
+		} else if (vm1.getCurrentAvailability(simulationTimeUtil.clock()) > vm2
 				.getCurrentAvailability(simulationTimeUtil.clock())) {
 			return 1;
 		} else if (vm1.getSubmitTime() < vm2.getSubmitTime()) {
