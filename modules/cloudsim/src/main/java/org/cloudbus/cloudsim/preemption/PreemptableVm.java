@@ -164,17 +164,17 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	public String toString() {
 		return "PreemptableVm{" +
 				"id=" + getId() +
-				", priority=" + priority +
-				", submitTime=" + submitTime +
-				", runtime=" + runtime +
-				", startExec=" + startExec +
-				", actualRuntime=" + actualRuntime +
-				", numberOfPreemptions=" + numberOfPreemptions +
-				", numberOfBackfillingChoice=" + numberOfBackfillingChoice +
-				", numberOfMigrations=" + numberOfMigrations +
+//				", priority=" + priority +
+//				", submitTime=" + submitTime +
+//				", runtime=" + runtime +
+//				", startExec=" + startExec +
+//				", actualRuntime=" + actualRuntime +
+//				", numberOfPreemptions=" + numberOfPreemptions +
+//				", numberOfBackfillingChoice=" + numberOfBackfillingChoice +
+//				", numberOfMigrations=" + numberOfMigrations +
 				", lastHostId=" + lastHostId +
-				", cpuReq=" + getMips() +
-				", availability=" + getCurrentAvailability(CloudSim.clock()) +
+//				", cpuReq=" + getMips() +
+//				", availability=" + getCurrentAvailability(CloudSim.clock()) +
 				"}\n";
 	}
 }

@@ -237,10 +237,13 @@ public class SystemTestFCFS {
     }
 
     private void advanceTime(double time) {
+
         while (CloudSim.clock() < time){
             CloudSim.runClockTick();
         }
-        CloudSim.runClockTick();
+
+        if (CloudSim.clock() == time)
+            CloudSim.runClockTick();
     }
 
     private void submitEvents() {
