@@ -80,6 +80,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	private SortedSet<PreemptableVm> vmsRunning = new TreeSet<PreemptableVm>();
 	private SortedSet<PreemptableVm> vmsForScheduling = new TreeSet<PreemptableVm>();
 	private List<DatacenterInfo> datacenterInfo;
+	private boolean tryAllocateWaitingQueue;
 	
 	// data stores
 	private HostUsageDataStore hostUsageDataStore;
@@ -124,6 +125,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		this.properties = properties;
 		this.admController = admController;
 		this.admittedRequests = new THashMap<Integer, Double>();
+		this.tryAllocateWaitingQueue = false;
 	
 		if (properties.getProperty("number_of_priorities") != null) {
 			int numberOfPriorities = Integer.parseInt(properties.getProperty("number_of_priorities"));
@@ -802,6 +804,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		PreemptableVm vm = (PreemptableVm) ev.getData();
 
 		if (vm.achievedRuntime(simulationTimeUtil.clock())) {
+			tryAllocateWaitingQueue = true;
 			if (getVmsRunning().remove(vm)) {		
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 						vm.getId(), " will be terminated.");
@@ -820,10 +823,6 @@ public class PreemptiveDatacenter extends Datacenter {
 				getAdmittedRequests().put(
 						vm.getPriority(),
 						getAdmittedRequests().get(vm.getPriority())	- vm.getMips());
-
-				if (!getVmsForScheduling().isEmpty() && !nextEventIsDestroy()) {
-					allocatingWaitingQueue();
-				}
 			} else {
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 						vm.getId(), " was terminated previously.");
@@ -831,6 +830,12 @@ public class PreemptiveDatacenter extends Datacenter {
 		} else {
 			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 					vm.getId(), " doesn't achieve the runtime yet.");
+		}
+
+
+		if (!getVmsForScheduling().isEmpty() && !nextEventIsDestroy() && tryAllocateWaitingQueue) {
+			allocatingWaitingQueue();
+			tryAllocateWaitingQueue = false;
 		}
 	}
 
