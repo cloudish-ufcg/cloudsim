@@ -8,6 +8,7 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
+import org.cloudbus.cloudsim.preemption.policies.preemption.TTVBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitAvailabilityAwareVmAllocationPolicy;
@@ -33,11 +34,26 @@ public class SystemTestFCFS {
     private PreemptableVmAllocationPolicy preemptableVmAllocationPolicy;
     private DatacenterCharacteristics characteristics;
 
+    // trace with 6603 vms for each priority
+    //----------------------------------------------------------------------
     private int NUMBER_OF_VMS;
     private List<Vm> vmP0S0;
     private List<Vm> vmP1S0;
     private List<Vm> vmP2S0;
     private List<Vm> vmP0S1;
+    // ---------------------------------------------------------------------
+
+
+
+    // trace with 10 prod vms, 20 batch vms and 30 free vms
+    // ---------------------------------------------------------------------
+    private int NUMBER_OF_VMS_P0;
+    private int NUMBER_OF_VMS_P1;
+    private int NUMBER_OF_VMS_P2;
+    private List<Vm> vmsP0;
+    private List<Vm> vmsP1;
+    private List<Vm> vmsP2;
+    // ---------------------------------------------------------------------
 
     private String datacenterOutputFile;
     private String datacenterInputFile;
@@ -59,13 +75,28 @@ public class SystemTestFCFS {
         // Initialize the CloudSim library
         CloudSim.init(num_user, calendar, trace_flag);
 
-
+        // trace with 6603 vms for each priority
+        //----------------------------------------------------------------------
         // inicializating the lists of vms
         NUMBER_OF_VMS = 6603;
         vmP0S0 = new ArrayList<>(NUMBER_OF_VMS);
         vmP1S0 = new ArrayList<>(NUMBER_OF_VMS);
         vmP2S0 = new ArrayList<>(NUMBER_OF_VMS);
         vmP0S1 = new ArrayList<>(NUMBER_OF_VMS);
+        //----------------------------------------------------------------------
+
+
+
+        // trace with 10 prod vms, 20 batch vms and 30 free vms
+        // ---------------------------------------------------------------------
+        // inicializating the lists of vms
+        NUMBER_OF_VMS_P0 = 10;
+        NUMBER_OF_VMS_P1 = 20;
+        NUMBER_OF_VMS_P2 = 30;
+        vmsP0 = new ArrayList<>(NUMBER_OF_VMS_P0);
+        vmsP1 = new ArrayList<>(NUMBER_OF_VMS_P1);
+        vmsP2 = new ArrayList<>(NUMBER_OF_VMS_P2);
+        // ---------------------------------------------------------------------
 
         // mocking properties to config simulation
         datacenterInputFile = "new_trace_test.sqlite3";
@@ -1277,6 +1308,7 @@ public class SystemTestFCFS {
         }
     }
 
+    @Ignore
     @Test
     public void testSystemSingleHostWithAvailableAwarePolicy() {
 
@@ -1360,6 +1392,7 @@ public class SystemTestFCFS {
         verifyAvailabilityOfSingleHost();
     }
 
+    @Ignore
     @Test
     // testing the operation of the system for more than one host
     public void testSystemMultipleHostWithAvailabilitAware() {
@@ -1457,6 +1490,420 @@ public class SystemTestFCFS {
 
 //        // verify expected availability for the vms
         verifyAvailabilityOfMultipleHosts();
+    }
+
+
+
+    @Test
+    public void testSystemSingleHostFCFSNewTrace() {
+        Log.enable();
+
+        hostCapacity = 10;
+
+        // creating host
+        List<Pe> peList1 = new ArrayList<Pe>();
+        peList1.add(new Pe(0, new PeProvisionerSimple(hostCapacity)));
+        properties.setProperty("preemption_policy_class",
+                "org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy");
+
+        host = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
+                peList1), new FCFSBasedPreemptionPolicy(properties));
+
+        // creating list of hosts
+        List<PreemptiveHost> hostList = new ArrayList<PreemptiveHost>();
+        hostList.add(host);
+
+
+        preemptableVmAllocationPolicy = new WorstFitPriorityBasedVmAllocationPolicy(hostList);
+
+        // First step: Initialize the CloudSim package. It should be called
+        // before creating any entities.
+        int num_user = 1; // number of grid users
+        Calendar calendar = Calendar.getInstance();
+        boolean trace_flag = false; // mean trace events
+
+        // Initialize the CloudSim library
+        CloudSim.init(num_user, calendar, trace_flag);
+        CloudSim.runStart();
+
+        // creating data center
+        try {
+            datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
+                    new LinkedList<Storage>(), 0, properties);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        //asserting host on data center and host total capacity
+        Assert.assertEquals(host, datacenter.getHostList().get(0));
+        Assert.assertEquals(hostCapacity, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        // creating vms model P0S0, total of vms 6603
+        // with cpu total requisition of 3301.5
+        populateVmListsNewTrace();
+
+        submitEventsNewTrace();
+        CloudSim.runClockTick();
+
+
+        advanceTime(0.0);
+        //allocating vms with submit time 0
+        testSimulationNewTraceRuntime0();
+
+        advanceTime(1.0);
+        //allocating vms with submit time 1
+        testSimulationNewTraceRuntime1();
+
+        advanceTime(2.0);
+        //allocating vms with submit time 2
+        testSimulationNewTraceRuntime2();
+
+        advanceTime(3.0);
+        testSimulationNewTraceRuntime3();
+
+        advanceTime(4.0);
+        testSimulationNewTraceRuntime4();
+
+        advanceTime(5.0);
+        testSimulationNewTraceRuntime5();
+
+        advanceTime(6.0);
+        testSimulationNewTraceRuntime6();
+
+        advanceTime(7.0);
+        testSimulationNewTraceRuntime7();
+
+        advanceTime(8.0);
+        testSimulationNewTraceRuntime8();
+
+        verifyAvailabilityOfSingleHostNewTrace();
+    }
+
+    private void verifyAvailabilityOfSingleHostNewTrace() {
+        double finishedTime = 0;
+
+        for (Vm vm : vmsP0) {
+
+            PreemptableVm pVm = (PreemptableVm) vm;
+            Assert.assertEquals(0, pVm.getNumberOfPreemptions());
+            Assert.assertEquals(0, pVm.getNumberOfBackfillingChoice());
+            Assert.assertEquals(0, pVm.getNumberOfMigrations());
+
+            if (pVm.getId() < 3 || pVm.getId() == 9) {
+                finishedTime = 7.0;
+            } else {
+                finishedTime = 6.0;
+            }
+
+            Assert.assertEquals(1.0, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
+        }
+
+        for (Vm vm : vmsP1) {
+
+            PreemptableVm pVm = (PreemptableVm) vm;
+            Assert.assertEquals(0, pVm.getNumberOfPreemptions());
+            Assert.assertEquals(0, pVm.getNumberOfBackfillingChoice());
+            Assert.assertEquals(0, pVm.getNumberOfMigrations());
+
+            if (pVm.getId() >= 10 && pVm.getId() <= 19) {
+                finishedTime = 4.0;
+                Assert.assertEquals(1.0, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
+            } else if (pVm.getId() >= 20 && pVm.getId() <= 23){
+                finishedTime = 5.0;
+                Assert.assertEquals(1.0, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
+            } else {
+                finishedTime = 8.0;
+                Assert.assertEquals(0.571428571, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
+            }
+
+        }
+
+        for (Vm vm : vmsP2) {
+
+            PreemptableVm pVm = (PreemptableVm) vm;
+            Assert.assertEquals(0, pVm.getNumberOfBackfillingChoice());
+            Assert.assertEquals(0, pVm.getNumberOfMigrations());
+
+            if (pVm.getId() >= 30 && pVm.getId() <= 39) {
+                Assert.assertEquals(1, pVm.getNumberOfPreemptions());
+                finishedTime = 6.0;
+                Assert.assertEquals(0.333333333, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
+
+            } else if (pVm.getId() >= 40 && pVm.getId() <= 49){
+                Assert.assertEquals(0, pVm.getNumberOfPreemptions());
+                finishedTime = 8.0;
+                Assert.assertEquals(0.285714286, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
+
+            } else {
+                Assert.assertEquals(0, pVm.getNumberOfPreemptions());
+                finishedTime = 8.0;
+                Assert.assertEquals(0.333333333, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
+            }
+
+        }
+
+
+    }
+
+    private void testSimulationNewTraceRuntime8() {
+        Assert.assertEquals(hostCapacity, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        Assert.assertEquals(hostCapacity, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+
+        //testing size of lists
+        Assert.assertEquals(0, datacenter.getVmsForScheduling().size());
+        Assert.assertEquals(0, datacenter.getVmsRunning().size());
+    }
+
+    private void testSimulationNewTraceRuntime7() {
+        Assert.assertEquals(3, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        Assert.assertEquals(hostCapacity, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 3, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 3 - 4, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+
+        //testing size of lists
+        Assert.assertEquals(0, datacenter.getVmsForScheduling().size());
+        Assert.assertEquals(26, datacenter.getVmsRunning().size());
+
+        testNumberOfPreemptionsAndBackfillingOfSingleHostWithFCFSPolicyTime0();
+    }
+
+    private void testSimulationNewTraceRuntime6() {
+        Assert.assertEquals(1, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        Assert.assertEquals(hostCapacity - 2, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 2 - 3, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 2 - 3 - 4, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+
+        //testing size of lists
+        Assert.assertEquals(0, datacenter.getVmsForScheduling().size());
+        Assert.assertEquals(30, datacenter.getVmsRunning().size());
+
+        testNumberOfPreemptionsAndBackfillingOfSingleHostWithFCFSPolicyTime0();
+    }
+
+    private void testSimulationNewTraceRuntime5() {
+        Assert.assertEquals(0, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        Assert.assertEquals(hostCapacity - 5, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 5 - 3, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 5 - 3 - 2, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+
+        //testing size of lists
+        Assert.assertEquals(20, datacenter.getVmsForScheduling().size());
+        Assert.assertEquals(26, datacenter.getVmsRunning().size());
+
+        testNumberOfPreemptionsAndBackfillingOfSingleHostWithFCFSPolicyTime5();
+    }
+
+    private void testNumberOfPreemptionsAndBackfillingOfSingleHostWithFCFSPolicyTime5() {
+        for(PreemptableVm vm : datacenter.getVmsRunning()) {
+
+            if (vm.getId() >= 30 && vm.getId() <= 39){
+                Assert.assertEquals(1, vm.getNumberOfPreemptions());
+            } else {
+                Assert.assertEquals(0, vm.getNumberOfPreemptions());
+            }
+
+            Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
+
+        }
+
+        for(PreemptableVm vm : datacenter.getVmsForScheduling()) {
+
+            Assert.assertEquals(0, vm.getNumberOfPreemptions());
+            Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
+        }
+
+    }
+
+    private void testSimulationNewTraceRuntime4() {
+        Assert.assertEquals(0, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        Assert.assertEquals(hostCapacity - 5, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 5 - 5, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 5 - 5, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+
+        //testing size of lists
+        Assert.assertEquals(30, datacenter.getVmsForScheduling().size());
+        Assert.assertEquals(20, datacenter.getVmsRunning().size());
+
+        testNumberOfPreemptionsAndBackfillingOfSingleHostWithFCFSPolicyTime1();
+
+    }
+
+    private void testSimulationNewTraceRuntime3() {
+        testSimulationNewTraceRuntime2();
+    }
+
+    private void testSimulationNewTraceRuntime2() {
+        Assert.assertEquals(0, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        Assert.assertEquals(hostCapacity - 5, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 5 - 5, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 5 - 5, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+
+        //testing size of lists
+        Assert.assertEquals(36, datacenter.getVmsForScheduling().size());
+        Assert.assertEquals(24, datacenter.getVmsRunning().size());
+
+        testNumberOfPreemptionsAndBackfillingOfSingleHostWithFCFSPolicyTime1();
+
+    }
+
+    private void testSimulationNewTraceRuntime1() {
+
+        Assert.assertEquals(0, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        Assert.assertEquals(hostCapacity - 5, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 5 - 5, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 5 - 5, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+
+        //testing size of lists
+        Assert.assertEquals(26, datacenter.getVmsForScheduling().size());
+        Assert.assertEquals(24, datacenter.getVmsRunning().size());
+
+        testNumberOfPreemptionsAndBackfillingOfSingleHostWithFCFSPolicyTime1();
+    }
+
+    private void testNumberOfPreemptionsAndBackfillingOfSingleHostWithFCFSPolicyTime1() {
+        for(PreemptableVm vm : datacenter.getVmsRunning()) {
+            Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
+            Assert.assertEquals(0, vm.getNumberOfPreemptions());
+        }
+
+        for(PreemptableVm vm : datacenter.getVmsForScheduling()) {
+
+            if (vm.getId() >= 30 && vm.getId() <= 39){
+                Assert.assertEquals(1, vm.getNumberOfPreemptions());
+            } else {
+                Assert.assertEquals(0, vm.getNumberOfPreemptions());
+            }
+            Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
+        }
+    }
+
+    private void testSimulationNewTraceRuntime0() {
+        Assert.assertEquals(0.5, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+
+        Assert.assertEquals(hostCapacity - 4.5, host.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 4.5 - 3, host.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(hostCapacity - 4.5 - 3 - 2, host.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
+
+        //testing size of lists
+        Assert.assertEquals(0, datacenter.getVmsForScheduling().size());
+        Assert.assertEquals(29, datacenter.getVmsRunning().size());
+
+        testNumberOfPreemptionsAndBackfillingOfSingleHostWithFCFSPolicyTime0();
+    }
+
+    private void testNumberOfPreemptionsAndBackfillingOfSingleHostWithFCFSPolicyTime0() {
+        for(PreemptableVm vm : datacenter.getVmsRunning()) {
+            Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
+            Assert.assertEquals(0, vm.getNumberOfPreemptions());
+        }
+
+        Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
+    }
+
+
+    private void populateVmListsNewTrace() {
+
+        int vmId = 0;
+        int priority = 0;
+        double runtime = 7;
+        double submitTime = 0;
+        double cpuReq = 0.5;
+
+
+        for (int i = 0; i < NUMBER_OF_VMS_P0; i++) {
+
+            if (i == NUMBER_OF_VMS_P0 - 1) {
+                submitTime = 1;
+            }
+
+            if (i >= 3){
+                runtime = 6;
+            }
+
+            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, submitTime, priority, runtime);
+            vmsP0.add(vm);
+        }
+
+        // creating vms model P1S0, total of vms 6603
+        // with cpu total requisition of 1980.9
+
+        priority = 1;
+        runtime = 4;
+        cpuReq = 0.3;
+        submitTime = 0;
+
+
+        for (int i = 0; i < NUMBER_OF_VMS_P1; i++) {
+
+            if (i >= 10) {
+                cpuReq = 0.5;
+                submitTime = 1;
+            }
+
+            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, submitTime, priority, runtime);
+            vmsP1.add(vm);
+        }
+
+        // creating vms model P2S0, total of vms 6603
+        // with cpu total requisition of 1320.6
+
+        priority = 2;
+        runtime = 2;
+        cpuReq = 0.2;
+        submitTime = 0;
+
+
+        for (int i = 0; i < NUMBER_OF_VMS_P2; i++) {
+
+            if (i >= 10 && i <= 19){
+                submitTime = 1;
+            } else if (i >= 20 && i <= 29){
+                submitTime = 2;
+            }
+
+            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, submitTime, priority, runtime);
+            vmsP2.add(vm);
+        }
+    }
+
+    private void submitEventsNewTrace() {
+
+        // time = 0
+        int NUMBER_OF_VMS_P0 = 10;
+        int NUMBER_OF_VMS_P1 = 20;
+        int NUMBER_OF_VMS_P2 = 30;
+
+        for (int i = 0; i < NUMBER_OF_VMS_P0; i++) {
+
+            PreemptableVm vm = (PreemptableVm) vmsP0.get(i);
+
+            CloudSim.send(datacenter.getId(), datacenter.getId(), vm.getSubmitTime(), CloudSimTags.VM_CREATE, vmsP0.get(i));
+        }
+
+        for (int i = 0; i < NUMBER_OF_VMS_P1; i++) {
+
+            PreemptableVm vm = (PreemptableVm) vmsP1.get(i);
+
+            CloudSim.send(datacenter.getId(), datacenter.getId(), vm.getSubmitTime(), CloudSimTags.VM_CREATE, vmsP1.get(i));
+        }
+
+        for (int i = 0; i < NUMBER_OF_VMS_P2; i++) {
+
+            PreemptableVm vm = (PreemptableVm) vmsP2.get(i);
+
+            CloudSim.send(datacenter.getId(), datacenter.getId(), vm.getSubmitTime(), CloudSimTags.VM_CREATE, vmsP2.get(i));
+        }
+
+
     }
 
 
