@@ -41,6 +41,7 @@ public class TaskDataStore extends DataStore {
 							+ "preemptions INTEGER, "
 							+ "backfillingChoices INTEGER, "
 							+ "migrations INTEGER, "
+							+ "firstTimeAllocated REAL, "
 							+ "PRIMARY KEY (taskId)"
 							+ ")");
 		} catch (Exception e) {
@@ -52,7 +53,7 @@ public class TaskDataStore extends DataStore {
 	}
 	
 	private static final String INSERT_TASK_SQL = "INSERT INTO " + GOOGLE_TASK_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	
 	public boolean addTaskList(List<TaskState> taskStates) {
 		if (taskStates == null) {
@@ -124,7 +125,8 @@ public class TaskDataStore extends DataStore {
 		insertMemberStatement.setInt(6, taskState.getPriority());
 		insertMemberStatement.setInt(7, taskState.getNumberOfPreemptions());
 		insertMemberStatement.setInt(8, taskState.getNumberOfBackfillingChoices());
-		insertMemberStatement.setInt(9, taskState.getNumberOfMigrations());
+		insertMemberStatement.setDouble(9, taskState.getFirstTimeAllocated());
+		insertMemberStatement.setInt(10, taskState.getNumberOfMigrations());
 		insertMemberStatement.addBatch();
 	}
 	
@@ -157,7 +159,7 @@ public class TaskDataStore extends DataStore {
 					.getDouble("finishTime"), rs.getDouble("runtime"), rs
 					.getInt("priority"), rs.getInt("preemptions"), rs
 					.getInt("backfillingChoices"), rs
-					.getInt("migrations")));
+					.getInt("migrations"), rs.getDouble("firstTimeAllocated")));
 		}
 		return taskStates;
 	}

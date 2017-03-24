@@ -29,6 +29,7 @@ public class TaskDataStoreTest {
 
     private int taskId, priority;
     private double cpuReq, finishingTime, runtime, submitTime;
+    private double firstTimeAllocated;
 
     @Before
     public void setUp() {
@@ -49,10 +50,11 @@ public class TaskDataStoreTest {
         submitTime = 0;
         runtime = 0.001;
         finishingTime = 0.001;
+        firstTimeAllocated = 5.82;
 
-        task1 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority - 1, 0, 0, 0);
-        task2 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority, 0, 0, 0);
-        task3 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority + 1, 0, 0, 0);
+        task1 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority - 1, 0, 0, 0, firstTimeAllocated);
+        task2 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority, 0, 0, 0, firstTimeAllocated);
+        task3 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority + 1, 0, 0, 0, firstTimeAllocated);
     }
 
     @After
@@ -98,7 +100,7 @@ public class TaskDataStoreTest {
         int taskId = 0;
 
         for (int i = 0; i < 50; i++) {
-            task1 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority - 1, 0, 0, 0);
+            task1 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority - 1, 0, 0, 0, firstTimeAllocated);
             taskStates.add(task1);
         }
 
@@ -108,7 +110,7 @@ public class TaskDataStoreTest {
         List<TaskState> taskStates2 = new ArrayList<>();
 
         for (int i = 0; i < 50; i++) {
-            task1 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority - 1, 0, 0, 0);
+            task1 = new TaskState(taskId++, cpuReq, submitTime, finishingTime, runtime, priority - 1, 0, 0, 0, firstTimeAllocated);
             taskStates.add(task1);
             taskStates2.add(task1);
         }

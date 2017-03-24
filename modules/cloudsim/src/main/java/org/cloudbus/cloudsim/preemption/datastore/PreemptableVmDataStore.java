@@ -54,6 +54,7 @@ public class PreemptableVmDataStore extends DataStore {
 							+ "migrations INTEGER, "
 							+ "hostId INTEGER, "
 							+ "running INTEGER, "
+							+ "firstTimeAllocated REAL, "
 							+ "PRIMARY KEY (vmId)"
 							+ ")");
 		} catch (Exception e) {
@@ -71,7 +72,7 @@ public class PreemptableVmDataStore extends DataStore {
 	}
 
 	private static final String INSERT_DATACENTER_INFO_SQL = "INSERT INTO " + VMS_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	
 	public boolean addWaitingVms(SortedSet<PreemptableVm> waitingVms) {
 		if (waitingVms == null) {
@@ -123,7 +124,8 @@ public class PreemptableVmDataStore extends DataStore {
 				insertMemberStatement.setInt(10, vm.getNumberOfPreemptions());
 				insertMemberStatement.setInt(11, vm.getNumberOfBackfillingChoice());
 				insertMemberStatement.setInt(12, vm.getNumberOfMigrations());
-				
+				insertMemberStatement.setDouble(15, vm.getFirstTimeAllocated());
+
 				if (running) {
 					insertMemberStatement.setInt(13, vm.getHost().getId()); //vm is waiting and doesn't have host
 					insertMemberStatement.setInt(14, RUNNING);
@@ -199,6 +201,7 @@ public class PreemptableVmDataStore extends DataStore {
 				vm.setNumberOfPreemptions(rs.getInt("preemptions"));
 				vm.setNumberOfBackfillingChoice(rs.getInt("backfillingChoice"));
 				vm.setNumberOfMigrations(rs.getInt("migrations"));
+				vm.setFirstTimeAllocated(rs.getDouble("firstTimeAllocated"));
 				
 				runningVms.add(vm);
 			}
@@ -237,7 +240,8 @@ public class PreemptableVmDataStore extends DataStore {
 				vm.setNumberOfPreemptions(rs.getInt("preemptions"));
 				vm.setNumberOfBackfillingChoice(rs.getInt("backfillingChoice"));
 				vm.setNumberOfMigrations(rs.getInt("migrations"));
-				
+				vm.setFirstTimeAllocated(rs.getDouble("firstTimeAllocated"));
+
 				waitingVms.add(vm);
 			}
 			return waitingVms;

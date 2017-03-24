@@ -169,7 +169,7 @@ public class MergeOfResultFiles {
                     runningVm.getPriority(),
                     runningVm.getNumberOfPreemptions(),
                     runningVm.getNumberOfBackfillingChoice(),
-                    runningVm.getNumberOfMigrations());
+                    runningVm.getNumberOfMigrations(), runningVm.getFirstTimeAllocated());
             concludingTasks.add(taskState);
         }
 
@@ -186,7 +186,7 @@ public class MergeOfResultFiles {
                     waitingVm.getPriority(),
                     waitingVm.getNumberOfPreemptions(),
                     waitingVm.getNumberOfBackfillingChoice(),
-                    waitingVm.getNumberOfMigrations());
+                    waitingVm.getNumberOfMigrations(), waitingVm.getFirstTimeAllocated());
             concludingTasks.add(taskState);
         }
 	}
@@ -282,7 +282,7 @@ public class MergeOfResultFiles {
 
 			taskState = new TaskState(task.getTaskId() + factor, task.getCpuReq(), task.getSubmitTime(), task.getFinishTime(),
 					task.getRuntime(), task.getPriority(), task.getNumberOfPreemptions(), task.getNumberOfBackfillingChoices(),
-					task.getNumberOfMigrations());
+					task.getNumberOfMigrations(), task.getFirstTimeAllocated());
 
     		finalListOfTasks.add(taskState);
 		}
