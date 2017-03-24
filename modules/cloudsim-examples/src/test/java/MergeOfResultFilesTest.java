@@ -316,9 +316,6 @@ public class MergeOfResultFilesTest {
         Mockito.when(properties.getProperty(TaskDataStore.DATABASE_URL_PROP)).thenReturn(DATABASE_URL);
         TaskDataStore dataStoreBase = new TaskDataStore(properties);
 
-        System.out.println(dataStoreBase.getAllTasks().toString());
-        System.out.println(dataStoreOutput.getAllTasks().toString());
-
         Assert.assertEquals(dataStoreOutput.getAllTasks().size(), NUMBER_OF_TASKS);
         Assert.assertEquals(dataStoreBase.getAllTasks(), dataStoreOutput.getAllTasks());
 
