@@ -1671,7 +1671,21 @@ public class SystemTestFCFS {
         Assert.assertEquals(0, datacenter.getVmsForScheduling().size());
         Assert.assertEquals(26, datacenter.getVmsRunning().size());
 
-        testNumberOfPreemptionsAndBackfillingOfSingleHostWithFCFSPolicyTime0();
+        for (PreemptableVm vm : datacenter.getVmsRunning()) {
+            Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
+            Assert.assertEquals(0, vm.getNumberOfPreemptions());
+
+            if(vm.getId() <= 2)
+                Assert.assertEquals(0d, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            else if(vm.getId() == 9)
+                Assert.assertEquals(1.0, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            else if(vm.getId() <= 29)
+                Assert.assertEquals(4.0, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            else
+                Assert.assertEquals(6.0, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+        }
+
+        Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
     }
 
     private void testSimulationNewTraceRuntime6() {
@@ -1685,7 +1699,21 @@ public class SystemTestFCFS {
         Assert.assertEquals(0, datacenter.getVmsForScheduling().size());
         Assert.assertEquals(30, datacenter.getVmsRunning().size());
 
-        testNumberOfPreemptionsAndBackfillingOfSingleHostWithFCFSPolicyTime0();
+        for (PreemptableVm vm : datacenter.getVmsRunning()) {
+            Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
+            Assert.assertEquals(0, vm.getNumberOfPreemptions());
+
+            if(vm.getId() <= 2)
+                Assert.assertEquals(0d, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            else if(vm.getId() == 9)
+                Assert.assertEquals(1.0, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            else if(vm.getId() <= 29)
+                Assert.assertEquals(4.0, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            else
+                Assert.assertEquals(6.0, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+        }
+
+        Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
     }
 
     private void testSimulationNewTraceRuntime5() {
@@ -1713,12 +1741,19 @@ public class SystemTestFCFS {
 
             Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
 
+            if(vm.getId() == 9)
+                Assert.assertEquals(1.00, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            else if (vm.getId() >= 24 && vm.getId() <= 29)
+                Assert.assertEquals(4.00, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            else
+                Assert.assertEquals(0d, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
         }
 
         for (PreemptableVm vm : datacenter.getVmsForScheduling()) {
 
             Assert.assertEquals(0, vm.getNumberOfPreemptions());
             Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
+            Assert.assertEquals(-1.0, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
         }
 
     }
@@ -1734,7 +1769,29 @@ public class SystemTestFCFS {
         Assert.assertEquals(30, datacenter.getVmsForScheduling().size());
         Assert.assertEquals(20, datacenter.getVmsRunning().size());
 
-        testNumberOfPreemptionsAndBackfillingOfSingleHostWithFCFSPolicyTime1();
+        for (PreemptableVm vm : datacenter.getVmsRunning()) {
+            Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
+            Assert.assertEquals(0, vm.getNumberOfPreemptions());
+
+            if(vm.getId() == 9 || vm.getId() >= 20 && vm.getId() < 24)
+                Assert.assertEquals(1.00, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            else if (vm.getId() >= 24)
+                Assert.assertEquals(4.00, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            else
+                Assert.assertEquals(0d, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+        }
+
+        for (PreemptableVm vm : datacenter.getVmsForScheduling()) {
+
+            if (vm.getId() >= 30 && vm.getId() <= 39) {
+                Assert.assertEquals(1, vm.getNumberOfPreemptions());
+                Assert.assertEquals(0d, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            } else {
+                Assert.assertEquals(0, vm.getNumberOfPreemptions());
+                Assert.assertEquals(-1.0, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            }
+            Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
+        }
 
     }
 
@@ -1776,14 +1833,21 @@ public class SystemTestFCFS {
         for (PreemptableVm vm : datacenter.getVmsRunning()) {
             Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
             Assert.assertEquals(0, vm.getNumberOfPreemptions());
+
+            if(vm.getId() == 9 || vm.getId() >= 20)
+                Assert.assertEquals(1.00, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            else
+                Assert.assertEquals(0d, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
         }
 
         for (PreemptableVm vm : datacenter.getVmsForScheduling()) {
 
             if (vm.getId() >= 30 && vm.getId() <= 39) {
                 Assert.assertEquals(1, vm.getNumberOfPreemptions());
+                Assert.assertEquals(0d, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
             } else {
                 Assert.assertEquals(0, vm.getNumberOfPreemptions());
+                Assert.assertEquals(-1.0, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
             }
             Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
         }
@@ -1807,6 +1871,7 @@ public class SystemTestFCFS {
         for (PreemptableVm vm : datacenter.getVmsRunning()) {
             Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
             Assert.assertEquals(0, vm.getNumberOfPreemptions());
+            Assert.assertEquals(0d, vm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
         }
 
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());

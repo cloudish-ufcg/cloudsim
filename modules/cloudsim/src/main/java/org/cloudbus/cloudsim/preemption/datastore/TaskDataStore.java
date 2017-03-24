@@ -125,8 +125,8 @@ public class TaskDataStore extends DataStore {
 		insertMemberStatement.setInt(6, taskState.getPriority());
 		insertMemberStatement.setInt(7, taskState.getNumberOfPreemptions());
 		insertMemberStatement.setInt(8, taskState.getNumberOfBackfillingChoices());
-		insertMemberStatement.setDouble(9, taskState.getFirstTimeAllocated());
-		insertMemberStatement.setInt(10, taskState.getNumberOfMigrations());
+		insertMemberStatement.setInt(9, taskState.getNumberOfMigrations());
+		insertMemberStatement.setDouble(10, taskState.getFirstTimeAllocated());
 		insertMemberStatement.addBatch();
 	}
 	

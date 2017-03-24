@@ -58,6 +58,16 @@ public class TaskState {
 		if (o == null || getClass() != o.getClass()) return false;
 
 		TaskState that = (TaskState) o;
+		if(this.taskId != that.getTaskId()) return false;
+		if(this.cpuReq != that.getCpuReq()) return false;
+		if(this.submitTime != that.getSubmitTime()) return false;
+		if (this.finishTime != that.getFinishTime()) return false;
+		if (this.runtime != that.getRuntime()) return false;
+		if(this.priority != that.getPriority()) return  false;
+		if(this.preemptions != that.getNumberOfPreemptions()) return false;
+		if(this.backfillingChoices != that.getNumberOfBackfillingChoices()) return false;
+		if(this.migrations != that.getNumberOfMigrations()) return false;
+		if(this.firstTimeAllocated != that.getFirstTimeAllocated()) return false;
 
 		return getTaskId() == that.getTaskId();
 	}
@@ -80,5 +90,21 @@ public class TaskState {
 
 	public void setFirstTimeAllocated(double firstTimeAllocated) {
 		this.firstTimeAllocated = firstTimeAllocated;
+	}
+
+	@Override
+	public String toString() {
+		return "TaskState{" +
+				"taskId=" + taskId +
+				", cpuReq=" + cpuReq +
+				", runtime=" + runtime +
+				", submitTime=" + submitTime +
+				", finishTime=" + finishTime +
+				", firstTimeAllocated=" + firstTimeAllocated +
+				", priority=" + priority +
+				", preemptions=" + preemptions +
+				", backfillingChoices=" + backfillingChoices +
+				", migrations=" + migrations +
+				'}';
 	}
 }
