@@ -4,7 +4,6 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
-import org.cloudbus.cloudsim.preemption.policies.preemption.TTVBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitAvailabilityAwareVmAllocationPolicy;
@@ -143,18 +142,6 @@ public class SystemTestAvalAware {
 
         if (CloudSim.clock() == time)
             CloudSim.runClockTick();
-
-        System.out.println("runtime " + time);
-        System.out.println("waiting");
-        Comparator<PreemptableVm> comparator = (PreemptableVm o1, PreemptableVm o2)->o1.getId() - o2.getId();
-        ArrayList list = new ArrayList<>(datacenter.getVmsForScheduling());
-        Collections.sort(list, comparator);
-        System.out.println(list.toString());
-        System.out.println("running");
-        comparator = (PreemptableVm o1, PreemptableVm o2)->o1.getLastHostId() - o2.getLastHostId();
-        list = new ArrayList<>(datacenter.getVmsRunning());
-        Collections.sort(list, comparator);
-        System.out.println(list.toString());
     }
 
     @Test
@@ -496,6 +483,29 @@ public class SystemTestAvalAware {
         testNumberOfPreemptionsAndBackfillingOfMultipleHostWithAvailAwarePolicyTime2();
     }
 
+    private void testNumberOfPreemptionsAndBackfillingOfMultipleHostWithAvailAwarePolicyTime2() {
+
+        for(PreemptableVm vm : datacenter.getVmsRunning()) {
+            Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
+            Assert.assertEquals(0, vm.getNumberOfPreemptions());
+        }
+
+        for(PreemptableVm vm : datacenter.getVmsForScheduling()) {
+            Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
+
+            if (vm.getId() == 28 || vm.getId() == 29 || (vm.getId() >= 40 && vm.getId() <= 59)){
+                Assert.assertEquals(0, vm.getNumberOfPreemptions());
+
+            } else {
+                Assert.assertEquals(1, vm.getNumberOfPreemptions());
+            }
+
+        }
+
+        testFirstTimeAllocatedForVmsP0TimeGreaterThan1();
+        testFirstTimeAllocatedForVmsP1TimeGreaterThan1MultipleHost();
+        testFirstTimeAllocatedForVmsP2TimeGreaterThan1MultipleHost();
+    }
 
     private void testSimulationMultipleHostsRuntime3() {
         testSimulationMultipleHostsRuntime2();
@@ -871,6 +881,39 @@ public class SystemTestAvalAware {
             Assert.assertEquals(0, vm.getNumberOfPreemptions());
         }
 
+        testFirstTimeAllocatedForVmsP0Time0();
+        testFirstTimeAllocatedForVmsP1Time0();
+        testFirstTimeAllocatedForVmsP2Time0();
+    }
+
+    private void testFirstTimeAllocatedForVmsP2Time0() {
+        for (Vm vm : vmsP2) {
+
+            if (vm.getId() < 40) {
+                PreemptableVm pVm = (PreemptableVm) vm;
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            }
+        }
+    }
+
+    private void testFirstTimeAllocatedForVmsP1Time0() {
+        for (Vm vm : vmsP1) {
+
+            if (vm.getId() < 20) {
+                PreemptableVm pVm = (PreemptableVm) vm;
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            }
+        }
+    }
+
+    private void testFirstTimeAllocatedForVmsP0Time0() {
+        for(Vm vm : vmsP0) {
+
+            if (vm.getId() < 9){
+                PreemptableVm pVm = (PreemptableVm) vm;
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            }
+        }
     }
 
     private void testSimulationRuntime1() {
@@ -950,6 +993,36 @@ public class SystemTestAvalAware {
                 Assert.assertEquals(0, vm.getNumberOfPreemptions());
         }
 
+        testFirstTimeAllocatedForVmsP0TimeGreaterThan1();
+        testSingleHostFirstTimeAllocatedForVmsP1TimeGreaterThan1();
+
+        testFirstTimeAllocatedForVmsP2Time0();
+    }
+
+    private void testSingleHostFirstTimeAllocatedForVmsP1TimeGreaterThan1() {
+        for (Vm vm : vmsP1) {
+
+            PreemptableVm pVm = (PreemptableVm) vm;
+
+            if (vm.getId() < 20)
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            else
+                Assert.assertEquals(1.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+        }
+    }
+
+    private void testFirstTimeAllocatedForVmsP0TimeGreaterThan1() {
+        for(Vm vm : vmsP0) {
+
+            PreemptableVm pVm = (PreemptableVm) vm;
+
+            if (vm.getId() < 9)
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+
+            else
+                Assert.assertEquals(1.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+
+        }
     }
 
 
@@ -1000,6 +1073,20 @@ public class SystemTestAvalAware {
                 Assert.assertEquals(0, vm.getNumberOfPreemptions());
         }
 
+        testFirstTimeAllocatedForVmsP0TimeGreaterThan1();
+        testSingleHostFirstTimeAllocatedForVmsP1TimeGreaterThan1();
+        testSingleHostFirstTimeAllocatedForVmsP2TimeGreaterThan5();
+    }
+
+    private void testSingleHostFirstTimeAllocatedForVmsP2TimeGreaterThan5() {
+        for (Vm vm : vmsP2) {
+
+            PreemptableVm pVm = (PreemptableVm) vm;
+            if (pVm.getId() < 40)
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            else if (pVm.getId() < 50)
+                Assert.assertEquals(5.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+        }
     }
 
     private void testSimulationRuntime6() {
@@ -1020,6 +1107,26 @@ public class SystemTestAvalAware {
         Assert.assertEquals(5, datacenter.getVmsForScheduling().size()); //14305
         Assert.assertEquals(39, datacenter.getVmsRunning().size()); //12107
 
+        testFirstTimeAllocatedForVmsP0TimeGreaterThan1();
+        testSingleHostFirstTimeAllocatedForVmsP1TimeGreaterThan1();
+        testSingleHostFirstTimeAllocatedForVmsP2TimeGreaterThan6();
+    }
+
+    private void testSingleHostFirstTimeAllocatedForVmsP2TimeGreaterThan6() {
+
+        for (Vm vm : vmsP2) {
+
+            PreemptableVm pVm = (PreemptableVm) vm;
+
+            if (pVm.getId() < 40)
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+
+            else if (pVm.getId() < 50)
+                Assert.assertEquals(5.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+
+            else
+                Assert.assertEquals(6.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+        }
     }
 
     private void testSimulationRuntime7() {
@@ -1053,6 +1160,10 @@ public class SystemTestAvalAware {
         //testing size of lists
         Assert.assertEquals(0, datacenter.getVmsForScheduling().size()); //14305
         Assert.assertEquals(25, datacenter.getVmsRunning().size()); //12107
+
+        testFirstTimeAllocatedForVmsP0TimeGreaterThan1();
+        testSingleHostFirstTimeAllocatedForVmsP1TimeGreaterThan1();
+        testSingleHostFirstTimeAllocatedForVmsP2TimeGreaterThan6();
     }
 
     private void testSimulationRuntime8() {
@@ -1065,6 +1176,10 @@ public class SystemTestAvalAware {
         //testing size of lists
         Assert.assertEquals(0, datacenter.getVmsForScheduling().size()); //14305
         Assert.assertEquals(0, datacenter.getVmsRunning().size()); //12107
+
+        testFirstTimeAllocatedForVmsP0TimeGreaterThan1();
+        testSingleHostFirstTimeAllocatedForVmsP1TimeGreaterThan1();
+        testSingleHostFirstTimeAllocatedForVmsP2TimeGreaterThan6();
     }
 
     private void verifyAvailabilityOfSingleHost() {
@@ -1144,8 +1259,6 @@ public class SystemTestAvalAware {
         }
     }
 
-
-
     private void testNumberOfPreemptionsAndBackfillingOfMultipleHostWithAvailAwarePolicyTime1() {
 
         for(PreemptableVm vm : datacenter.getVmsRunning()) {
@@ -1165,28 +1278,30 @@ public class SystemTestAvalAware {
 
         }
 
-    }
-
-    private void testNumberOfPreemptionsAndBackfillingOfMultipleHostWithAvailAwarePolicyTime2() {
-
-        for(PreemptableVm vm : datacenter.getVmsRunning()) {
-            Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
-            Assert.assertEquals(0, vm.getNumberOfPreemptions());
-        }
-
-        for(PreemptableVm vm : datacenter.getVmsForScheduling()) {
-            Assert.assertEquals(0, vm.getNumberOfBackfillingChoice());
-
-            if (vm.getId() == 28 || vm.getId() == 29 || (vm.getId() >= 40 && vm.getId() <= 59)){
-                Assert.assertEquals(0, vm.getNumberOfPreemptions());
-
-            } else {
-                Assert.assertEquals(1, vm.getNumberOfPreemptions());
-            }
-
-        }
+        testFirstTimeAllocatedForVmsP0TimeGreaterThan1();
+        testFirstTimeAllocatedForVmsP1TimeGreaterThan1MultipleHost();
+        testFirstTimeAllocatedForVmsP2TimeGreaterThan1MultipleHost();
 
     }
+
+    private void testFirstTimeAllocatedForVmsP2TimeGreaterThan1MultipleHost() {
+        for (Vm vm : vmsP2) {
+            PreemptableVm pVm = (PreemptableVm) vm;
+            if (vm.getId() < 40)
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+        }
+    }
+
+    private void testFirstTimeAllocatedForVmsP1TimeGreaterThan1MultipleHost() {
+        for (Vm vm : vmsP1) {
+             PreemptableVm pVm = (PreemptableVm) vm;
+             if (pVm.getId() < 20)
+                 Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+             else if (pVm.getId() < 28)
+                 Assert.assertEquals(1.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+         }
+    }
+
 
     private void testNumberOfPreemptionsAndBackfillingOfMultipleHostWithAvailAwarePolicyTime4() {
 
@@ -1213,6 +1328,37 @@ public class SystemTestAvalAware {
 
         }
 
+        testFirstTimeAllocatedForVmsP0TimeGreaterThan1();
+        testFirstTimeAllocatedForVmsP1TimeGreaterThan4MultipleHost();
+        testFirstTimeAllocatedForVmsP2TimeGreaterThan4MultipleHost();
+    }
+
+    private void testFirstTimeAllocatedForVmsP2TimeGreaterThan4MultipleHost() {
+        for (Vm vm : vmsP2) {
+            PreemptableVm pVm = (PreemptableVm) vm;
+            if (vm.getId() < 40)
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+
+            else if (pVm.getId() < 44)
+                Assert.assertEquals(4.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+        }
+    }
+
+    private void testFirstTimeAllocatedForVmsP1TimeGreaterThan4MultipleHost() {
+
+        for(Vm vm : vmsP1) {
+
+            PreemptableVm pVm = (PreemptableVm) vm;
+
+            if (pVm.getId() < 20)
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+
+            else if(pVm.getId() < 28)
+                Assert.assertEquals(1.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+
+            else
+                Assert.assertEquals(4.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+        }
     }
 
     private void testNumberOfPreemptionsAndBackfillingOfMultipleHostWithAvailAwarePolicyTime5() {
@@ -1240,6 +1386,10 @@ public class SystemTestAvalAware {
 
         }
 
+        testFirstTimeAllocatedForVmsP0TimeGreaterThan1();
+        testFirstTimeAllocatedForVmsP1TimeGreaterThan4MultipleHost();
+        testFirstTimeAllocatedForVmsP2TimeGreaterThan4MultipleHost();
+
     }
 
     private void testNumberOfPreemptionsAndBackfillingOfMultipleHostWithAvailAwarePolicyTime6() {
@@ -1266,7 +1416,25 @@ public class SystemTestAvalAware {
             }
 
         }
+        testFirstTimeAllocatedForVmsP0TimeGreaterThan1();
+        testFirstTimeAllocatedForVmsP1TimeGreaterThan4MultipleHost();
+        testFirstTimeAllocatedForVmsP2TimeGreaterThan6MultipleHost();
+    }
 
+    private void testFirstTimeAllocatedForVmsP2TimeGreaterThan6MultipleHost() {
+
+        for (Vm vm : vmsP2) {
+            PreemptableVm pVm = (PreemptableVm) vm;
+
+            if (vm.getId() < 40)
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+
+            else if (pVm.getId() < 44)
+                Assert.assertEquals(4.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+
+            else if (pVm.getId() < 57)
+                Assert.assertEquals(6.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+        }
     }
 
     private void testNumberOfPreemptionsAndBackfillingOfMultipleHostWithAvailAwarePolicyTime7() {
@@ -1284,6 +1452,29 @@ public class SystemTestAvalAware {
 
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
 
+        testFirstTimeAllocatedForVmsP0TimeGreaterThan1();
+        testFirstTimeAllocatedForVmsP1TimeGreaterThan4MultipleHost();
+        testFirstTimeAllocatedForVmsP2TimeGreaterThan7MultipleHost();
+
+
+    }
+
+    private void testFirstTimeAllocatedForVmsP2TimeGreaterThan7MultipleHost() {
+        for (Vm vm : vmsP2) {
+            PreemptableVm pVm = (PreemptableVm) vm;
+
+            if (vm.getId() < 40)
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+
+            else if (pVm.getId() < 44)
+                Assert.assertEquals(4.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+
+            else if (pVm.getId() < 57)
+                Assert.assertEquals(6.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+
+            else
+                Assert.assertEquals(7.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+        }
     }
 
     private void testNumberOfPreemptionsAndBackfillingOfMultipleHostWithAvailAwarePolicyTime8() {
@@ -1296,9 +1487,8 @@ public class SystemTestAvalAware {
 
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
 
+        testFirstTimeAllocatedForVmsP0TimeGreaterThan1();
+        testFirstTimeAllocatedForVmsP1TimeGreaterThan4MultipleHost();
+        testFirstTimeAllocatedForVmsP2TimeGreaterThan7MultipleHost();
     }
-
-
-
-
 }
