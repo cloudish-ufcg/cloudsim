@@ -354,6 +354,12 @@ public class SystemTestTTV {
             Assert.assertEquals(0, pVm.getNumberOfBackfillingChoice());
             Assert.assertEquals(0, pVm.getNumberOfMigrations());
 
+            if (pVm.getId() >= 0 && pVm.getId() <= 8){
+                Assert.assertEquals(0.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            } else {
+                Assert.assertEquals(1.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            }
+
             if (pVm.getId() < 3 || pVm.getId() == 9) {
                 finishedTime = 7.0;
             } else {
@@ -369,15 +375,18 @@ public class SystemTestTTV {
             Assert.assertEquals(0, pVm.getNumberOfBackfillingChoice());
             Assert.assertEquals(0, pVm.getNumberOfMigrations());
 
+
             if (pVm.getId() >= 10 && pVm.getId() <= 19) {
                 finishedTime = 8.0;
                 Assert.assertEquals(0.5, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
                 Assert.assertEquals(1, pVm.getNumberOfPreemptions());
+                Assert.assertEquals(0.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
 
             } else {
                 finishedTime = 5.0;
                 Assert.assertEquals(1.0, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
                 Assert.assertEquals(0, pVm.getNumberOfPreemptions());
+                Assert.assertEquals(1.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
             }
         }
 
@@ -387,24 +396,29 @@ public class SystemTestTTV {
             Assert.assertEquals(0, pVm.getNumberOfBackfillingChoice());
             Assert.assertEquals(0, pVm.getNumberOfMigrations());
 
+
             if (pVm.getId() >= 30 && pVm.getId() <= 39) {
                 finishedTime = 7.0;
                 Assert.assertEquals(0.285714286, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
                 Assert.assertEquals(1, pVm.getNumberOfPreemptions());
+                Assert.assertEquals(0.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
 
             } else if (pVm.getId() >= 40 && pVm.getId() <= 49){
                 finishedTime = 7.0;
                 Assert.assertEquals(0.333333333, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
                 Assert.assertEquals(0, pVm.getNumberOfPreemptions());
+                Assert.assertEquals(5.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
 
             } else if (pVm.getId() >= 50 && pVm.getId() <= 54){
                 finishedTime = 8.0;
                 Assert.assertEquals(0.333333333, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
                 Assert.assertEquals(0, pVm.getNumberOfPreemptions());
+                Assert.assertEquals(6.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
             } else {
                 finishedTime = 9.0;
                 Assert.assertEquals(0.285714286, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
                 Assert.assertEquals(0, pVm.getNumberOfPreemptions());
+                Assert.assertEquals(7.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
             }
         }
 
@@ -1187,6 +1201,15 @@ public class SystemTestTTV {
             Assert.assertEquals(0, pVm.getNumberOfBackfillingChoice());
             Assert.assertEquals(0, pVm.getNumberOfMigrations());
 
+            // verifying first time allocated
+            // ---------------------------------------------
+            if (pVm.getId() >= 0 && pVm.getId() <= 8){
+                Assert.assertEquals(0.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            } else {
+                Assert.assertEquals(1.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            }
+            // ----------------------------------------------
+
             if (pVm.getId() < 3 || pVm.getId() == 9) {
                 finishedTime = 7.0;
             } else {
@@ -1199,6 +1222,20 @@ public class SystemTestTTV {
         for (Vm vm : vmsP1) {
 
             PreemptableVm pVm = (PreemptableVm) vm;
+
+
+            // verifying first time allocated
+            // ---------------------------------------------
+            if (pVm.getId() >= 10 && pVm.getId() <= 19){
+                Assert.assertEquals(0.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            } else if (pVm.getId() >= 20 && pVm.getId() <= 27) {
+                Assert.assertEquals(1.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            } else {
+                Assert.assertEquals(4.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            }
+            // ----------------------------------------------
+
+
 
             if (pVm.getId() >= 10 && pVm.getId() <= 12) {
 
@@ -1264,6 +1301,19 @@ public class SystemTestTTV {
         for (Vm vm : vmsP2) {
 
             PreemptableVm pVm = (PreemptableVm) vm;
+
+            // verifying first time allocated
+            // ---------------------------------------------
+            if (pVm.getId() >= 30 && pVm.getId() <= 39){
+                Assert.assertEquals(0.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            } else if (pVm.getId() >= 40 && pVm.getId() <= 43) {
+                Assert.assertEquals(4.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            } else if (pVm.getId() >= 44 && pVm.getId() <= 49){
+                Assert.assertEquals(6.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            } else {
+                Assert.assertEquals(7.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+            }
+            // ----------------------------------------------
 
             Assert.assertEquals(0, pVm.getNumberOfBackfillingChoice());
 
