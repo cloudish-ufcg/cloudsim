@@ -2188,10 +2188,7 @@ public class SystemTestAvalAware {
 
             }
         }
-
     }
-
-
 
     private void testSimulation10HostsRuntime8(){
         Assert.assertEquals(0, datacenter.getVmsRunning().size());
@@ -2258,12 +2255,6 @@ public class SystemTestAvalAware {
                 Assert.assertEquals(6.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
             }
         }
-
-
-
-
-
-
     }
 
     private void test10HostsVmsP0StatisticsTime7ToEnd(){
