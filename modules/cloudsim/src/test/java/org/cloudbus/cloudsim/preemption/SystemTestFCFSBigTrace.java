@@ -19,7 +19,7 @@ import java.util.*;
 /**
  * Created by jvmafra on 29/03/17.
  */
-public class SystemTestFCFSOldTrace {
+public class SystemTestFCFSBigTrace {
 
     private static final double ACCEPTABLE_DIFFERENCE = 0.000001;
     private static final int PROD = 0;
@@ -177,7 +177,7 @@ public class SystemTestFCFSOldTrace {
 
 
     @Test
-    public void testSystemSingleHost() {
+    public void testSystemSingleHost() throws Exception{
 
         // First step: Initialize the CloudSim package. It should be called
         // before creating any entities.
@@ -190,12 +190,8 @@ public class SystemTestFCFSOldTrace {
         CloudSim.runStart();
 
         // creating data center
-        try {
-            datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
+             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
                     new LinkedList<Storage>(), 0, properties);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         //asserting host on data center and host total capacity
         Assert.assertEquals(host, datacenter.getHostList().get(0));
@@ -456,7 +452,7 @@ public class SystemTestFCFSOldTrace {
 
     @Test
     // testing the operation of the system for more than one host
-    public void testSystemMultipleHost() {
+    public void testSystemMultipleHost() throws Exception{
 
         hostCapacity = 2201;
 
@@ -495,12 +491,8 @@ public class SystemTestFCFSOldTrace {
         CloudSim.runStart();
 
         // creating data center
-        try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
                     new LinkedList<Storage>(), 0, properties);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         //asserting hosts in datacenter and host total capacity
         Assert.assertEquals(host1.getId(), datacenter.getHostList().get(0).getId());
@@ -936,7 +928,7 @@ public class SystemTestFCFSOldTrace {
     @Ignore
     @Test
     // testing the operation of the system for more than one host
-    public void testSystemMultipleHostWithAvailabilitAware() {
+    public void testSystemMultipleHostWithAvailabilitAware() throws Exception{
 
         hostCapacity = 2201;
 
@@ -975,12 +967,8 @@ public class SystemTestFCFSOldTrace {
         CloudSim.runStart();
 
         // creating data center
-        try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
                     new LinkedList<Storage>(), 0, properties);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         //asserting hosts in datacenter and host total capacity
         Assert.assertEquals(host1.getId(), datacenter.getHostList().get(0).getId());
@@ -1339,7 +1327,7 @@ public class SystemTestFCFSOldTrace {
 
     @Ignore
     @Test
-    public void testSystemSingleHostWithAvailableAwarePolicy() {
+    public void testSystemSingleHostWithAvailableAwarePolicy() throws Exception{
 
         // First step: Initialize the CloudSim package. It should be called
         // before creating any entities.
@@ -1367,12 +1355,8 @@ public class SystemTestFCFSOldTrace {
         preemptableVmAllocationPolicy = new WorstFitAvailabilityAwareVmAllocationPolicy(hostList);
 
         // creating data center
-        try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
                     new LinkedList<Storage>(), 0, properties);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         //asserting host on data center and host total capacity
         Assert.assertEquals(host, datacenter.getHostList().get(0));

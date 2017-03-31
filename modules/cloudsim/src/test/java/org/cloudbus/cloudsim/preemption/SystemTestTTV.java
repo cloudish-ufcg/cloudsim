@@ -17,6 +17,8 @@ import org.mockito.Mockito;
 
 import java.util.*;
 
+import static org.junit.Assert.fail;
+
 /**
  * Created by jvmafra on 22/03/17.
  */
@@ -247,7 +249,7 @@ public class SystemTestTTV {
     }
 
     @Test
-    public void testSystemSingleHostWithTTVPolicy() {
+    public void testSystemSingleHostWithTTVPolicy() throws Exception{
         Log.enable();
 
         hostCapacity = 10;
@@ -279,12 +281,8 @@ public class SystemTestTTV {
         CloudSim.runStart();
 
         // creating data center
-        try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
                     new LinkedList<Storage>(), 0, properties);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         //asserting host on data center and host total capacity
         Assert.assertEquals(host, datacenter.getHostList().get(0));
@@ -645,7 +643,7 @@ public class SystemTestTTV {
 
 
     @Test
-    public void testSystemThreeHostsWithTTVPolicy() {
+    public void testSystemThreeHostsWithTTVPolicy() throws Exception{
         Log.enable();
 
         hostCapacity = 3.3;
@@ -688,12 +686,8 @@ public class SystemTestTTV {
         CloudSim.runStart();
 
         // creating data center
-        try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
                     new LinkedList<Storage>(), 0, properties);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         //asserting hosts in datacenter and host total capacity
         Assert.assertEquals(host1.getId(), datacenter.getHostList().get(0).getId());
@@ -1277,7 +1271,7 @@ public class SystemTestTTV {
                 Assert.assertEquals(0, pVm.getNumberOfBackfillingChoice());
                 Assert.assertEquals(0, pVm.getNumberOfMigrations());
             } else {
-                System.out.println("Some VMP1 was not verifyed");
+                fail("Some VMP1 was not verifyed");
             }
 
 
@@ -1350,13 +1344,13 @@ public class SystemTestTTV {
                 Assert.assertEquals(0, pVm.getNumberOfBackfillingChoice());
 
             } else {
-                System.out.println("Some VMP2 was not verifyied");
+                fail("Some VMP2 was not verifyied");
             }
         }
     }
 
     @Test
-    public void testSystem10HostsWithTTVPolicy() {
+    public void testSystem10HostsWithTTVPolicy() throws Exception{
         Log.enable();
 
         hostCapacity = 1;
@@ -1395,12 +1389,8 @@ public class SystemTestTTV {
         CloudSim.runStart();
 
         // creating data center
-        try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
                     new LinkedList<Storage>(), 0, properties);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         //asserting hosts in datacenter and host total capacity
 

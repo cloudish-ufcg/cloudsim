@@ -13,9 +13,12 @@ import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.internal.runners.statements.Fail;
 import org.mockito.Mockito;
 
 import java.util.*;
+
+import static org.junit.Assert.fail;
 
 /**
  * Created by jvmafra on 20/03/17.
@@ -149,7 +152,7 @@ public class SystemTestAvalAware {
     }
 
     @Test
-    public void testSystemSingleHostWithAvalabilityAwarePolicy() {
+    public void testSystemSingleHostWithAvalabilityAwarePolicy() throws Exception{
         Log.enable();
 
         // creating host
@@ -179,12 +182,8 @@ public class SystemTestAvalAware {
         CloudSim.runStart();
 
         // creating data center
-        try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
                     new LinkedList<Storage>(), 0, properties);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         //asserting host on data center and host total capacity
         Assert.assertEquals(host, datacenter.getHostList().get(0));
@@ -232,7 +231,7 @@ public class SystemTestAvalAware {
     }
 
     @Test
-    public void testSystemThreeHostsWithAvailabilityAwarePolicy() {
+    public void testSystemThreeHostsWithAvailabilityAwarePolicy() throws Exception{
         Log.enable();
 
         hostCapacity = 3.3;
@@ -275,12 +274,8 @@ public class SystemTestAvalAware {
         CloudSim.runStart();
 
         // creating data center
-        try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
                     new LinkedList<Storage>(), 0, properties);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         //asserting hosts in datacenter and host total capacity
         Assert.assertEquals(host1.getId(), datacenter.getHostList().get(0).getId());
@@ -759,7 +754,7 @@ public class SystemTestAvalAware {
                 Assert.assertEquals(0, pVm.getNumberOfBackfillingChoice());
                 Assert.assertEquals(0, pVm.getNumberOfMigrations());
             } else {
-                System.out.println("Some VMP1 was not verifyed");
+                fail("Some VMP1 was not verifyed");
             }
 
 
@@ -825,7 +820,7 @@ public class SystemTestAvalAware {
                 Assert.assertEquals(0, pVm.getNumberOfBackfillingChoice());
 
             } else {
-                System.out.println("Some VMP2 was not verifyied");
+                fail("Some VMP2 was not verifyied");
             }
         }
 
@@ -1493,7 +1488,7 @@ public class SystemTestAvalAware {
     }
 
     @Test
-    public void testSystem10HostsWithAvailabilityAwarePolicy() {
+    public void testSystem10HostsWithAvailabilityAwarePolicy() throws Exception {
         Log.enable();
 
         hostCapacity = 1.0;
@@ -1532,12 +1527,8 @@ public class SystemTestAvalAware {
         CloudSim.runStart();
 
         // creating data center
-        try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
                     new LinkedList<Storage>(), 0, properties);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         //asserting hosts in datacenter and host total capacity
         for (int id = 0; id < 10; id++) {

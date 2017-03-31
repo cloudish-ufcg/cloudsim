@@ -177,7 +177,7 @@ public class SystemTestFCFS {
 
 
     @Test
-    public void testSystemSingleHostFCFSNewTrace() {
+    public void testSystemSingleHostFCFSNewTrace() throws Exception{
         Log.enable();
 
         hostCapacity = 10;
@@ -209,12 +209,8 @@ public class SystemTestFCFS {
         CloudSim.runStart();
 
         // creating data center
-        try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
                     new LinkedList<Storage>(), 0, properties);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         //asserting host on data center and host total capacity
         Assert.assertEquals(host, datacenter.getHostList().get(0));
@@ -652,7 +648,7 @@ public class SystemTestFCFS {
     }
 
     @Test
-    public void testSystemThreeHostsFCFSNewTrace() {
+    public void testSystemThreeHostsFCFSNewTrace() throws Exception{
         Log.disable();
 
         hostCapacity = 3.3;
@@ -695,12 +691,8 @@ public class SystemTestFCFS {
 
         // creating data center
         Mockito.when(characteristics.getHostList()).thenReturn(hostList2);
-        try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
                     new LinkedList<Storage>(), 0, properties);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         //asserting host on data center and host total capacity
         Assert.assertEquals(host1, datacenter.getHostList().get(0));
@@ -2016,7 +2008,7 @@ public class SystemTestFCFS {
     }
 
     @Test
-    public void testSystem10HostsFCFSNewTrace() {
+    public void testSystem10HostsFCFSNewTrace() throws Exception{
         Log.disable();
 
         hostCapacity = 1.0;
@@ -2095,12 +2087,8 @@ public class SystemTestFCFS {
 
         // creating data center
         Mockito.when(characteristics.getHostList()).thenReturn(hostList2);
-        try {
             datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
                     new LinkedList<Storage>(), 0, properties);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
 
         //asserting host on data center and host total capacity
         Assert.assertEquals(host1, datacenter.getHostList().get(0));
