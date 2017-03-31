@@ -354,10 +354,11 @@ public class TraceDatacenterBrokerTest {
         double runTime = 1;
         double cpuReq = 0.02;
         int priority = 1;
+        double firstTimeAllocated = -1.0;
 
         for (int i = 0; i < 50; i++) {
             double now = CloudSim.clock();
-            TaskState taskState = new TaskState(id++, cpuReq, submitTime, now, runTime, priority, 0, 0, 0);
+            TaskState taskState = new TaskState(id++, cpuReq, submitTime, now, runTime, priority, 0, 0, 0, firstTimeAllocated) ;
             taskStates.add(taskState);
         }
     }

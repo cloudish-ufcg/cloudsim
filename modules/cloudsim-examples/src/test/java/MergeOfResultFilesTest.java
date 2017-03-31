@@ -35,14 +35,15 @@ public class MergeOfResultFilesTest {
     private TaskState task;
 
     private int taskId, priority;
+    private double firstTimeAllocated;
+
     private double cpuReq, finishingTime, runtime, submitTime;
 
     // UsageEntry characteristics
-
     private int hostId = 0;
     private UsageEntry entry0, entry1, entry2;
-    private List<UsageEntry> entryList;
 
+    private List<UsageEntry> entryList;
     private static final int NUMBER_OF_USAGE_ENTRIES = 10;
     private static final double P0_USAGE = 40.558585;
     private static final double P1_USAGE = 21.9875422;
@@ -50,11 +51,11 @@ public class MergeOfResultFilesTest {
     private static final int P0_VMS = 12;
     private static final int P1_VMS = 1;
     private static final int P2_VMS = 3;
+
+
     private static final double AVAILABLE_MIPS = 0.78598;
 
-
     //DatacenterInfo characteristics
-
     private static final int NUMBER_OF_DATACENTER_INFO = 20;
     private double time;
     private static int VMS_RUNNING = 59;
@@ -70,11 +71,11 @@ public class MergeOfResultFilesTest {
     private double RESOURCES_RUNNING_P2 = 0d;
     private double RESOURCES_WAITING_P0 = 123.99999;
     private double RESOURCES_WAITING_P1 = 0.000000001;
+
     private double RESOURCES_WAITING_P2 = 6000.99999999;
-
     private DatacenterInfo info;
-    private List<DatacenterInfo> datacenterInfoList;
 
+    private List<DatacenterInfo> datacenterInfoList;
     private String[] args;
     JCommander jc;
 
@@ -97,10 +98,11 @@ public class MergeOfResultFilesTest {
         submitTime = 0;
         runtime = 0.001;
         finishingTime = 0;
+        firstTimeAllocated = 1.5;
 
         for (int i = 0; i < NUMBER_OF_TASKS; i++) {
 
-            task = new TaskState(taskId++, cpuReq, submitTime, finishingTime++, runtime, priority - 1, 0, 0, 0);
+            task = new TaskState(taskId++, cpuReq, submitTime, finishingTime++, runtime, priority - 1, 0, 0, 0, firstTimeAllocated);
             taskStates.add(task);
         }
 
@@ -164,12 +166,13 @@ public class MergeOfResultFilesTest {
                     + "preemptions INTEGER, "
                     + "backfillingChoices INTEGER, "
                     + "migrations INTEGER, "
+                    + "firstTimeAllocated REAL, "
                     + "PRIMARY KEY (taskId)"
                     + ")");
             statement.close();
 
             String INSERT_CLOUDLET_SQL = "INSERT INTO googletasks"
-                    + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             // populating the database
             for (TaskState taskState: taskStates) {
@@ -184,6 +187,7 @@ public class MergeOfResultFilesTest {
                 insertMemberStatement.setInt(7, taskState.getNumberOfPreemptions());
                 insertMemberStatement.setInt(8, taskState.getNumberOfBackfillingChoices());
                 insertMemberStatement.setInt(9, taskState.getNumberOfMigrations());
+                insertMemberStatement.setDouble(10, taskState.getFirstTimeAllocated());
                 insertMemberStatement.execute();
             }
             connection.close();
