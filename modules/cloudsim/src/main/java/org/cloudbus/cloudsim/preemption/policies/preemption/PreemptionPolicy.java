@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
@@ -14,10 +15,9 @@ import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
 public abstract class PreemptionPolicy {
 	
 	public static final int DEFAULT_NUMBER_OF_PRIORITIES = 3;
-	public static final int DECIMAL_ACCURACY = 9;
-	
-	private Map<Integer, Double> priorityToInUseMips = new HashMap<Integer, Double>();
-	private Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new HashMap<Integer, SortedSet<PreemptableVm>>();	
+
+	private Map<Integer, Double> priorityToInUseMips = new THashMap<Integer, Double>();
+	private Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new THashMap<Integer, SortedSet<PreemptableVm>>();
 	private int numberOfPriorities = DEFAULT_NUMBER_OF_PRIORITIES;
 	private double totalMips;
 	protected SimulationTimeUtil simulationTimeUtil;
@@ -36,7 +36,7 @@ public abstract class PreemptionPolicy {
 
 		double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority()); 
 		getPriorityToInUseMips().put(vm.getPriority(),
-				DecimalUtil.format(priorityCurrentUse + vm.getMips(), DECIMAL_ACCURACY));
+				DecimalUtil.format(priorityCurrentUse + vm.getMips()));
 		
 	}
 	
@@ -50,7 +50,7 @@ public abstract class PreemptionPolicy {
 		double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority()); 
 		
 		getPriorityToInUseMips().put( vm.getPriority(),
-				DecimalUtil.format(priorityCurrentUse - vm.getMips(), DECIMAL_ACCURACY));
+				DecimalUtil.format(priorityCurrentUse - vm.getMips()));
 		
 	}
 	
@@ -94,8 +94,7 @@ public abstract class PreemptionPolicy {
 			inUseByNonPreemptiveVms += getPriorityToInUseMips().get(i);
 		}
 
-		return DecimalUtil.format(getTotalMips() - inUseByNonPreemptiveVms,
-				DECIMAL_ACCURACY);
+		return DecimalUtil.format(getTotalMips() - inUseByNonPreemptiveVms);
 	}
 
 

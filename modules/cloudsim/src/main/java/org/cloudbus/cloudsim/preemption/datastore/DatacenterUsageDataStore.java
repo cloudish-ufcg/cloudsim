@@ -153,7 +153,8 @@ public class DatacenterUsageDataStore extends DataStore {
 
 			while (rs.next()) {
 				entries.add(new DatacenterInfo(rs.getDouble("time"), rs
-						.getInt("vmsRunning"), rs.getInt("vmsRunningP0"), rs
+						.getInt("vmsRunning"), rs
+						.getInt("vmsRunningP0"), rs
 						.getDouble("resourcesRunningP0"), rs
 						.getInt("vmsRunningP1"), rs
 						.getDouble("resourcesRunningP1"), rs

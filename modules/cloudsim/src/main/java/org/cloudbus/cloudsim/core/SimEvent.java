@@ -51,7 +51,7 @@ public class SimEvent implements Cloneable, Comparable<SimEvent> {
          * the {@link #compareTo(org.cloudbus.cloudsim.core.SimEvent)}
          * makes use of this field.
          */
-	private long serial = -1;
+	public long serial = -1;
 
 	// Internal event types
 
@@ -136,7 +136,7 @@ public class SimEvent implements Cloneable, Comparable<SimEvent> {
 			return 1;
 		} else if (serial < event.serial) {
 			return -1;
-		} else if (this == event) {
+		} else if (this.equals(event)) {
 			return 0;
 		} else {
 			return 1;
@@ -236,5 +236,40 @@ public class SimEvent implements Cloneable, Comparable<SimEvent> {
 	 */
 	public void setDestination(int d) {
 		entDst = d;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof SimEvent)) return false;
+
+		SimEvent event = (SimEvent) o;
+
+		if (etype != event.etype) return false;
+		if (Double.compare(event.time, time) != 0) return false;
+		if (Double.compare(event.endWaitingTime, endWaitingTime) != 0) return false;
+		if (entSrc != event.entSrc) return false;
+		if (entDst != event.entDst) return false;
+		if (getTag() != event.getTag()) return false;
+		if (serial != event.serial) return false;
+		if(getData() == null) return getData() == event.getData();
+		return getData().equals(event.getData());
+	}
+
+	@Override
+	public int hashCode() {
+		int result;
+		long temp;
+		result = etype;
+		temp = Double.doubleToLongBits(time);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(endWaitingTime);
+		result = 31 * result + (int) (temp ^ (temp >>> 32));
+		result = 31 * result + entSrc;
+		result = 31 * result + entDst;
+		result = 31 * result + getTag();
+		result = 31 * result + getData().hashCode();
+		result = 31 * result + (int) (serial ^ (serial >>> 32));
+		return result;
 	}
 }

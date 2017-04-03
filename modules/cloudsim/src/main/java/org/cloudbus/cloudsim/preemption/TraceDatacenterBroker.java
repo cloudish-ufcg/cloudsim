@@ -15,7 +15,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
+import java.util.TimerTask;
 import java.util.TreeSet;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import gnu.trove.map.hash.THashMap;
 
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
@@ -66,6 +72,7 @@ public class TraceDatacenterBroker extends SimEntity {
     private InputTraceDataStore inputTraceDataStore;
 
     private TaskDataStore taskDataStore;
+//    private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
     public TraceDatacenterBroker(String name, Properties properties) throws Exception {
         super(name);
@@ -88,12 +95,20 @@ public class TraceDatacenterBroker extends SimEntity {
         setTaskStoringIntervalSize(taskStoringIntervalSize);
 
         setDatacenterIdsList(new LinkedList<Integer>());
-        setDatacenterCharacteristicsList(new HashMap<Integer, DatacenterCharacteristics>());
+        setDatacenterCharacteristicsList(new THashMap<Integer, DatacenterCharacteristics>());
 
         inputTraceDataStore = new InputTraceDataStore(properties);
         taskDataStore = new TaskDataStore(properties);
         
         this.properties = properties;
+        
+		
+//		executor.scheduleAtFixedRate(new TimerTask() {
+//			@Override
+//			public void run() {
+//				storeFinishedTasks(false);
+//			}
+//		}, 1, 1, TimeUnit.MINUTES);
         
     }
 
@@ -117,6 +132,7 @@ public class TraceDatacenterBroker extends SimEntity {
             // if the simulation finishes
             case CloudSimTags.END_OF_SIMULATION:
                 storeFinishedTasks(true);
+//                executor.shutdown();
                 break;
             case CloudSimTags.VM_DESTROY_ACK:
                 processVmDestroyAck(ev);
@@ -171,7 +187,7 @@ public class TraceDatacenterBroker extends SimEntity {
 		TaskState taskState = new TaskState(vm.getId(), vm.getMips(),
 				vm.getSubmitTime(), now, vm.getRuntime(), vm.getPriority(),
 				vm.getNumberOfPreemptions(), vm.getNumberOfBackfillingChoice(),
-				vm.getNumberOfMigrations());
+				vm.getNumberOfMigrations(), vm.getFirstTimeAllocated());
         finishedTasks.add(taskState);
         setConcludedTasks(getConcludedTasks() + 1);
     }
@@ -211,7 +227,7 @@ public class TraceDatacenterBroker extends SimEntity {
 				
 		        Log.printLine(CloudSim.clock() + ": The datacenter will be initialize from time: " + startTime);
 				
-				// creating the first task store event
+//				// creating the first task store event
 				send(getId(), startTime + getTaskStoringIntervalSize(),
 						STORE_FINISHED_TASKS_EVENT);
 				
@@ -285,7 +301,7 @@ public class TraceDatacenterBroker extends SimEntity {
      */
     protected void processResourceCharacteristicsRequest(SimEvent ev) {
         setDatacenterIdsList(CloudSim.getCloudResourceList());
-        setDatacenterCharacteristicsList(new HashMap<Integer, DatacenterCharacteristics>());
+        setDatacenterCharacteristicsList(new THashMap<Integer, DatacenterCharacteristics>());
 
         Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": Cloud Resource List received with ",
                 getDatacenterIdsList().size(), " resource(s)");

@@ -6,6 +6,7 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
@@ -16,8 +17,8 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 
     public static final String SLO_TARGET_PREFIX_PROP = "slo_availability_target_priority_";
 
-    protected Map<Integer, Double> priorityToSLOTarget = new HashMap<Integer, Double>();
-    protected Map<Integer, Map<Integer, PreemptableVm>> priorityToRunningVms = new HashMap<Integer, Map<Integer, PreemptableVm>>();
+    protected Map<Integer, Double> priorityToSLOTarget = new THashMap<Integer, Double>();
+    protected Map<Integer, Map<Integer, PreemptableVm>> priorityToRunningVms = new THashMap<Integer, Map<Integer, PreemptableVm>>();
 
     public VmAvailabilityBasedPreemptionPolicy(Properties properties) {
         this(properties, new SimulationTimeUtil());
@@ -51,13 +52,13 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 //			VmAvailabilityBasedPreemptableVmComparator comparator = new VmAvailabilityBasedPreemptableVmComparator(
 //					sloAvailabilityTargets.get(priority), simulationTimeUtil);
 //			getPriorityToVms().put(priority, new TreeSet<PreemptableVm>(comparator));
-            priorityToRunningVms.put(priority, new HashMap<Integer, PreemptableVm>());
+            priorityToRunningVms.put(priority, new THashMap<Integer, PreemptableVm>());
             getPriorityToInUseMips().put(priority, new Double(0));
         }
     }
 
     public static Map<Integer, Double> getSLOAvailabilityTargets(Properties properties) {
-        Map<Integer, Double> sloTargets = new HashMap<Integer, Double>();
+        Map<Integer, Double> sloTargets = new THashMap<Integer, Double>();
 
         if (properties == null) {
             throw new IllegalArgumentException("The SLO availability target must be set for each priority");
@@ -174,7 +175,7 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 //		getPriorityToVms().get(vm.getPriority()).add(vm);
         double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority());
         getPriorityToInUseMips().put(vm.getPriority(),
-                DecimalUtil.format(priorityCurrentUse + vm.getMips(), DECIMAL_ACCURACY));
+                DecimalUtil.format(priorityCurrentUse + vm.getMips()));
 
     }
 
@@ -191,7 +192,7 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
         double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority());
 
         getPriorityToInUseMips().put(vm.getPriority(),
-                DecimalUtil.format(priorityCurrentUse - vm.getMips(), DECIMAL_ACCURACY));
+                DecimalUtil.format(priorityCurrentUse - vm.getMips()));
 
     }
 
@@ -209,7 +210,7 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 
     @Override
     public Map<Integer, SortedSet<PreemptableVm>> getPriorityToVms() {
-        Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new HashMap<Integer, SortedSet<PreemptableVm>>();
+        Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new THashMap<Integer, SortedSet<PreemptableVm>>();
 
         for (int i = 0; i < getNumberOfPriorities(); i++) {
             VmAvailabilityBasedPreemptableVmComparator comparator = new VmAvailabilityBasedPreemptableVmComparator(

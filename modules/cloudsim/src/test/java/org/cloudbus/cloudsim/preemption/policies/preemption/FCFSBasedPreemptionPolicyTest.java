@@ -6,6 +6,7 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.junit.Assert;
@@ -442,8 +443,8 @@ public class FCFSBasedPreemptionPolicyTest {
 	@Test
 	public void tesNextVmForPreempting() {
 		// setting environment
-		Map<Integer, Double> priorityToMipsInUse = new HashMap<Integer, Double>();
-		Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new HashMap<Integer, SortedSet<PreemptableVm>>();
+		Map<Integer, Double> priorityToMipsInUse = new THashMap<Integer, Double>();
+		Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new THashMap<Integer, SortedSet<PreemptableVm>>();
 		double cpuReq = 1.0;
 
 		//priority 0

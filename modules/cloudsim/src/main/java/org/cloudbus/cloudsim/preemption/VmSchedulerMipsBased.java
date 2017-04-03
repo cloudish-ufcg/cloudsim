@@ -13,9 +13,7 @@ import java.util.List;
  */
 public class VmSchedulerMipsBased extends VmScheduler{
 
-
     double totalMips;
-    private static final int DECIMAL_ACCURACY = 9;
 
     /**
      * Creates a new VmScheduler.
@@ -96,11 +94,11 @@ public class VmSchedulerMipsBased extends VmScheduler{
 
     public double getTotalMips() { return totalMips; }
 
-    public void setTotalMips(double totalMips) { this.totalMips = DecimalUtil.format(totalMips, DECIMAL_ACCURACY); }
+    public void setTotalMips(double totalMips) { this.totalMips = DecimalUtil.format(totalMips); }
 
     @Override
     protected void setAvailableMips(double availableMips) {
-        super.setAvailableMips(DecimalUtil.format(availableMips, DECIMAL_ACCURACY));
+        super.setAvailableMips(DecimalUtil.format(availableMips));
     }
 
     @Override

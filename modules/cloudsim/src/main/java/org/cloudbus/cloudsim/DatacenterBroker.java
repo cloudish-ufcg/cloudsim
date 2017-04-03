@@ -14,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEntity;
@@ -99,8 +100,8 @@ public class DatacenterBroker extends SimEntity {
 
 		setDatacenterIdsList(new LinkedList<Integer>());
 		setDatacenterRequestedIdsList(new ArrayList<Integer>());
-		setVmsToDatacentersMap(new HashMap<Integer, Integer>());
-		setDatacenterCharacteristicsList(new HashMap<Integer, DatacenterCharacteristics>());
+		setVmsToDatacentersMap(new THashMap<Integer, Integer>());
+		setDatacenterCharacteristicsList(new THashMap<Integer, DatacenterCharacteristics>());
 	}
 
 	/**
@@ -202,7 +203,7 @@ public class DatacenterBroker extends SimEntity {
 	 */
 	protected void processResourceCharacteristicsRequest(SimEvent ev) {
 		setDatacenterIdsList(CloudSim.getCloudResourceList());
-		setDatacenterCharacteristicsList(new HashMap<Integer, DatacenterCharacteristics>());
+		setDatacenterCharacteristicsList(new THashMap<Integer, DatacenterCharacteristics>());
 
 		Log.printConcatLine(CloudSim.clock(), ": ", getName(), ": Cloud Resource List received with ",
 				getDatacenterIdsList().size(), " resource(s)");

@@ -4,15 +4,15 @@ public class DatacenterInfo {
 
 	private double time;
 	private int vmsRunning;
-	int vmsRunningP0;
-	int vmsRunningP1;
-	int vmsRunningP2;
-	int vmsForScheduling;
-	int vmsForSchedulingP0;
-	int vmsForSchedulingP1;
-	int vmsForSchedulingP2;
-	double resourcesRunningP0, resourcesRunningP1, resourcesRunningP2;
-	double resourcesWaitingP0, resourcesWaitingP1, resourcesWaitingP2;
+	private int vmsRunningP0;
+	private int vmsRunningP1;
+	private int vmsRunningP2;
+	private int vmsForScheduling;
+	private int vmsForSchedulingP0;
+	private int vmsForSchedulingP1;
+	private int vmsForSchedulingP2;
+	private double resourcesRunningP0, resourcesRunningP1, resourcesRunningP2;
+	private double resourcesWaitingP0, resourcesWaitingP1, resourcesWaitingP2;
 	
 	public DatacenterInfo(double time, int vmsRunning, int vmsRunningP0,
 			int vmsRunningP1, int vmsRunningP2, int vmsForScheduling,

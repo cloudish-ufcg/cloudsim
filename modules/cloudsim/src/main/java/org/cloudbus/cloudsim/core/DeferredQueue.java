@@ -8,10 +8,7 @@
 
 package org.cloudbus.cloudsim.core;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 /**
  * This class implements the deferred event queue used by {@link CloudSim}. 

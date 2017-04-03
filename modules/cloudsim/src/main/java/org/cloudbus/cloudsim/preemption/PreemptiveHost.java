@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
@@ -28,7 +29,7 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 				new BwProvisionerSimple(Integer.MAX_VALUE), Integer.MAX_VALUE,
 				peList, vmScheduler);
 		
-		setUsageMap(new HashMap<Double, UsageInfo>());
+		setUsageMap(new THashMap<Double, UsageInfo>());
 		setPreemptionPolicy(preemptionPolicy);
 		preemptionPolicy.setTotalMips(((VmSchedulerMipsBased) getVmScheduler())
 				.getTotalMips());
@@ -58,7 +59,6 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 		return false;
 	}
 
-
     @Override
     public int hashCode() {
         return getId();
@@ -70,8 +70,10 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 
 	@Override
 	public boolean isSuitableForVm(Vm vm) {
+
 		if (vm == null) {
 			return false;
+
 		} else if (getVmScheduler().getAvailableMips() >= vm.getMips()) {
 			return true;
 		} 
@@ -111,11 +113,7 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 	}
 	
 	public double getTotalUsage() {
-		double totalUsage = 0;
-		for (Integer priority : preemptionPolicy.getPriorityToInUseMips().keySet()) {
-			totalUsage += preemptionPolicy.getPriorityToInUseMips().get(priority);
-		}
-		return DecimalUtil.format(totalUsage, DECIMAL_ACCURACY);
+		return DecimalUtil.format(((VmSchedulerMipsBased)getVmScheduler()).getMipsInUse());
 	}
 	
 	@Override
@@ -131,6 +129,7 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 	}
 	
 	public double getAvailableMipsByPriority(int priority) {
+
 		return preemptionPolicy.getAvailableMipsByPriority(priority);
 	}
 
@@ -139,22 +138,48 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 		return ((VmSchedulerMipsBased) getVmScheduler()).getTotalMips();
 	}
 	
-	public List<UsageEntry> getUsageEntries() {
+	public List<UsageEntry> getUsageEntries(double clock) {
 		List<UsageEntry> usageEntries = new LinkedList<UsageEntry>();
-		for (UsageInfo usageInfo : getUsageMap().values()) {
-			usageEntries.addAll(usageInfo.getUsageEntries());
+
+		List<UsageInfo> usageInfos = getUsageInfos();
+		resetUsageMap();
+
+		for (UsageInfo usageInfo : usageInfos) {
+
+			if (usageInfo.getTime() < clock) {
+				usageEntries.addAll(usageInfo.getUsageEntries());
+
+			} else {
+				putUsageInfo(usageInfo);
+			}
 		}
 		return usageEntries;
 	}
-	
+
+	public List<UsageInfo> getUsageInfos() {
+
+		List<UsageInfo> usageInfos = new LinkedList<>();
+		usageInfos.addAll(getUsageMap().values());
+
+		return usageInfos;
+	}
+
+	public void putUsageInfo(UsageInfo usageInfo) {
+		getUsageMap().put(usageInfo.getTime(), usageInfo);
+	}
+
+	public void resetUsageMap() {
+		getUsageMap().clear();
+	}
+
 	private void setUsageMap(Map<Double, UsageInfo> usageMap) {
 		this.usageMap = usageMap;
 	}
-	
+
 	protected Map<Double, UsageInfo> getUsageMap() {
 		return usageMap;
 	}
-	
+
 	public void updateUsage(double time) {
 		getUsageMap().put( time,
 				new UsageInfo(getId(), time, preemptionPolicy
@@ -163,10 +188,6 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 						getAvailableMips()));
 	}
 
-	public void resetUsageMap() {
-		getUsageMap().clear();
-	}
-	
 	public PreemptionPolicy getPreemptionPolicy() {
 		return preemptionPolicy;
 	}

@@ -2,6 +2,7 @@ package org.cloudbus.cloudsim.preemption;
 
 import org.cloudbus.cloudsim.CloudletSchedulerTimeShared;
 import org.cloudbus.cloudsim.Vm;
+import org.cloudbus.cloudsim.core.CloudSim;
 
 public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 
@@ -13,11 +14,13 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	private double runtime;
 	private double startExec;
 	private double actualRuntime;
+
+	private double firstTimeAllocated;
+
 	private int numberOfPreemptions;
 	private int numberOfBackfillingChoice;
 	private int numberOfMigrations;
 	private int lastHostId;
-
 	public PreemptableVm(int id, int userId, double cpuReq, double memReq,
 			double submitTime, int priority, double runtime) {
 		super(id, userId, cpuReq, 1, (int) memReq, 0, 0, "default",
@@ -31,6 +34,7 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		setNumberOfBackfillingChoice(0);
 		setNumberOfMigrations(0);
 		setLastHostId(INVALID_HOST);
+		setFirstTimeAllocated(-1.0);
 		actualRuntime = 0;
 	}
 
@@ -47,9 +51,9 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		}
 		return 1;
 	}
-	
+
 	public void preempt(double currentTime) {
-		actualRuntime += (currentTime - getStartExec());		
+		actualRuntime += (currentTime - getStartExec());
 		setStartExec(NOT_EXECUTING_TIME);
 		setNumberOfPreemptions(getNumberOfPreemptions() + 1);
 	}
@@ -61,7 +65,7 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	public void setSubmitTime(double submitTime) {
 		this.submitTime = submitTime;
 	}
-	
+
 	public int getPriority() {
 		return priority;
 	}
@@ -85,7 +89,7 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	public void setStartExec(double startExec) {
 		this.startExec = startExec;
 	}
-	
+
 	public void setActualRuntime(double actualRuntime) {
 		this.actualRuntime = actualRuntime;
 	}
@@ -134,10 +138,23 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		this.numberOfMigrations = numberOfMigrations;
 	}
 
+	public double getFirstTimeAllocated() {
+		return firstTimeAllocated;
+	}
+
+	public void setFirstTimeAllocated(double firstTimeAllocated) {
+		this.firstTimeAllocated = firstTimeAllocated;
+	}
+
 	public void allocatingToHost(int hostId) {
+
 		if (getLastHostId() != INVALID_HOST && hostId != getLastHostId()) {
 			setNumberOfMigrations(getNumberOfMigrations() + 1);
 		}
+
+		if (getFirstTimeAllocated() == -1)
+			setFirstTimeAllocated(CloudSim.clock());
+
 		setLastHostId(hostId);
 	}
 
@@ -158,16 +175,22 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		}
 		return getActualRuntime(currentTime) / (currentTime - getSubmitTime());
 	}
-	
-	public double getAvailabilityWhileAllocating(double currentTime) {
-		if (currentTime == getSubmitTime()) {
-			return 1;
-		}
-		return getActualRuntime(currentTime) / (currentTime - getSubmitTime());
-	}
-	
+
 	@Override
 	public String toString() {
-		return String.valueOf(getId());
+		return "PreemptableVm{" +
+				"id=" + getId() +
+//				", priority=" + priority +
+//				", submitTime=" + submitTime +
+//				", runtime=" + runtime +
+//				", startExec=" + startExec +
+//				", actualRuntime=" + actualRuntime +
+//				", numberOfPreemptions=" + numberOfPreemptions +
+//				", numberOfBackfillingChoice=" + numberOfBackfillingChoice +
+//				", numberOfMigrations=" + numberOfMigrations +
+				", lastHostId=" + lastHostId +
+//				", cpuReq=" + getMips() +
+//				", availability=" + getCurrentAvailability(CloudSim.clock()) +
+				"}\n";
 	}
 }

@@ -1,5 +1,7 @@
 package org.cloudbus.cloudsim.preemption;
 
+import gnu.trove.map.hash.THashMap;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,8 +24,8 @@ public class UsageInfo {
 		this.time = time;
 		this.totalUsage = totalUsage;
 		this.availableMips = availableMips;
-		this.priorityToUsage =  new HashMap<Integer, Double>(priorityToInUseMips);
-		this.priorityToNumberOfVms = new HashMap<Integer, Integer>();
+		this.priorityToUsage =  new THashMap<Integer, Double>(priorityToInUseMips);
+		this.priorityToNumberOfVms = new THashMap<Integer, Integer>();
 		
 		for (Integer priority : priorityToVms.keySet()) {
 			priorityToNumberOfVms.put(priority, priorityToVms.get(priority).size());
@@ -37,12 +39,12 @@ public class UsageInfo {
 		this.time = time;
 		this.totalUsage = p0Usage + p1Usage + p2Usage;
 		this.availableMips = availableMips;
-		this.priorityToUsage =  new HashMap<Integer, Double>();
+		this.priorityToUsage =  new THashMap<Integer, Double>();
 		priorityToUsage.put(0, p0Usage);
 		priorityToUsage.put(1, p1Usage);
 		priorityToUsage.put(2, p2Usage);
 		
-		this.priorityToNumberOfVms = new HashMap<Integer, Integer>();
+		this.priorityToNumberOfVms = new THashMap<Integer, Integer>();
 		priorityToNumberOfVms.put(0, p0Vms);
 		priorityToNumberOfVms.put(1, p1Vms);
 		priorityToNumberOfVms.put(2, p2Vms);

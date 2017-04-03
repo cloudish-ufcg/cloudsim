@@ -7,9 +7,10 @@
 
 package org.cloudbus.cloudsim.preemption;
 
+import gnu.trove.map.hash.THashMap;
+
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,7 +18,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TimerTask;
 import java.util.TreeSet;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
@@ -57,6 +62,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	public static final int MAKE_DATACENTER_CHECKPOINT_EVENT = DATACENTER_BASE + 5;
 	public static final int INITIALIZE_FROM_CHECKPOINT_EVENT = DATACENTER_BASE + 6;
 	public static final int TRY_TO_ALLOCATE_WAITING_QUEUE_EVENT = DATACENTER_BASE + 7;
+	public static final int UPDATE_QUOTAS_EVENT = DATACENTER_BASE + 8;
 	
 	// default interval sizes 
 	// TODO review this default values, maybe it should be in microseconds
@@ -64,6 +70,8 @@ public class PreemptiveDatacenter extends Datacenter {
 	private static final int DEFAULT_DATACENTER_INFO_STORING_INTERVAL_SIZE = 1440; // one day in minutes
 	private static final int DEFAULT_DATACENTER_COLLECT_INFO_INTERVAL_SIZE = 5; // in minutes
 	private static final int DEFAULT_CHECKPOINT_INTERVAL_SIZE = 1440; // one day in minutes
+	private static final int DEFAULT_UPDATE_QUOTA_INTERVAL_SIZE = 5;
+
 
 	PreemptableVmAllocationPolicy vmAllocationPolicy;
 	
@@ -72,6 +80,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	private SortedSet<PreemptableVm> vmsRunning = new TreeSet<PreemptableVm>();
 	private SortedSet<PreemptableVm> vmsForScheduling = new TreeSet<PreemptableVm>();
 	private List<DatacenterInfo> datacenterInfo;
+	private boolean tryAllocateWaitingQueue;
 	
 	// data stores
 	private HostUsageDataStore hostUsageDataStore;
@@ -82,11 +91,17 @@ public class PreemptiveDatacenter extends Datacenter {
 	private double datacenterStoringInfoIntervalSize;
 	private double checkpointIntervalSize;
 	private double allocateWaitingQueueIntervalSize = INVALID_INTERVAL_SIZE; 
+	private double updateQuotaIntervalSize;
 
 	private boolean collectDatacenterInfo = false;
 	private boolean makeCheckpoint = false;
+	private boolean calculateQuotaEventTrigged = false;
 	private Properties properties;
 	private static double lastProcessTime;
+	private AdmissionController admController;
+	private Map<Integer, Double> admittedRequests;
+	
+	private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 	
 	public PreemptiveDatacenter(
 			String name,
@@ -94,13 +109,36 @@ public class PreemptiveDatacenter extends Datacenter {
 			PreemptableVmAllocationPolicy vmAllocationPolicy,
 			List<Storage> storageList,
 			double schedulingInterval, Properties properties) throws Exception {
+		this(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval, properties, new NoRejectionAdmissionController());
+	}
+	
+	public PreemptiveDatacenter(
+			String name,
+			DatacenterCharacteristics characteristics,
+			PreemptableVmAllocationPolicy vmAllocationPolicy,
+			List<Storage> storageList,
+			double schedulingInterval, Properties properties, AdmissionController admController) throws Exception {
 		super(name, characteristics, vmAllocationPolicy, storageList, schedulingInterval);
 		
 		this.hostUsageDataStore = new HostUsageDataStore(properties);
 		this.datacenterDataStore = new DatacenterUsageDataStore(properties);
 		this.properties = properties;
-		
-        double hostUsageStoringIntervalSize = properties
+		this.admController = admController;
+		this.admittedRequests = new THashMap<Integer, Double>();
+		this.tryAllocateWaitingQueue = false;
+	
+		if (properties.getProperty("number_of_priorities") != null) {
+			int numberOfPriorities = Integer.parseInt(properties.getProperty("number_of_priorities"));
+			if (numberOfPriorities <= 0) {
+				throw new IllegalArgumentException("The number of priorities must be a positive integer.");
+			}
+			
+			for (int priority = 0; priority < numberOfPriorities; priority++) {
+				admittedRequests.put(priority, 0d);
+			}
+		}
+
+        int hostUsageStoringIntervalSize = properties
                 .getProperty("utilization_storing_interval_size") == null ? DEFAULT_UTILIZATION_STORING_INTERVAL_SIZE
                 : Integer.parseInt(properties.getProperty("utilization_storing_interval_size"));
         
@@ -145,9 +183,35 @@ public class PreemptiveDatacenter extends Datacenter {
 
 			setDatacenterCollectInfoIntervalSize(datacenterCollectInfoIntervalSize);
 		}
+		if(properties.getProperty("update_quota_event_trigged") != null
+				&& properties.getProperty("update_quota_event_trigged")
+				.equals("yes")) {
+
+			setCalculateQuotaEventTrigged(true);
+
+			if (properties.getProperty("update_quota_interval_size") != null) {
+				double updateQuotaIntervalSize = properties
+						.getProperty("update_quota_interval_size") == null ? DEFAULT_UPDATE_QUOTA_INTERVAL_SIZE
+						: Double.parseDouble(properties.getProperty("update_quota_interval_size"));
+
+				setUpdateQuotaIntervalSize(updateQuotaIntervalSize);
+			}
+		}
+		
+		executor.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				storeHostUtilization(false);
+				
+			}
+		}, hostUsageStoringIntervalSize, hostUsageStoringIntervalSize, TimeUnit.MINUTES);
         
 	}
-	
+
+	private void setCalculateQuotaEventTrigged(boolean option) {
+		this.calculateQuotaEventTrigged = option;
+	}
+
 	@Override
 	protected void processOtherEvent(SimEvent ev) {
 
@@ -183,6 +247,10 @@ public class PreemptiveDatacenter extends Datacenter {
 				storeDatacenterInfo(false);
 				break;
 				
+			case UPDATE_QUOTAS_EVENT:
+				updateQuotas();
+				break;
+				
 			case MAKE_DATACENTER_CHECKPOINT_EVENT:
 				makeCheckpoint();
 				break;
@@ -192,6 +260,7 @@ public class PreemptiveDatacenter extends Datacenter {
 				terminateSimulation();
 				storeHostUtilization(true);
 				storeDatacenterInfo(true);
+				executor.shutdown();
 				break;
 	
 			// other unknown tags are processed by this method
@@ -201,7 +270,25 @@ public class PreemptiveDatacenter extends Datacenter {
 		}
 	}
 
-    private void tryToAllocateWaitingQueue() {
+    private void updateQuotas() {
+		Log.print("Update quota is occurring in time " + simulationTimeUtil.clock());
+		getAdmController().calculateQuota(getAdmittedRequests());
+		
+		// scheduling next update quota event
+		Log.printConcatLine(simulationTimeUtil.clock(),
+				": Scheduling next update quota event will be in ",
+				getUpdateQuotaIntervalSize(), " time units.");
+
+		Integer endOfSimulation = Integer.parseInt(properties.getProperty("end_of_simulation_time"));
+
+		if (simulationTimeUtil.clock() + getUpdateQuotaIntervalSize() < endOfSimulation){
+			// this method allow the quota event to be ran before destroy events (serial = -1)
+			sendPriorityEvent(getId(), getUpdateQuotaIntervalSize(),
+					PreemptiveDatacenter.UPDATE_QUOTAS_EVENT, null, -1);
+		}
+	}
+
+	private void tryToAllocateWaitingQueue() {
     	if (firstProcessNow()) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
 					": First processing at this time. Pre processing and updating last process time to ", simulationTimeUtil.clock());
@@ -230,7 +317,11 @@ public class PreemptiveDatacenter extends Datacenter {
 					+ " waitingVms on checkpoint.");
 
 			getVmsForScheduling().addAll(waitingVms);
-
+			
+			for (PreemptableVm vm : waitingVms) {
+				getAdmittedRequests().put(vm.getPriority(), admittedRequests.get(vm.getPriority()) + vm.getMips());
+			}
+			
 			for (PreemptableVm vm: runningVms){
 				vm.setStartExec(simulationTimeUtil.clock());
 				PreemptiveHost host = mapOfHosts.get(vm.getLastHostId());
@@ -253,6 +344,8 @@ public class PreemptiveDatacenter extends Datacenter {
 				sendFirst(getId(), remainingTime, CloudSimTags.VM_DESTROY_ACK, vm);
 
 				host.updateUsage(simulationTimeUtil.clock());
+				
+				getAdmittedRequests().put(vm.getPriority(), admittedRequests.get(vm.getPriority()) + vm.getMips());
 
 				getVmsRunning().add(vm);
 
@@ -264,7 +357,7 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	private Map<Integer, PreemptiveHost> generateMapOfHosts(){
 		List<PreemptiveHost> hostList = getHostList();
-		Map<Integer, PreemptiveHost> mapOfHosts = new HashMap<>();
+		Map<Integer, PreemptiveHost> mapOfHosts = new THashMap<>();
 
 		for (PreemptiveHost host: hostList){
 			mapOfHosts.put(host.getId(), host);
@@ -276,20 +369,27 @@ public class PreemptiveDatacenter extends Datacenter {
 
 
 	private void makeCheckpoint() {
-		Log.printConcatLine(simulationTimeUtil.clock(), ": Building datacenter checkpoint.");
-		
-		PreemptableVmDataStore vmDataStore = new PreemptableVmDataStore(properties, simulationTimeUtil.clock());
-		
-		if (!vmDataStore.addWaitingVms(getVmsForScheduling())) {
-			Log.printConcatLine(simulationTimeUtil.clock(),
-					": There was an error while making checkpoint of vms for scheduling.");
-		}
-		
-		if (!vmDataStore.addRunningVms(getVmsRunning())) {
-			Log.printConcatLine(simulationTimeUtil.clock(),
-					": There was an error while making checkpoint of vms running.");	
-		}
-
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+		executor.execute(new Runnable() {
+			
+			@Override
+			public void run() {
+				Log.printConcatLine(simulationTimeUtil.clock(), ": Building datacenter checkpoint.");
+				
+				PreemptableVmDataStore vmDataStore = new PreemptableVmDataStore(properties, simulationTimeUtil.clock());
+				
+				if (!vmDataStore.addWaitingVms(new TreeSet<PreemptableVm>(getVmsForScheduling()))) {
+					Log.printConcatLine(simulationTimeUtil.clock(),
+							": There was an error while making checkpoint of vms for scheduling.");
+				}
+				
+				if (!vmDataStore.addRunningVms(new TreeSet<PreemptableVm>(getVmsRunning()))) {
+					Log.printConcatLine(simulationTimeUtil.clock(),
+							": There was an error while making checkpoint of vms running.");	
+				}
+			}
+		});
+		 
 		//scheduling next checkpoint event
 		if (!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
@@ -297,29 +397,33 @@ public class PreemptiveDatacenter extends Datacenter {
 					getCheckpointIntervalSize(), " time units.");
 			send(getId(), getCheckpointIntervalSize(),
 					PreemptiveDatacenter.MAKE_DATACENTER_CHECKPOINT_EVENT);
-		}
+		}		
 	}
 
 	private void scheduleDatacenterEvents() {
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Scheduling the first datacenter events.");
-		
-		// creating the first utilization store event
-		send(getId(), getHostUsageStoringIntervalSize(),
-				PreemptiveDatacenter.STORE_HOST_UTILIZATION_EVENT);
-		
-		
+
+//		// creating the first utilization store event
+//		send(getId(), getHostUsageStoringIntervalSize(),
+//				PreemptiveDatacenter.STORE_HOST_UTILIZATION_EVENT);
+
+		// creating the first update quota event
+		if (getCalculateQuotaEventTrigged()) {
+			sendPriorityEvent(getId(), getUpdateQuotaIntervalSize(),
+					PreemptiveDatacenter.UPDATE_QUOTAS_EVENT, null, -1);
+		}
 		// creating the first datacenter store event
 		if (collectDatacenterInfo) {
 			send(getId(), getDatacenterCollectInfoIntervalSize(), PreemptiveDatacenter.COLLECT_DATACENTER_INFO_EVENT);
-			
+
 			send(getId(), getDatacenterStoringInfoIntervalSize(), PreemptiveDatacenter.STORE_DATACENTER_INFO_EVENT);
 		}
-		
+
 		// creating the first checkpoint event
 		if (makeCheckpoint) {
 			send(getId(), getCheckpointIntervalSize(), PreemptiveDatacenter.MAKE_DATACENTER_CHECKPOINT_EVENT);
 		}
-		
+
 		// periodically trying to allocate waiting queue
 		if (getAllocateWaitingQueueIntervalSize() != INVALID_INTERVAL_SIZE) {
 			send(getId(), getAllocateWaitingQueueIntervalSize(), PreemptiveDatacenter.TRY_TO_ALLOCATE_WAITING_QUEUE_EVENT);
@@ -431,7 +535,7 @@ public class PreemptiveDatacenter extends Datacenter {
 						resourcesWaitingP0, vmsForSchedulingP1,
 						resourcesWaitingP1, vmsForSchedulingP2,
 						resourcesWaitingP2));
-		
+
 		// creating next event if the are more vms to be concluded
 		if ((!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) && !endOfSimulation) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
@@ -461,14 +565,12 @@ public class PreemptiveDatacenter extends Datacenter {
 	private void storeHostUtilization(boolean endOfSimulation) {
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Storing host usage into database.");
 
-		List<UsageEntry> usageEntries = new ArrayList<UsageEntry>();
+		List<UsageEntry> usageEntries = new LinkedList<UsageEntry>();
 		
 		for (Host host : getHostList()) {
-			PreemptiveHost gHost = (PreemptiveHost) host;
 
-			usageEntries.addAll(gHost.getUsageEntries());
-						
-			gHost.resetUsageMap();
+			PreemptiveHost gHost = (PreemptiveHost) host;
+			usageEntries.addAll(gHost.getUsageEntries(this.simulationTimeUtil.clock()));
 		}
 		
 		Log.printConcatLine(simulationTimeUtil.clock(), ":", usageEntries.size()," will be stored into database now.");
@@ -476,17 +578,21 @@ public class PreemptiveDatacenter extends Datacenter {
 		hostUsageDataStore.addUsageEntries(usageEntries);
 		
 		// creating next event if the are more vms to be concluded
-		if ((!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) && !endOfSimulation) {
-			Log.printConcatLine(simulationTimeUtil.clock(),
-					": Scheduling next store host utilization event in be in ",
-					getHostUsageStoringIntervalSize(), " time units.");
-			send(getId(), getHostUsageStoringIntervalSize(),
-					STORE_HOST_UTILIZATION_EVENT);
-		}
+//		if ((!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) && !endOfSimulation) {
+//			Log.printConcatLine(simulationTimeUtil.clock(),
+//					": Scheduling next store host utilization event in be in ",
+//					getHostUsageStoringIntervalSize(), " time units.");
+//			send(getId(), getHostUsageStoringIntervalSize(),
+//					STORE_HOST_UTILIZATION_EVENT);
+//		}
 	}
 	
 	public List<UsageEntry> getHostUtilizationEntries() {
 		return hostUsageDataStore.getAllUsageEntries();
+	}
+
+	public void setAdmController(AdmissionController admController) {
+		this.admController = admController;
 	}
 
 	/**
@@ -503,9 +609,25 @@ public class PreemptiveDatacenter extends Datacenter {
 	 */
 	@Override
 	protected void processVmCreate(SimEvent ev, boolean ack) {
+
 		PreemptableVm vm = (PreemptableVm) ev.getData();
 
-		allocateHostForVm(ack, vm, null, false);
+		if (!getCalculateQuotaEventTrigged()) {
+			getAdmController().calculateQuota(getAdmittedRequests());
+		}
+
+		if (admController.accept(vm, getAdmittedRequests())) {
+
+			// updating the admitted requests for specific priority
+			int priority = vm.getPriority();
+			double currentAdmitted = admittedRequests.get(vm.getPriority());
+			getAdmittedRequests().put(priority, currentAdmitted + vm.getMips());
+
+			allocateHostForVm(ack, vm, null, false);
+		} else {
+			Log.printConcatLine(simulationTimeUtil.clock(),
+					": VM #", vm.getId(), " - ", vm.getPriority(), " was not accepted by Admission Controler.");
+		}
 	}
 
 	protected boolean allocateHostForVm(boolean ack, PreemptableVm vm, PreemptiveHost host, boolean isBackfilling) {
@@ -557,7 +679,8 @@ public class PreemptiveDatacenter extends Datacenter {
 			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 					vm.getId(), " will be destroyed in ", remainingTime,
 					" microseconds.");
-			sendFirst(getId(), remainingTime, CloudSimTags.VM_DESTROY_ACK, vm);			
+
+			sendFirst(getId(), remainingTime, CloudSimTags.VM_DESTROY_ACK, vm);
 			
 		}
 		return result;
@@ -592,7 +715,37 @@ public class PreemptiveDatacenter extends Datacenter {
 
 		scheduleFirst(entityId, delay, cloudSimTag, data);
 	}
+	
+	protected void sendPriorityEvent(int entityId, double delay, int cloudSimTag, Object data, long serial) {
+		if (entityId < 0) {
+			Log.printConcatLine(getName(), ".send(): Error - "
+					+ "invalid entity id ", entityId);
+			return;
+		}
 
+		// if delay is -ve, then it doesn't make sense. So resets to 0.0
+		if (delay < 0) {
+			delay = 0;
+		}
+
+		if (Double.isInfinite(delay)) {
+			throw new IllegalArgumentException(
+					"The specified delay is infinite value");
+		}
+
+		int srcId = getId();
+		if (entityId != srcId) {// only delay messages between different
+								// entities
+			delay += getNetworkDelay(srcId, entityId);
+		}
+		
+		if (!CloudSim.running()) {
+			return;
+		}
+		
+		CloudSim.send(getId(), entityId, delay, cloudSimTag, data, serial);
+	}
+	
 	private boolean tryingAllocateOnHost(PreemptableVm vm, PreemptiveHost host) {
 		if (host == null) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
@@ -649,12 +802,13 @@ public class PreemptiveDatacenter extends Datacenter {
 	@Override
 	protected void processVmDestroy(SimEvent ev, boolean ack) {
 		PreemptableVm vm = (PreemptableVm) ev.getData();
-		
+
 		if (vm.achievedRuntime(simulationTimeUtil.clock())) {
+			tryAllocateWaitingQueue = true;
 			if (getVmsRunning().remove(vm)) {		
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 						vm.getId(), " will be terminated.");
-				
+								
 				PreemptiveHost host = (PreemptiveHost) vm.getHost();
 				getVmAllocationPolicy().deallocateHostForVm(vm);
 			
@@ -662,12 +816,13 @@ public class PreemptiveDatacenter extends Datacenter {
 					sendNow(vm.getUserId(), CloudSimTags.VM_DESTROY_ACK, vm);
 				}
 
-				//updating host utilization
+				//updating host utilization				
 				host.updateUsage(simulationTimeUtil.clock());
-							
-				if (!getVmsForScheduling().isEmpty() && !nextEventIsDestroy()) {
-					allocatingWaitingQueue();
-				}
+				
+				// updating the admitted resources
+				getAdmittedRequests().put(
+						vm.getPriority(),
+						getAdmittedRequests().get(vm.getPriority())	- vm.getMips());
 			} else {
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 						vm.getId(), " was terminated previously.");
@@ -675,6 +830,12 @@ public class PreemptiveDatacenter extends Datacenter {
 		} else {
 			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 					vm.getId(), " doesn't achieve the runtime yet.");
+		}
+
+
+		if (!getVmsForScheduling().isEmpty() && !nextEventIsDestroy() && tryAllocateWaitingQueue) {
+			allocatingWaitingQueue();
+			tryAllocateWaitingQueue = false;
 		}
 	}
 
@@ -696,7 +857,7 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	private void allocatingWaitingQueue() {	
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to allocate the VMs in waiting queue.");
-		
+
 		boolean isBackfilling = false;
 		
 		ArrayList<PreemptableVm> waitingQueue = new ArrayList<PreemptableVm>(getVmsForScheduling());
@@ -800,6 +961,14 @@ public class PreemptiveDatacenter extends Datacenter {
 	public void setCheckpointIntervalSize(double checkpointIntervalSize) {
 		this.checkpointIntervalSize = checkpointIntervalSize;
 	}
+	
+	private double getUpdateQuotaIntervalSize() {
+		return updateQuotaIntervalSize;
+	}
+	
+	public void setUpdateQuotaIntervalSize(double updateQuotaIntervalSize) {
+		this.updateQuotaIntervalSize = updateQuotaIntervalSize;
+	}
 
 	public void setHostUsageDataStore(HostUsageDataStore hostUsageDataStore) {
 		this.hostUsageDataStore = hostUsageDataStore;
@@ -812,5 +981,17 @@ public class PreemptiveDatacenter extends Datacenter {
 	public void setAllocateWaitingQueueIntervalSize(
 			double allocateWaitingQueueIntervalSize) {
 		this.allocateWaitingQueueIntervalSize = allocateWaitingQueueIntervalSize;
+	}
+
+	public Map<Integer, Double> getAdmittedRequests() {
+		return admittedRequests;
+	}
+
+	public AdmissionController getAdmController() {
+		return admController;
+	}
+
+	public boolean getCalculateQuotaEventTrigged() {
+		return calculateQuotaEventTrigged;
 	}
 }
