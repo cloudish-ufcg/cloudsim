@@ -12,25 +12,21 @@ import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
 
-import gnu.trove.map.hash.THashMap;
-
 public class WorstFitPriorityBasedVmAllocationPolicy extends
 		PriorityBasedVMAllocationPolicy {
 
 	public WorstFitPriorityBasedVmAllocationPolicy(List<PreemptiveHost> hosts) {
-		super(new ArrayList<Host>(0));
-
+		super(new ArrayList<>(0));
+		
 		if (hosts == null){
 			throw new IllegalArgumentException(
 					"The set of host can not be null.");
 		}
 
 		setSimulationTimeUtil(new SimulationTimeUtil());
-		priorityToSortedHost = new THashMap<>();
 		int numberOfPriorities = hosts.get(0).getNumberOfPriorities();
 
 		for (int priority = 0; priority < numberOfPriorities; priority++) {
-
 			PreemptiveHostComparator comparator = new PreemptiveHostComparator(priority);
 			getPriorityToSortedHost().put(priority, new TreeSet<>(comparator));
 		}
@@ -50,7 +46,6 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 		PreemptableVm gVm = (PreemptableVm) vm;
 
 		if (getPriorityToSortedHost().containsKey(gVm.getPriority())) {
-
 			SortedSet<PreemptiveHost> hosts = getPriorityToSortedHost().get(gVm.getPriority());
 
 			if (!hosts.isEmpty()) {
