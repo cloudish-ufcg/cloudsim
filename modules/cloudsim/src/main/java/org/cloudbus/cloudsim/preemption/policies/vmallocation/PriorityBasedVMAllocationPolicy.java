@@ -11,13 +11,14 @@ import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 
+import gnu.trove.map.hash.THashMap;
+
 public abstract class PriorityBasedVMAllocationPolicy extends PreemptableVmAllocationPolicy {
 
-	protected Map<Integer, SortedSet<PreemptiveHost>> priorityToSortedHost;
+	protected Map<Integer, SortedSet<PreemptiveHost>> priorityToSortedHost = new THashMap<>();
 	
-	public PriorityBasedVMAllocationPolicy(List<? extends Host> hostList) {
-		super(hostList);
-		// TODO Auto-generated constructor stub
+	public PriorityBasedVMAllocationPolicy(List<PreemptiveHost> hosts) {
+		super(hosts);
 	}
 
 	@Override
