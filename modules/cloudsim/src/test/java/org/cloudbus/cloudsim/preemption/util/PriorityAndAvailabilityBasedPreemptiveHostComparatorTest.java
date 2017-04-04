@@ -179,4 +179,31 @@ public class PriorityAndAvailabilityBasedPreemptiveHostComparatorTest {
 
         Assert.assertArrayEquals(expectedFree.toArray(), hostsFree.toArray());
     }
+
+    @Test
+    public void testCeiling() {
+
+        Mockito.when(host1.getAvailableMipsByPriorityAndAvailability(PROD)).thenReturn(0.1);
+        Mockito.when(host2.getAvailableMipsByPriorityAndAvailability(PROD)).thenReturn(0.2);
+        Mockito.when(host3.getAvailableMipsByPriorityAndAvailability(PROD)).thenReturn(0.3);
+
+        TreeSet<PreemptiveHost> hostsProd = new TreeSet<>(comparatorProd.reversed());
+
+        hostsProd.add(host1);
+        hostsProd.add(host2);
+        hostsProd.add(host3);
+
+        Assert.assertEquals(host2, hostsProd.ceiling(host2));
+
+        PreemptiveHost host4 = Mockito.mock(PreemptiveHost.class);
+        Mockito.when(host4.getId()).thenReturn(4);
+        Mockito.when(host4.getAvailableMipsByPriorityAndAvailability(PROD)).thenReturn(0.6);
+        Assert.assertEquals(null, hostsProd.ceiling(host4));
+
+        PreemptiveHost host5 = Mockito.mock(PreemptiveHost.class);
+        Mockito.when(host5.getId()).thenReturn(4);
+        Mockito.when(host5.getAvailableMipsByPriorityAndAvailability(PROD)).thenReturn(0.29);
+
+        Assert.assertEquals(host3, hostsProd.ceiling(host5));
+    }
 }

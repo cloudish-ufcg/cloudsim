@@ -6,13 +6,11 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
-import org.cloudbus.cloudsim.preemption.policies.hostselection.HostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
@@ -20,7 +18,6 @@ import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class WorstFitPriorityBasedVmAllocationPolicyTest {
 
