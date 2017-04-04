@@ -69,10 +69,10 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
     @Test
     public void testSelectHostForVm() {
         PreemptableVm vm1 = new PreemptableVm(1, 1, 0.9, 1.0, 0, PRIORITY_0, 0);
-        PreemptableVm vm2 = new PreemptableVm(1, 1, 2, 1.0, 0, PRIORITY_0, 0);
-        PreemptableVm vm3 = new PreemptableVm(1, 1, 3, 1.0, 0, PRIORITY_0, 0);
-        PreemptableVm vm4 = new PreemptableVm(1, 1, 4, 1.0, 0, PRIORITY_0, 0);
-        PreemptableVm vm5 = new PreemptableVm(1, 1, 5.1, 1.0, 0, PRIORITY_0, 0);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, 2, 1.0, 0, PRIORITY_0, 0);
+        PreemptableVm vm3 = new PreemptableVm(3, 1, 3, 1.0, 0, PRIORITY_0, 0);
+        PreemptableVm vm4 = new PreemptableVm(4, 1, 4, 1.0, 0, PRIORITY_0, 0);
+        PreemptableVm vm5 = new PreemptableVm(5, 1, 5.1, 1.0, 0, PRIORITY_0, 0);
 
         // host1 has 1 mips available is suitable for Vm1
         Assert.assertEquals(host1, preemptablePolicy.selectHost(vm1));
@@ -142,6 +142,7 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
         PreemptableVm vm3 = new PreemptableVm(3, 1, 2.8, 1.0, 0, PRIORITY_0, 0);
         PreemptableVm vm4 = new PreemptableVm(4, 1, 2, 1.0, 0, PRIORITY_2, 0);
         PreemptableVm vm5 = new PreemptableVm(5, 1, 1.1, 1.0, 0, PRIORITY_2, 0);
+        PreemptableVm vm6 = new PreemptableVm(5, 1, 3, 1.0, 0, PRIORITY_1, 0);
 
         // host1 has 1 mips available and it is suitable for Vm1.
         Assert.assertEquals(host1, preemptablePolicy.selectHost(vm1));
@@ -161,7 +162,7 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
 
 
         // natural order: host1: 0.1, host3: 0.9, host2: 3
-        // order of hosts by available mips for vms with priority 0 is the same (ascending order): (host: 0.1, host2: 3, host: 5)
+        // order of hosts by available mips for vms with priority 0 is the same (ascending order): (host1: 0.1, host2: 3, host3: 5)
         // host1 has 1 mips available is suitable for Vm3
         Assert.assertEquals(host2, preemptablePolicy.selectHost(vm3));
 
@@ -169,8 +170,8 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
         // host2 has 3 mips available is suitable for Vm4
         Assert.assertEquals(host2, preemptablePolicy.selectHost(vm4));
         // allocating vm in this host
-        Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm2, host2));
-        Assert.assertEquals(vm2.getHost(), host2);
+        Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm4, host2));
+        Assert.assertEquals(vm4.getHost(), host2);
 
 
         // natural order: host1 (0.1 mips), host3 (0.9 mips), host2 (1 mips)
@@ -178,9 +179,12 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
         // host2 has 3 mips available and it is suitable for Vm3.
         Assert.assertEquals(host2, preemptablePolicy.selectHost(vm3));
 
-
+        // any host is suitable for vm with priority 2 and cpuReq = 1.1
         Assert.assertNull(preemptablePolicy.selectHost(vm5));
 
+        // natural order: host1 (0.1 mips), host3 (0.9 mips), host2 (1 mips)
+        // order by priority 1: host1 (0.1 mips), host3 (0.9 mips), host2 (3 mips)
+        Assert.assertEquals(host2, preemptablePolicy.selectHost(vm6));
 
     }
 
