@@ -19,7 +19,7 @@ import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedPreempt
 public class WorstFitAvailabilityAwareVmAllocationPolicy extends PriorityAndAvailabilityBasedVMAllocationPolicy {
 
     public WorstFitAvailabilityAwareVmAllocationPolicy(List<PreemptiveHost> hostList) {
-        super(new ArrayList<PreemptiveHost>(0));
+        super(hostList);
 
         setSimulationTimeUtil(new SimulationTimeUtil());
 

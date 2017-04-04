@@ -16,7 +16,7 @@ public class WorstFitPriorityBasedVmAllocationPolicy extends
 		PriorityBasedVMAllocationPolicy {
 
 	public WorstFitPriorityBasedVmAllocationPolicy(List<PreemptiveHost> hosts) {
-		super(new ArrayList<>(0));
+		super(hosts);
 		
 		if (hosts == null){
 			throw new IllegalArgumentException(

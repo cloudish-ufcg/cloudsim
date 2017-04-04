@@ -512,7 +512,7 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
         /* the allocation is not successful because the available mips verified in allocation do not consider preemption,
         * but the preemption can be caused using the correct method.
         */
-        
+
 
 
     }

@@ -28,7 +28,7 @@ public class BestFitPriorityBasedVmAllocationPolicy extends PriorityBasedVMAlloc
 
 
     public BestFitPriorityBasedVmAllocationPolicy(List<PreemptiveHost> hosts, SimulationTimeUtil simulationTimeUtil) {
-        super(new ArrayList<Host>(0));
+        super(new ArrayList<PreemptiveHost>(0));
 
         if (hosts == null){
             throw new IllegalArgumentException(
