@@ -26,7 +26,8 @@ public class BestFitPriorityBasedVmAllocationPolicy extends PriorityBasedVMAlloc
 
 //    private Map<Integer, SortedSet<PreemptiveHost>> priorityToSortedHost;
 
-    public BestFitPriorityBasedVmAllocationPolicy(List<PreemptiveHost> hosts) {
+
+    public BestFitPriorityBasedVmAllocationPolicy(List<PreemptiveHost> hosts, SimulationTimeUtil simulationTimeUtil) {
         super(new ArrayList<Host>(0));
 
         if (hosts == null){
@@ -34,15 +35,15 @@ public class BestFitPriorityBasedVmAllocationPolicy extends PriorityBasedVMAlloc
                     "The set of host can not be null.");
         }
 
-        setSimulationTimeUtil(new SimulationTimeUtil());
+        setSimulationTimeUtil(simulationTimeUtil);
         priorityToSortedHost = new THashMap<>();
         int numberOfPriorities = hosts.get(0).getNumberOfPriorities();
 
         for (int priority = 0; priority < numberOfPriorities; priority++) {
 
-			IncreasingCapacityPreemptiveHostComparator comparator = new IncreasingCapacityPreemptiveHostComparator(
-					priority);
-			getPriorityToSortedHost().put(priority, new TreeSet<>(comparator));
+            IncreasingCapacityPreemptiveHostComparator comparator = new IncreasingCapacityPreemptiveHostComparator(
+                    priority);
+            getPriorityToSortedHost().put(priority, new TreeSet<>(comparator));
         }
 
         // creating priority host skins
@@ -51,7 +52,10 @@ public class BestFitPriorityBasedVmAllocationPolicy extends PriorityBasedVMAlloc
                 getPriorityToSortedHost().get(priority).add(host);
             }
         }
+    }
 
+    public BestFitPriorityBasedVmAllocationPolicy(List<PreemptiveHost> hosts) {
+        this(hosts, new SimulationTimeUtil());
     }
 
     @Override
