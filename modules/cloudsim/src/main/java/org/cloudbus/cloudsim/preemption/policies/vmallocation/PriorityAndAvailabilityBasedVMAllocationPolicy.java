@@ -16,9 +16,9 @@ import gnu.trove.map.hash.THashMap;
 
 public abstract class PriorityAndAvailabilityBasedVMAllocationPolicy extends PreemptableVmAllocationPolicy {
 
-    private Map<Integer, PriorityQueue<PreemptiveHost>> priorityToSortedHostFCFS = new THashMap<>();
-    private Map<Integer, PriorityQueue<PreemptiveHost>> priorityToSortedHostAvailabilityAware = new THashMap<>();
-    private Map<Integer, Double> priorityToSLOTarget = new THashMap<Integer, Double>();
+    protected Map<Integer, PriorityQueue<PreemptiveHost>> priorityToPriorityQueueHostFCFS = new THashMap<>();
+    protected Map<Integer, PriorityQueue<PreemptiveHost>> priorityToPriorityQueueHostAvailabilityAware = new THashMap<>();
+    protected Map<Integer, Double> priorityToSLOTarget = new THashMap<Integer, Double>();
 	
 	public PriorityAndAvailabilityBasedVMAllocationPolicy(List<PreemptiveHost> hostList) {
 		super(hostList);
@@ -26,7 +26,7 @@ public abstract class PriorityAndAvailabilityBasedVMAllocationPolicy extends Pre
 	
     public void preProcess() {
 
-        priorityToSortedHostAvailabilityAware = new THashMap<>();
+        priorityToPriorityQueueHostAvailabilityAware = new THashMap<>();
 
         int numberOfPriorities = ((PreemptiveHost) getHostList().get(0)).getNumberOfPriorities();
 
@@ -34,7 +34,7 @@ public abstract class PriorityAndAvailabilityBasedVMAllocationPolicy extends Pre
 
 			PriorityAndAvailabilityBasedPreemptiveHostComparator comparatorAvailabilityAware = new PriorityAndAvailabilityBasedPreemptiveHostComparator(
 					priority);
-			getPriorityToSortedHostAvailabilityAware().put(priority,
+			getPriorityToPriorityQueueHostAvailabilityAware().put(priority,
 					new PriorityQueue<PreemptiveHost>(comparatorAvailabilityAware));
 
         }
@@ -42,7 +42,7 @@ public abstract class PriorityAndAvailabilityBasedVMAllocationPolicy extends Pre
         for (Host host : getHostList()) {
             PreemptiveHost pHost = (PreemptiveHost) host;
             for (int priority = 0; priority < numberOfPriorities; priority++) {
-                getPriorityToSortedHostAvailabilityAware().get(priority).add(pHost);
+                getPriorityToPriorityQueueHostAvailabilityAware().get(priority).add(pHost);
             }
         }
     }
@@ -77,16 +77,16 @@ public abstract class PriorityAndAvailabilityBasedVMAllocationPolicy extends Pre
     protected void addPriorityHost(Host host) {
         PreemptiveHost gHost = (PreemptiveHost) host;
         for (int priority = 0; priority < gHost.getNumberOfPriorities(); priority++) {
-            getPriorityToSortedHostFCFS().get(priority).add(gHost);
-            getPriorityToSortedHostAvailabilityAware().get(priority).add(gHost);
+            getPriorityToPriorityQueueHostFCFS().get(priority).add(gHost);
+            getPriorityToPriorityQueueHostAvailabilityAware().get(priority).add(gHost);
         }
     }
 
     protected void removePriorityHost(Host host) {
         PreemptiveHost gHost = (PreemptiveHost) host;
         for (int priority = 0; priority < gHost.getNumberOfPriorities(); priority++) {
-            getPriorityToSortedHostFCFS().get(priority).remove(gHost);
-            getPriorityToSortedHostAvailabilityAware().get(priority).remove(gHost);
+            getPriorityToPriorityQueueHostFCFS().get(priority).remove(gHost);
+            getPriorityToPriorityQueueHostAvailabilityAware().get(priority).remove(gHost);
         }
     }
 
@@ -114,10 +114,10 @@ public abstract class PriorityAndAvailabilityBasedVMAllocationPolicy extends Pre
 //            @TODO or in the next time to choose the way of select the host.
 //            */
 //            if (pVm.getCurrentAvailability(simulationTimeUtil.clock()) > getSLOTarget(pVm.getPriority())) {
-//                firstHost = getPriorityToSortedHostFCFS().get(pVm.getPriority()).peek();
+//                firstHost = getPriorityToPriorityQueueHostFCFS().get(pVm.getPriority()).peek();
 //
 //            } else {
-//                firstHost = getPriorityToSortedHostAvailabilityAware().get(pVm.getPriority()).peek();
+//                firstHost = getPriorityToPriorityQueueHostAvailabilityAware().get(pVm.getPriority()).peek();
 //            }
 //
 //            if (firstHost.isSuitableForVm(pVm)) {
@@ -170,12 +170,12 @@ public abstract class PriorityAndAvailabilityBasedVMAllocationPolicy extends Pre
         }
     }
 
-    protected Map<Integer, PriorityQueue<PreemptiveHost>> getPriorityToSortedHostFCFS() {
-        return this.priorityToSortedHostFCFS;
+    protected Map<Integer, PriorityQueue<PreemptiveHost>> getPriorityToPriorityQueueHostFCFS() {
+        return this.priorityToPriorityQueueHostFCFS;
     }
 
-    protected Map<Integer, PriorityQueue<PreemptiveHost>> getPriorityToSortedHostAvailabilityAware() {
-        return this.priorityToSortedHostAvailabilityAware;
+    protected Map<Integer, PriorityQueue<PreemptiveHost>> getPriorityToPriorityQueueHostAvailabilityAware() {
+        return this.priorityToPriorityQueueHostAvailabilityAware;
     }
 
     protected void setPriorityToSLOTarget(List<PreemptiveHost> hostList) {

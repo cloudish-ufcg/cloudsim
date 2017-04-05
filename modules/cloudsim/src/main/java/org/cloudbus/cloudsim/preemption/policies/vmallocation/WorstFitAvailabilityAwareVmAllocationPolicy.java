@@ -2,14 +2,11 @@ package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
 import java.util.*;
 
-import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Host;
-import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
-import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.util.PreemptiveHostComparator;
 import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedPreemptiveHostComparator;
 
@@ -33,15 +30,15 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PriorityAndAvai
 			PriorityAndAvailabilityBasedPreemptiveHostComparator comparatorAvailabilityAware = new PriorityAndAvailabilityBasedPreemptiveHostComparator(
 					priority);
 
-			getPriorityToSortedHostFCFS().put(priority, new PriorityQueue<PreemptiveHost>(comparatorFCFS));
-			getPriorityToSortedHostAvailabilityAware().put(priority,
+			getPriorityToPriorityQueueHostFCFS().put(priority, new PriorityQueue<PreemptiveHost>(comparatorFCFS));
+			getPriorityToPriorityQueueHostAvailabilityAware().put(priority,
 					new PriorityQueue<PreemptiveHost>(comparatorAvailabilityAware));
 		}
 
 		for (PreemptiveHost host : hostList) {
 			for (int priority = 0; priority < numberOfPriorities; priority++) {
-				getPriorityToSortedHostFCFS().get(priority).add(host);
-				getPriorityToSortedHostAvailabilityAware().get(priority).add(host);
+				getPriorityToPriorityQueueHostFCFS().get(priority).add(host);
+				getPriorityToPriorityQueueHostAvailabilityAware().get(priority).add(host);
 			}
 		}
 
@@ -61,10 +58,10 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PriorityAndAvai
             @TODO or in the next time to choose the way of select the host.
             */
             if (pVm.getCurrentAvailability(simulationTimeUtil.clock()) > getSLOTarget(pVm.getPriority())) {
-                firstHost = getPriorityToSortedHostFCFS().get(pVm.getPriority()).peek();
+                firstHost = getPriorityToPriorityQueueHostFCFS().get(pVm.getPriority()).peek();
 
             } else {
-                firstHost = getPriorityToSortedHostAvailabilityAware().get(pVm.getPriority()).peek();
+                firstHost = getPriorityToPriorityQueueHostAvailabilityAware().get(pVm.getPriority()).peek();
             }
 
             if (firstHost.isSuitableForVm(pVm)) {
