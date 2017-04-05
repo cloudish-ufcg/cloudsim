@@ -252,8 +252,6 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
 
         Mockito.when(MockedVm.getMips()).thenReturn(5.1);
         Assert.assertNull(bestFitVmAllocationPolicy.selectHost(MockedVm));
-
-
     }
 
 
