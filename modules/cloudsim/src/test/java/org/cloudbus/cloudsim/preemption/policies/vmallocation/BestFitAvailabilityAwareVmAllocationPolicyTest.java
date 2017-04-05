@@ -13,6 +13,7 @@ import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
@@ -556,4 +557,90 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
         Assert.assertTrue(host3.getVmList().isEmpty());
     }
 
+    @Test
+    public void testPreemptAndDestroy() {
+
+        int BATCH = 1;
+        int id = 0;
+        int userId = 0;
+        double memReq = 1.0;
+        double runtime = 10;
+
+        int priority = BATCH;
+
+        double submitTime = 0;
+        double cpuReq = 0.5;
+        PreemptableVm vm0 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm1 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+
+        cpuReq = 0.499999999;
+        PreemptableVm vm2 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+
+        submitTime = 1;
+        cpuReq = 0.3;
+        PreemptableVm vm3 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+
+        cpuReq = 0.499999998;
+        PreemptableVm vm4 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+
+        cpuReq = 0.2;
+        PreemptableVm vm5 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+
+        cpuReq = 0.000000001;
+        PreemptableVm vm6 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+
+        cpuReq = 0.5;
+        PreemptableVm vm7 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+
+        Mockito.when(simulationTimeUtil.clock()).thenReturn(0d);
+
+        // natural order: host1 (0.5 mips), host2 (0.5 mips), host3 (0.5 mips)
+        Assert.assertEquals(host1, bestFitVmAllocationPolicy.selectHost(vm0));
+        Assert.assertTrue(bestFitVmAllocationPolicy.allocateHostForVm(vm0, host1));
+        Assert.assertEquals(host1, vm0.getHost());
+
+        // natural order: host1 (0 mips), host2 (0.5 mips), host3 (0.5 mips)
+        Assert.assertEquals(host2, bestFitVmAllocationPolicy.selectHost(vm1));
+        Assert.assertTrue(bestFitVmAllocationPolicy.allocateHostForVm(vm1, host2));
+        Assert.assertEquals(host2, vm1.getHost());
+
+        // natural order: host1 (0 mips), host2 (0 mips), host3 (0.000000001 mips)
+        Assert.assertEquals(host3, bestFitVmAllocationPolicy.selectHost(vm2));
+        Assert.assertTrue(bestFitVmAllocationPolicy.allocateHostForVm(vm2, host3));
+        Assert.assertEquals(host3, vm2.getHost());
+
+        Mockito.when(simulationTimeUtil.clock()).thenReturn(1.0);
+
+        // natural order: host1 (0.5 mips), host2 (0.5 mips), host3 (0.5 mips)
+        Assert.assertEquals(host1, bestFitVmAllocationPolicy.selectHost(vm3));
+        Assert.assertTrue(bestFitVmAllocationPolicy.preempt(vm0)); // preempting vm with availability = 1.0
+        Assert.assertNull(vm0.getHost());
+        Assert.assertTrue(bestFitVmAllocationPolicy.allocateHostForVm(vm3, host1));
+        Assert.assertEquals(host1, vm3.getHost());
+
+        // natural order: host1 (0.2 mips), host2 (0.5 mips), host3 (0.5 mips)
+        Assert.assertEquals(host2, bestFitVmAllocationPolicy.selectHost(vm4));
+        Assert.assertTrue(bestFitVmAllocationPolicy.preempt(vm1)); // preempting vm with availability = 1.0
+        Assert.assertNull(vm1.getHost());
+        Assert.assertTrue(bestFitVmAllocationPolicy.allocateHostForVm(vm4, host2));
+        Assert.assertEquals(host2, vm4.getHost());
+
+        // natural order: host2 (0.000000002 mips), host1 (0.2 mips), host3 (0.5 mips)
+        Assert.assertEquals(host1, bestFitVmAllocationPolicy.selectHost(vm5));
+        Assert.assertTrue(bestFitVmAllocationPolicy.allocateHostForVm(vm5, host1));
+        Assert.assertEquals(host1, vm5.getHost());
+
+        // natural order: host1 (0 mips), host2 (0.000000002 mips), host3 (0.5 mips)
+        Assert.assertEquals(host2, bestFitVmAllocationPolicy.selectHost(vm6));
+        Assert.assertTrue(bestFitVmAllocationPolicy.allocateHostForVm(vm6, host2));
+        Assert.assertEquals(host2, vm6.getHost());
+
+        // natural order: host1 (0.2 mips), host2 (0.000000001 mips), host3 (0.5 mips)
+        Assert.assertEquals(host3, bestFitVmAllocationPolicy.selectHost(vm7));
+        Assert.assertTrue(bestFitVmAllocationPolicy.preempt(vm2)); // preempting vm with availability = 1.0
+        Assert.assertNull(vm2.getHost());
+        Assert.assertTrue(bestFitVmAllocationPolicy.allocateHostForVm(vm7, host3));
+        Assert.assertEquals(host3, vm7.getHost());
+
+    }
 }
