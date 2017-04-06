@@ -11,6 +11,7 @@ import gnu.trove.map.hash.THashMap;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,6 +42,7 @@ import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedP
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedVmComparator;
 import org.cloudbus.cloudsim.preemption.util.PriorityAndTTVBasedPreemptableVmComparator;
+import org.junit.runners.model.FrameworkMethod;
 
 /**
  * TODO
@@ -83,6 +85,7 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	private List<DatacenterInfo> datacenterInfo;
 	private boolean tryAllocateWaitingQueue;
+	private int smallerPriorityOfCurrentDestoy = Integer.MAX_VALUE;
 	
 	// data stores
 	private HostUsageDataStore hostUsageDataStore;
@@ -297,7 +300,7 @@ public class PreemptiveDatacenter extends Datacenter {
 			lastProcessTime = simulationTimeUtil.clock();
 			getVmAllocationPolicy().preProcess();
 			
-			allocatingWaitingQueue();
+			allocatingWaitingQueue(0);
 		} else {
 			Log.printConcatLine(simulationTimeUtil.clock(),
 					": The waiting queue already was tried to be alocated at this time.");
@@ -809,6 +812,8 @@ public class PreemptiveDatacenter extends Datacenter {
 
 		if (vm.achievedRuntime(simulationTimeUtil.clock())) {
 			tryAllocateWaitingQueue = true;
+			
+			smallerPriorityOfCurrentDestoy = Math.min(smallerPriorityOfCurrentDestoy, vm.getPriority());
 			if (getVmsRunning().remove(vm)) {		
 				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 						vm.getId(), " will be terminated.");
@@ -838,8 +843,9 @@ public class PreemptiveDatacenter extends Datacenter {
 
 
 		if (!getVmsForScheduling().isEmpty() && !nextEventIsDestroy() && tryAllocateWaitingQueue) {
-			allocatingWaitingQueue();
+			allocatingWaitingQueue(smallerPriorityOfCurrentDestoy);
 			tryAllocateWaitingQueue = false;
+			smallerPriorityOfCurrentDestoy = Integer.MAX_VALUE;
 		}
 	}
 
@@ -860,7 +866,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	}
 
 	//TODO method can be moved to VmAllocationPolicy once the structures of waiting and running are moved too
-	private void allocatingWaitingQueue() {	
+	private void allocatingWaitingQueue(int allocateFromPriority) {	
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to allocate the VMs in waiting queue.");
 
 		boolean isBackfilling = false;
@@ -893,9 +899,13 @@ public class PreemptiveDatacenter extends Datacenter {
 			Collections.sort(waitingQueue, new PriorityAndTTVBasedPreemptableVmComparator(sloTargets, simulationTimeUtil));
 		}
 		for (PreemptableVm currentVm : waitingQueue) {
+			if (currentVm.getPriority() >= allocateFromPriority) {
 				if (!allocateHostForVm(false, currentVm, null, isBackfilling)) {
 					isBackfilling = true;
 				}
+			} else {
+				isBackfilling = true;
+			}
 		}
 	}
 

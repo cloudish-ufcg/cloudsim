@@ -1,28 +1,27 @@
 package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
-import gnu.trove.map.hash.THashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
+
 import org.cloudbus.cloudsim.Host;
-import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
-import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
-import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.util.IncreasingCapacityPreemptiveHostComparator;
 import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedIncreasingCapacityPreemptiveHostComparator;
-import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedPreemptiveHostComparator;
-import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 
-import java.util.*;
+import gnu.trove.map.hash.THashMap;
 
 /**
  * Created by jvmafra on 03/04/17.
  */
 public class BestFitAvailabilityAwareVmAllocationPolicy extends PriorityAndAvailabilityBasedVMAllocationPolicy{
 
-    protected Map<Integer, TreeSet<PreemptiveHost>> priorityToSortedHostAvailabilityAware = new THashMap<>();
-    protected Map<Integer, TreeSet<PreemptiveHost>> priorityToSortedHostFCFS = new THashMap<>();
+    private Map<Integer, TreeSet<PreemptiveHost>> priorityToSortedHostAvailabilityAware = new THashMap<>();
+    private Map<Integer, TreeSet<PreemptiveHost>> priorityToSortedHostFCFS = new THashMap<>();
+    private int numberOfPriorities;
 
     public BestFitAvailabilityAwareVmAllocationPolicy(List<PreemptiveHost> hostList, SimulationTimeUtil simulationTimeUtil) {
         super(hostList);
@@ -32,7 +31,7 @@ public class BestFitAvailabilityAwareVmAllocationPolicy extends PriorityAndAvail
 
         setSimulationTimeUtil(simulationTimeUtil);
 
-        int numberOfPriorities = hostList.get(0).getNumberOfPriorities();
+        numberOfPriorities = hostList.get(0).getNumberOfPriorities();
 
         for (int priority = 0; priority < numberOfPriorities; priority++) {
 
@@ -90,19 +89,11 @@ public class BestFitAvailabilityAwareVmAllocationPolicy extends PriorityAndAvail
 
             PreemptableVm pVm = (PreemptableVm) vm;
 
-            List<Pe> peList1 = new ArrayList<Pe>();
-            peList1.add(new Pe(0, new PeProvisionerSimple(pVm.getMips())));
-
-            Properties properties = new Properties();
-            properties.setProperty("number_of_priorities", "3");
-
-            PreemptiveHost fakeHost = new PreemptiveHost(Integer.MIN_VALUE, peList1,
-                    new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
-
-            /*
-            @TODO Decide if the vm has to be violating SLO in this time
-            @TODO or in the next time to choose the way of select the host.
-            */
+         	/*
+        	 * Creating a host with the VM's capacity. This host would fit perfectly the vm.
+        	 */
+        	PreemptiveHost fakeHost = new PreemptiveHost(pVm.getMips(), numberOfPriorities);
+            
             if (pVm.getCurrentAvailability(simulationTimeUtil.clock()) > getSLOTarget(pVm.getPriority())) {
                 return getPriorityToSortedHostFCFS().get(pVm.getPriority()).ceiling(fakeHost);
 

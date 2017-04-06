@@ -101,32 +101,6 @@ public abstract class PriorityAndAvailabilityBasedVMAllocationPolicy extends Pre
         return true;
     }
 
-//    @Override
-//    public Host selectHost(Vm vm) {
-//
-//        verifyVm(vm);
-//
-//        if (!getHostList().isEmpty()) {
-//            PreemptableVm pVm = (PreemptableVm) vm;
-//            PreemptiveHost firstHost;
-//            /*
-//            @TODO Decide if the vm has to be violating SLO in this time
-//            @TODO or in the next time to choose the way of select the host.
-//            */
-//            if (pVm.getCurrentAvailability(simulationTimeUtil.clock()) > getSLOTarget(pVm.getPriority())) {
-//                firstHost = getPriorityToPriorityQueueHostFCFS().get(pVm.getPriority()).peek();
-//
-//            } else {
-//                firstHost = getPriorityToPriorityQueueHostAvailabilityAware().get(pVm.getPriority()).peek();
-//            }
-//
-//            if (firstHost.isSuitableForVm(pVm)) {
-//                return firstHost;
-//            }
-//        }
-//        return null;
-//    }
-
     protected double getSLOTarget(int priority) {
         return priorityToSLOTarget.get(priority);
     }

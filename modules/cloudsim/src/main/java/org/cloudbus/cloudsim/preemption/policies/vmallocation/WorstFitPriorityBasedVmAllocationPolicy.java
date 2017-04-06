@@ -1,6 +1,5 @@
 package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;

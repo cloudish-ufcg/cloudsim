@@ -1,9 +1,11 @@
 package org.cloudbus.cloudsim.preemption;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Host;
@@ -12,9 +14,11 @@ import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmScheduler;
 import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
+import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
 
 public class PreemptiveHost extends Host implements Comparable<Host> {
@@ -33,6 +37,22 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 		setPreemptionPolicy(preemptionPolicy);
 		preemptionPolicy.setTotalMips(((VmSchedulerMipsBased) getVmScheduler())
 				.getTotalMips());
+	}
+
+	public PreemptiveHost(double mips, int numberOfPriorities) {
+		this(Integer.MIN_VALUE, new ArrayList<Pe>() {
+			{
+				add(new Pe(0, new PeProvisionerSimple(mips)));
+			}
+		}, new VmSchedulerMipsBased(new ArrayList<Pe>() {
+			{
+				add(new Pe(0, new PeProvisionerSimple(mips)));
+			}
+		}), new FCFSBasedPreemptionPolicy(new Properties() {
+			{
+				setProperty(FCFSBasedPreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, String.valueOf(numberOfPriorities));
+			}
+		})); 
 	}
 
 	@Override

@@ -21,8 +21,9 @@ public class IncreasingCapacityPreemptiveHostComparator implements Comparator<Pr
         int result = (new Double(o1.getAvailableMipsByPriority(getPriority()))
                 .compareTo(new Double(o2.getAvailableMipsByPriority(getPriority()))));
 
-        if (result == 0)
-            return new Integer(o1.getId()).compareTo(new Integer(o2.getId()));
+        if (result == 0) {
+        	return new Integer(o1.getId()).compareTo(new Integer(o2.getId()));
+        }
 
         return result;
     }
