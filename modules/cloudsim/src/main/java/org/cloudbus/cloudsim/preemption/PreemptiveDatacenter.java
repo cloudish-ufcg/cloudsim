@@ -7,11 +7,8 @@
 
 package org.cloudbus.cloudsim.preemption;
 
-import gnu.trove.map.hash.THashMap;
-
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,7 +39,8 @@ import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedP
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedVmComparator;
 import org.cloudbus.cloudsim.preemption.util.PriorityAndTTVBasedPreemptableVmComparator;
-import org.junit.runners.model.FrameworkMethod;
+
+import gnu.trove.map.hash.THashMap;
 
 /**
  * TODO
