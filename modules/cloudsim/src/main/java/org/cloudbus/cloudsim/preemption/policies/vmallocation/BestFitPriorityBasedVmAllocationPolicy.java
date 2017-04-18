@@ -58,11 +58,25 @@ public class BestFitPriorityBasedVmAllocationPolicy extends PriorityBasedVMAlloc
 			TreeSet<PreemptiveHost> hosts = (TreeSet<PreemptiveHost>) getPriorityToSortedHost().get(gVm.getPriority());
 
             if (!hosts.isEmpty()) {
-            	/*
-            	 * Creating a host with the VM's capacity. This host would fit perfectly the vm.
-            	 */
-            	PreemptiveHost fakeHost = new PreemptiveHost(gVm.getMips(), numberOfPriorities);
-                return hosts.ceiling(fakeHost);
+            	
+    			/*
+    			 * Checking if the smallest host is suitable for this VM, if yes
+    			 * this is the host that should be selected
+    			 */
+            	if (hosts.first().isSuitableForVm(gVm)) {
+            		return hosts.first();
+            		
+            		/*
+    				 * Checking if the greatest host is suitable for this VM, if yes
+    				 * there is at least one host that is suitable for this VM
+    				 */
+            	} else if (hosts.last().isSuitableForVm(gVm)){
+            		/*
+            		 * Creating a host with the VM's capacity. This host would fit perfectly the vm.
+            		 */
+            		PreemptiveHost fakeHost = new PreemptiveHost(gVm.getMips(), numberOfPriorities);
+            		return hosts.ceiling(fakeHost);            		
+            	}            	
             }
         }
         return null;

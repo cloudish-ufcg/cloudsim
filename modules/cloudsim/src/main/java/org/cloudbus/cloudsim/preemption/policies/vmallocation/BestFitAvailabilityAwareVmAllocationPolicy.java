@@ -86,20 +86,35 @@ public class BestFitAvailabilityAwareVmAllocationPolicy extends PriorityAndAvail
         verifyVm(vm);
 
         if (!getHostList().isEmpty()) {
-
-            PreemptableVm pVm = (PreemptableVm) vm;
-
-         	/*
-        	 * Creating a host with the VM's capacity. This host would fit perfectly the vm.
-        	 */
-        	PreemptiveHost fakeHost = new PreemptiveHost(pVm.getMips(), numberOfPriorities);
+        	PreemptableVm pVm = (PreemptableVm) vm;
+        	
+        	TreeSet<PreemptiveHost> hosts;
             
             if (pVm.getCurrentAvailability(simulationTimeUtil.clock()) > getSLOTarget(pVm.getPriority())) {
-                return getPriorityToSortedHostFCFS().get(pVm.getPriority()).ceiling(fakeHost);
+                hosts = (TreeSet<PreemptiveHost>) getPriorityToSortedHostFCFS().get(pVm.getPriority());
 
             } else {
-                return getPriorityToSortedHostAvailabilityAware().get(pVm.getPriority()).ceiling(fakeHost);
+                hosts = (TreeSet<PreemptiveHost>) getPriorityToSortedHostAvailabilityAware().get(pVm.getPriority());
             }
+            
+			/*
+			 * Checking if the smallest host is suitable for this VM, if yes
+			 * this is the host that should be selected
+			 */
+            if (hosts.first().isSuitableForVm(pVm)) {            	
+            	return hosts.first();
+            
+				/*
+				 * Checking if the greatest host is suitable for this VM, if yes
+				 * there is at least one host that is suitable for this VM
+				 */
+            } else if (hosts.last().isSuitableForVm(pVm)){
+            	/*
+            	 * Creating a host with the VM's capacity. This host would fit perfectly the vm.
+            	 */
+            	PreemptiveHost fakeHost = new PreemptiveHost(pVm.getMips(), numberOfPriorities);
+            	return hosts.ceiling(fakeHost);            		
+            }       
         }
         return null;
     }
@@ -130,6 +145,4 @@ public class BestFitAvailabilityAwareVmAllocationPolicy extends PriorityAndAvail
             getPriorityToSortedHostAvailabilityAware().get(priority).remove(gHost);
         }
     }
-
-
 }

@@ -1,6 +1,10 @@
 package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
-import gnu.trove.map.hash.THashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
@@ -13,13 +17,9 @@ import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import gnu.trove.map.hash.THashMap;
 
 /**
  * Created by jvmafra on 04/04/17.
@@ -210,21 +210,45 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
 
         bestFitVmAllocationPolicyWithMock.preProcess();
         Mockito.when(MockedVm.getMips()).thenReturn(0.9);
+        Mockito.when(mockedPreemptionPolicy1.isSuitableFor(MockedVm)).thenReturn(true);
+        Mockito.when(mockedPreemptionPolicy2.isSuitableFor(MockedVm)).thenReturn(true);
+        Mockito.when(mockedPreemptionPolicy3.isSuitableFor(MockedVm)).thenReturn(true);
+        Mockito.when(mockedPreemptionPolicy4.isSuitableFor(MockedVm)).thenReturn(true);
         Assert.assertEquals(hostWithMockedPolicy1, bestFitVmAllocationPolicyWithMock.selectHost(MockedVm));
 
         Mockito.when(MockedVm.getMips()).thenReturn(1.1);
+        Mockito.when(mockedPreemptionPolicy1.isSuitableFor(MockedVm)).thenReturn(false);
+        Mockito.when(mockedPreemptionPolicy2.isSuitableFor(MockedVm)).thenReturn(true);
+        Mockito.when(mockedPreemptionPolicy3.isSuitableFor(MockedVm)).thenReturn(true);
+        Mockito.when(mockedPreemptionPolicy4.isSuitableFor(MockedVm)).thenReturn(true);
         Assert.assertEquals(hostWithMockedPolicy2, bestFitVmAllocationPolicyWithMock.selectHost(MockedVm));
 
         Mockito.when(MockedVm.getMips()).thenReturn(2.0);
+        Mockito.when(mockedPreemptionPolicy1.isSuitableFor(MockedVm)).thenReturn(false);
+        Mockito.when(mockedPreemptionPolicy2.isSuitableFor(MockedVm)).thenReturn(true);
+        Mockito.when(mockedPreemptionPolicy3.isSuitableFor(MockedVm)).thenReturn(true);
+        Mockito.when(mockedPreemptionPolicy4.isSuitableFor(MockedVm)).thenReturn(true);
         Assert.assertEquals(hostWithMockedPolicy2, bestFitVmAllocationPolicyWithMock.selectHost(MockedVm));
 
         Mockito.when(MockedVm.getMips()).thenReturn(2.5);
+        Mockito.when(mockedPreemptionPolicy1.isSuitableFor(MockedVm)).thenReturn(false);
+        Mockito.when(mockedPreemptionPolicy2.isSuitableFor(MockedVm)).thenReturn(false);
+        Mockito.when(mockedPreemptionPolicy3.isSuitableFor(MockedVm)).thenReturn(true);
+        Mockito.when(mockedPreemptionPolicy4.isSuitableFor(MockedVm)).thenReturn(true);
         Assert.assertEquals(hostWithMockedPolicy3, bestFitVmAllocationPolicyWithMock.selectHost(MockedVm));
 
         Mockito.when(MockedVm.getMips()).thenReturn(4.8);
+        Mockito.when(mockedPreemptionPolicy1.isSuitableFor(MockedVm)).thenReturn(false);
+        Mockito.when(mockedPreemptionPolicy2.isSuitableFor(MockedVm)).thenReturn(false);
+        Mockito.when(mockedPreemptionPolicy3.isSuitableFor(MockedVm)).thenReturn(false);
+        Mockito.when(mockedPreemptionPolicy4.isSuitableFor(MockedVm)).thenReturn(true);
         Assert.assertEquals(hostWithMockedPolicy4, bestFitVmAllocationPolicyWithMock.selectHost(MockedVm));
 
         Mockito.when(MockedVm.getMips()).thenReturn(5.1);
+        Mockito.when(mockedPreemptionPolicy1.isSuitableFor(MockedVm)).thenReturn(false);
+        Mockito.when(mockedPreemptionPolicy2.isSuitableFor(MockedVm)).thenReturn(false);
+        Mockito.when(mockedPreemptionPolicy3.isSuitableFor(MockedVm)).thenReturn(false);
+        Mockito.when(mockedPreemptionPolicy4.isSuitableFor(MockedVm)).thenReturn(false);
         Assert.assertNull(bestFitVmAllocationPolicyWithMock.selectHost(MockedVm));
     }
 
