@@ -777,6 +777,7 @@ public class PreemptiveDatacenter extends Datacenter {
 								+ ") to allocate VM #" + vm.getId()
 								+ " (priority " + vm.getPriority() + ")");
 				getVmAllocationPolicy().preempt(vmToPreempt);
+				smallerPriorityOfCurrentDestoy = Math.min(smallerPriorityOfCurrentDestoy, vm.getPriority());
 				getVmsRunning().remove(vmToPreempt);
 				getVmsForScheduling().add(vmToPreempt);
 				return tryingAllocateOnHost(vm, host);
