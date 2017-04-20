@@ -1454,9 +1454,9 @@ public class SystemTestBestFitFCFS {
         advanceTime(6.0);
         testSimulationTenHostsRuntime6();
 
-//        advanceTime(7.0);
-//        testSimulationThreeHostsRuntime7();
-//
+        advanceTime(7.0);
+        testSimulationTenHostsRuntime7();
+
 //        advanceTime(8.0);
 //        testSimulationThreeHostsRuntime8();
 //
@@ -2100,6 +2100,49 @@ public class SystemTestBestFitFCFS {
         }
     }
 
+    private void testSimulationTenHostsRuntime7() {
 
+        for (Host host :
+                datacenter.getHostList()) {
+
+            PreemptiveHost pHost = (PreemptiveHost) host;
+
+            Assert.assertEquals(1.0, pHost.getAvailableMipsByPriority(PROD), ACCEPTABLE_DIFFERENCE);
+
+            if (pHost.getId() < 5 || pHost.getId() == 9)
+                Assert.assertEquals(1.0, pHost.getAvailableMipsByPriority(BATCH), ACCEPTABLE_DIFFERENCE);
+            else if (pHost.getId() == 8 || pHost.getId() == 5)
+                Assert.assertEquals(0.5, pHost.getAvailableMipsByPriority(BATCH), ACCEPTABLE_DIFFERENCE);
+            else
+                Assert.assertEquals(0d, pHost.getAvailableMipsByPriority(BATCH), ACCEPTABLE_DIFFERENCE);
+
+            if (pHost.getId() == 0) {
+                Assert.assertEquals(1.0, pHost.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+                Assert.assertEquals(1.0, pHost.getAvailableMipsByPriority(FREE), ACCEPTABLE_DIFFERENCE);
+            }
+            else if (pHost.getId() == 1 || pHost.getId() == 4) {
+                Assert.assertEquals(0.6, pHost.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+                Assert.assertEquals(0.6, pHost.getAvailableMipsByPriority(FREE), ACCEPTABLE_DIFFERENCE);
+            }
+            else if (pHost.getId() == 5) {
+                Assert.assertEquals(0.5, pHost.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+                Assert.assertEquals(0.5, pHost.getAvailableMipsByPriority(FREE), ACCEPTABLE_DIFFERENCE);
+            }
+            else if (pHost.getId() == 9) {
+                Assert.assertEquals(0.2, pHost.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+                Assert.assertEquals(0.2, pHost.getAvailableMipsByPriority(FREE), ACCEPTABLE_DIFFERENCE);
+            }
+            else if (pHost.getId() == 8) {
+                Assert.assertEquals(0.1, pHost.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+                Assert.assertEquals(0.1, pHost.getAvailableMipsByPriority(FREE), ACCEPTABLE_DIFFERENCE);
+            }
+            else {
+                Assert.assertEquals(0d, pHost.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+                Assert.assertEquals(0d, pHost.getAvailableMipsByPriority(FREE), ACCEPTABLE_DIFFERENCE);
+            }
+        }
+
+        testVmsP0StatisticsTime7To9();
+    }
 }
 
