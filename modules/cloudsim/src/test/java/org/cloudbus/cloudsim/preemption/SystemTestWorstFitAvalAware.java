@@ -23,7 +23,7 @@ import static org.junit.Assert.fail;
 /**
  * Created by jvmafra on 20/03/17.
  */
-public class SystemTestAvalAware {
+public class SystemTestWorstFitAvalAware {
 
     private static final double ACCEPTABLE_DIFFERENCE = 0.000001;
     private static final int PROD = 0;
@@ -152,7 +152,7 @@ public class SystemTestAvalAware {
     }
 
     @Test
-    public void testSystemSingleHostWithAvalabilityAwarePolicy() throws Exception{
+    public void testSystemSingleHostWithWorstFitAvalabilityAwarePolicy() throws Exception{
         Log.enable();
 
         // creating host
@@ -231,7 +231,7 @@ public class SystemTestAvalAware {
     }
 
     @Test
-    public void testSystemThreeHostsWithAvailabilityAwarePolicy() throws Exception{
+    public void testSystemThreeHostsWithWorstFitAvailabilityAwarePolicy() throws Exception{
         Log.enable();
 
         hostCapacity = 3.3;
@@ -1488,7 +1488,7 @@ public class SystemTestAvalAware {
     }
 
     @Test
-    public void testSystem10HostsWithAvailabilityAwarePolicy() throws Exception {
+    public void testSystem10HostsWithWorstFitAvailabilityAwarePolicy() throws Exception {
         Log.enable();
 
         hostCapacity = 1.0;

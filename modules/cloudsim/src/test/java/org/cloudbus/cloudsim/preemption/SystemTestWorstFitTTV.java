@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
 /**
  * Created by jvmafra on 22/03/17.
  */
-public class SystemTestTTV {
+public class SystemTestWorstFitTTV {
 
     private static final double ACCEPTABLE_DIFFERENCE = 0.000001;
     private static final int PROD = 0;
@@ -249,7 +249,7 @@ public class SystemTestTTV {
     }
 
     @Test
-    public void testSystemSingleHostWithTTVPolicy() throws Exception{
+    public void testSystemSingleHostWithWorstFitTTVPolicy() throws Exception{
         Log.enable();
 
         hostCapacity = 10;
@@ -643,7 +643,7 @@ public class SystemTestTTV {
 
 
     @Test
-    public void testSystemThreeHostsWithTTVPolicy() throws Exception{
+    public void testSystemThreeHostsWithWorstFitTTVPolicy() throws Exception{
         Log.enable();
 
         hostCapacity = 3.3;
@@ -1350,7 +1350,7 @@ public class SystemTestTTV {
     }
 
     @Test
-    public void testSystem10HostsWithTTVPolicy() throws Exception{
+    public void testSystem10HostsWithWorstFitTTVPolicy() throws Exception{
         Log.enable();
 
         hostCapacity = 1;

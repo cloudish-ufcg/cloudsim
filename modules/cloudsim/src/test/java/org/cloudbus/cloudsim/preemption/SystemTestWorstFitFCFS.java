@@ -18,7 +18,7 @@ import org.mockito.Mockito;
 /**
  * Created by Alessandro Lia Fook Santos and Joao Victor Mafra on 01/11/16.
  */
-public class SystemTestFCFS {
+public class SystemTestWorstFitFCFS {
 
     private static final double ACCEPTABLE_DIFFERENCE = 0.000001;
     private static final int PROD = 0;
@@ -177,7 +177,7 @@ public class SystemTestFCFS {
 
 
     @Test
-    public void testSystemSingleHostFCFSNewTrace() throws Exception{
+    public void testSystemSingleHostWorstFitFCFSNewTrace() throws Exception{
         Log.enable();
 
         hostCapacity = 10;
@@ -648,7 +648,7 @@ public class SystemTestFCFS {
     }
 
     @Test
-    public void testSystemThreeHostsFCFSNewTrace() throws Exception{
+    public void testSystemThreeHostsWorstFitFCFSNewTrace() throws Exception{
         Log.disable();
 
         hostCapacity = 3.3;
@@ -2008,7 +2008,7 @@ public class SystemTestFCFS {
     }
 
     @Test
-    public void testSystem10HostsFCFSNewTrace() throws Exception{
+    public void testSystem10HostsWorstFitFCFSNewTrace() throws Exception{
         Log.disable();
 
         hostCapacity = 1.0;
