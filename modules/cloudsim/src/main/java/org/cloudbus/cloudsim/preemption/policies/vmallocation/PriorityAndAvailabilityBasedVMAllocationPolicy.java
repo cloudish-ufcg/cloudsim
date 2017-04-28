@@ -124,9 +124,36 @@ public abstract class PriorityAndAvailabilityBasedVMAllocationPolicy extends Pre
             return false;
         }
 
-        removePriorityHost(host);
-        boolean result = host.vmCreate(vm);
-        addPriorityHost(host);
+        PreemptiveHost pHost = (PreemptiveHost) host;
+        PreemptableVm pVm = (PreemptableVm) vm;
+        
+        removePriorityHost(pHost);
+        boolean result = pHost.vmCreate(pVm);
+        
+		if (!result) {
+			while (!result) {
+				PreemptableVm vmToPreempt = (PreemptableVm) pHost.nextVmForPreempting();
+				
+				// TODO do we nedd this check?
+				if (vmToPreempt != null && vmToPreempt.getPriority() >= pVm.getPriority()) {
+					Log.printConcatLine(simulationTimeUtil.clock(),
+							": Preempting VM #" + vmToPreempt.getId() + " (priority " + vmToPreempt.getPriority()
+									+ ") to allocate VM #" + vm.getId() + " (priority " + pVm.getPriority() + ")");
+				
+					// preempting vm
+					vmToPreempt.preempt(simulationTimeUtil.clock());
+					pHost.vmDestroy(vmToPreempt);					
+					vmToPreempt.setBeingInstantiated(true);
+					
+					getVmsRunning().remove(vmToPreempt);
+					getVmsWaiting().add(vmToPreempt);
+					
+					result = pHost.vmCreate(pVm);					
+				}
+			}
+		}    
+        
+        addPriorityHost(pHost);
 
         return result;
     }
@@ -137,7 +164,12 @@ public abstract class PriorityAndAvailabilityBasedVMAllocationPolicy extends Pre
 
         Host host = vm.getHost();
 
-        if (validateHostForVm((PreemptableVm) vm, host)) {
+        if (validateHostForVm((PreemptableVm) vm, host)) {        	
+			if (!getVmsRunning().remove(vm)) {
+				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
+						vm.getId(), " is not running to be removed.");
+			}
+			
             removePriorityHost(host);
             host.vmDestroy(vm);
             addPriorityHost(host);

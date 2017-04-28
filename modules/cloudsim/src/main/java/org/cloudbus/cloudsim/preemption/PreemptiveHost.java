@@ -1,13 +1,11 @@
 package org.cloudbus.cloudsim.preemption;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
@@ -20,6 +18,8 @@ import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
 import org.cloudbus.cloudsim.provisioners.BwProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.cloudbus.cloudsim.provisioners.RamProvisionerSimple;
+
+import gnu.trove.map.hash.THashMap;
 
 public class PreemptiveHost extends Host implements Comparable<Host> {
 	

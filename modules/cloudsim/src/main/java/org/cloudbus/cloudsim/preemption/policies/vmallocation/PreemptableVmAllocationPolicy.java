@@ -2,6 +2,8 @@ package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Vm;
@@ -16,12 +18,12 @@ import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
  */
 public abstract class PreemptableVmAllocationPolicy extends VmAllocationPolicy {
 
-	/**
-	 * The map between each VM and its allocated host. The map key is a VM UID
-	 * and the value is the allocated host for that VM.
-	 */
+	
+	private SortedSet<PreemptableVm> vmsRunning = new TreeSet<PreemptableVm>();
+	private SortedSet<PreemptableVm> vmsWaiting = new TreeSet<PreemptableVm>();
 
-	SimulationTimeUtil simulationTimeUtil;
+	
+	protected SimulationTimeUtil simulationTimeUtil;
 
 	public PreemptableVmAllocationPolicy (List<? extends Host> hostList){
 		super(hostList);
@@ -52,6 +54,22 @@ public abstract class PreemptableVmAllocationPolicy extends VmAllocationPolicy {
 
 	public void setSimulationTimeUtil(SimulationTimeUtil simulationTimeUtil) {
 		this.simulationTimeUtil = simulationTimeUtil;
+	}
+	
+	public SortedSet<PreemptableVm> getVmsRunning() {
+		return vmsRunning;
+	}
+
+	public boolean thereIsVmsRunning() {
+		return !getVmsRunning().isEmpty();
+	}
+
+	public SortedSet<PreemptableVm> getVmsWaiting() {
+		return vmsWaiting;
+	}
+
+	public boolean thereIsVmsWaiting() {
+		return !getVmsWaiting().isEmpty();
 	}
 }
 
