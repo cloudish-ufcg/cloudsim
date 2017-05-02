@@ -72,18 +72,12 @@ public class PreemptiveDatacenter extends Datacenter {
 	private static final int DEFAULT_CHECKPOINT_INTERVAL_SIZE = 1440; // one day in minutes
 	private static final int DEFAULT_UPDATE_QUOTA_INTERVAL_SIZE = 5;
 
-
 	PreemptableVmAllocationPolicy vmAllocationPolicy;
 	
 	SimulationTimeUtil simulationTimeUtil = new SimulationTimeUtil();
 
-	//TODO structures of vms can be moved to VmAllocationPolicy
-//	private SortedSet<PreemptableVm> vmsRunning = new TreeSet<PreemptableVm>();
-//	private SortedSet<PreemptableVm> vmsForScheduling = new TreeSet<PreemptableVm>();
-
 	private List<DatacenterInfo> datacenterInfo;
 	private boolean tryAllocateWaitingQueue;
-//	private int smallerPriorityOfCurrentDestoy = Integer.MAX_VALUE;
 	
 	// data stores
 	private HostUsageDataStore hostUsageDataStore;
@@ -626,7 +620,7 @@ public class PreemptiveDatacenter extends Datacenter {
 			double currentAdmitted = admittedRequests.get(vm.getPriority());
 			getAdmittedRequests().put(priority, currentAdmitted + vm.getMips());
 
-			allocateHostForVm(ack, vm, null, false);
+			allocateHostForVm(ack, vm, false);
 		} else {
 			Log.printConcatLine(simulationTimeUtil.clock(),
 					": VM #", vm.getId(), " - ", vm.getPriority(), " was not accepted by Admission Controler.");
@@ -634,7 +628,7 @@ public class PreemptiveDatacenter extends Datacenter {
 	}
 
 	//TODO this method logic can be moved to VmAllocationPolicy
-	protected boolean allocateHostForVm(boolean ack, PreemptableVm vm, PreemptiveHost host, boolean isBackfilling) {
+	protected boolean allocateHostForVm(boolean ack, PreemptableVm vm, boolean isBackfilling) {
 		Log.printConcatLine(simulationTimeUtil.clock(),
 				": Trying to allocate host for VM #", vm.getId());
 		
@@ -645,39 +639,32 @@ public class PreemptiveDatacenter extends Datacenter {
 			getVmAllocationPolicy().preProcess();			
 		}
 		
-		if (host == null) {			
-			host = (PreemptiveHost) getVmAllocationPolicy().selectHost(vm);	
+		PreemptiveHost host = (PreemptiveHost) getVmAllocationPolicy().selectHost(vm);	
+		
+		if (host == null) {
+			Log.printConcatLine(simulationTimeUtil.clock(),
+					": There is not resource to allocate VM #" + vm.getId()
+							+ " now, it will be tryed in the future.");
+			if (!getVmsForScheduling().contains(vm)) {
+				getVmsForScheduling().add(vm);
+			}
+			return false;
 		}
 		
-		boolean result = tryingAllocateOnHost(vm, host);
+		boolean result = getVmAllocationPolicy().allocateHostForVm(vm, host);
 
 		if (ack) {
 			sendingAck(vm, result);
 		}
 		
 		if (result) {
-			getVmAllocationPolicy().getVmsRunning().add(vm);
-			
-			//TODO we can move these calls to into vmCreate method in Host or to allocateVm in VmAllocationPolicy
-			vm.setStartExec(simulationTimeUtil.clock());
-			vm.allocatingToHost(host.getId());
 			
 			if (isBackfilling) {
 				vm.setNumberOfBackfillingChoice(vm.getNumberOfBackfillingChoice() + 1);				
 			}
 			
-			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
-					vm.getId(), " was allocated on host #", host.getId(),
-					" successfully.");
-			
 			//updating host utilization
 			host.updateUsage(simulationTimeUtil.clock());
-			
-			if (vm.isBeingInstantiated()) {
-				vm.setBeingInstantiated(false);
-			}
-			
-			getVmsForScheduling().remove(vm);
 			
 			double remainingTime = vm.getRuntime() - vm.getActualRuntime(simulationTimeUtil.clock());
 			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
@@ -748,21 +735,6 @@ public class PreemptiveDatacenter extends Datacenter {
 		}
 		
 		CloudSim.send(getId(), entityId, delay, cloudSimTag, data, serial);
-	}
-	
-	private boolean tryingAllocateOnHost(PreemptableVm vm, PreemptiveHost host) {
-		if (host == null) {
-			Log.printConcatLine(simulationTimeUtil.clock(),
-					": There is not resource to allocate VM #" + vm.getId()
-							+ " now, it will be tryed in the future.");
-			if (!getVmsForScheduling().contains(vm)) {
-				getVmsForScheduling().add(vm);
-			}
-			return false;
-		}
-		
-		// trying to allocate
-		return getVmAllocationPolicy().allocateHostForVm(vm, host);
 	}
 
 	private void sendingAck(PreemptableVm vm, boolean result) {
@@ -862,7 +834,7 @@ public class PreemptiveDatacenter extends Datacenter {
 			Collections.sort(waitingQueue, new PriorityAndTTVBasedPreemptableVmComparator(sloTargets, simulationTimeUtil));
 		}
 		for (PreemptableVm currentVm : waitingQueue) {
-			if (!allocateHostForVm(false, currentVm, null, isBackfilling)) {
+			if (!allocateHostForVm(false, currentVm, isBackfilling)) {
 				isBackfilling = true;
 			}
 		}

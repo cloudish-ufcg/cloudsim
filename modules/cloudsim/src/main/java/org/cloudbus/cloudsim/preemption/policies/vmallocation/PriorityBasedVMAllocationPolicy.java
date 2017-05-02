@@ -118,6 +118,22 @@ public abstract class PriorityBasedVMAllocationPolicy extends PreemptableVmAlloc
 				}
 			}
 		}
+
+		// updating allocation structures
+		getVmsRunning().add(pVm);
+		getVmsWaiting().remove(pVm);
+
+		pVm.setStartExec(simulationTimeUtil.clock());
+		pVm.allocatingToHost(host.getId());
+		
+		if (pVm.isBeingInstantiated()) {
+			pVm.setBeingInstantiated(false);
+		}
+		
+		Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
+				vm.getId(), " was allocated on host #", host.getId(),
+				" successfully.");
+
 		addPriorityHost(host);
 		return result;
 	}

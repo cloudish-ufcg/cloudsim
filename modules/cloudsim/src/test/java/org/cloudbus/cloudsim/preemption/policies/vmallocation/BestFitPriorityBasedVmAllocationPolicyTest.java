@@ -526,7 +526,7 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
         /*
          * vm9 can be allocated but it will preempt vm2 and vm3. For here, vm9 can not be created in host3
          */
-        Assert.assertFalse(host3.vmCreate(vm3));
+        Assert.assertFalse(host3.vmCreate(vm9));
         
         // deallocating vms
         preemptablePolicy.deallocateHostForVm(vm2);
