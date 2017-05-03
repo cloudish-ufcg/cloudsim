@@ -1317,7 +1317,7 @@ public class SystemTestBestFitAvalAware {
     }
 
     @Test
-    public void testSystemTenHostsBestFitTTVNewTrace() throws Exception {
+    public void testSystemTenHostsBestFitAvailAwareNewTrace() throws Exception {
 
         Log.disable();
 
@@ -1326,8 +1326,6 @@ public class SystemTestBestFitAvalAware {
         // creating host
         List<Pe> peList1 = new ArrayList<Pe>();
         peList1.add(new Pe(0, new PeProvisionerSimple(hostCapacity)));
-        properties.setProperty("preemption_policy_class",
-                "org.cloudbus.cloudsim.preemption.policies.preemption.TTVBasedPreemptionPolicy");
 
         // creating list of hosts
         List<PreemptiveHost> hostList = new ArrayList<PreemptiveHost>();
@@ -1336,7 +1334,7 @@ public class SystemTestBestFitAvalAware {
         for (int id = 0; id < 10; id++) {
 
             host = new PreemptiveHost(id, peList1, new VmSchedulerMipsBased(
-                    peList1), new TTVBasedPreemptionPolicy(properties));
+                    peList1), new VmAvailabilityBasedPreemptionPolicy(properties));
 
             hostList.add(host);
             hostList2.add(host);
@@ -1404,9 +1402,6 @@ public class SystemTestBestFitAvalAware {
 
         advanceTime(8.0);
         testSimulationTenHostsRuntime8();
-
-        advanceTime(9.0);
-        testSimulationTenHostsRuntime9();
 
         verifyAvailabilityOfTenHosts();
     }
@@ -1812,24 +1807,16 @@ public class SystemTestBestFitAvalAware {
 
             if (pVm.getId() <= 39) {
 
-                if (pVm.getId() == 30) {
-                    hostId = 4;
-                    testVmStatisticsWithOnePreemption(pVm);
-                } else {
-
+                if (pVm.getId() <= 31) {
+                    hostId = 3;
+                    testVmRunning(hostId, pVm);
                     testVmStatisticsWithOnePreemptionAndOneMigration(pVm);
 
-                    if (pVm.getId() == 31)
-                        hostId = 4;
-
-                    else if (pVm.getId() <= 36)
-                        hostId = 2;
-
-                    else
-                        hostId = 3;
+                } else {
+                    testVmForScheduling(pVm);
+                    testVmStatisticsWithOnePreemption(pVm);
                 }
 
-                testVmRunning(hostId, pVm);
                 Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
 
             } else if (pVm.getId() <= 47) {
@@ -1841,20 +1828,25 @@ public class SystemTestBestFitAvalAware {
 
                 testVmStatisticsWithDefaultValues(pVm);
                 Assert.assertEquals(5.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
-            } else if (pVm.getId() <= 51) {
+
+            } else {
 
                 Assert.assertEquals(6.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
                 testVmStatisticsWithDefaultValues(pVm);
 
                 if (pVm.getId() <= 49)
                     hostId = 1;
+
+                else if (pVm.getId() <= 51)
+                    hostId = 4;
+
+                else if (pVm.getId() <= 56)
+                    hostId = 2;
+
                 else
                     hostId = 3;
 
                 testVmRunning(hostId, pVm);
-            } else {
-                testVmStatisticsWithDefaultValues(pVm);
-                testVmNeverAllocated(pVm);
             }
         }
     }
@@ -1865,25 +1857,23 @@ public class SystemTestBestFitAvalAware {
 
             PreemptiveHost pHost = (PreemptiveHost) host;
 
-            if (pHost.getId() == 0 ||
-                    pHost.getId() == 2 ||
-                    pHost.getId() == 4 ||
-                    pHost.getId() == 9) {
-
+            if (pHost.getId() == 0 || pHost.getId() == 9) {
                 testHostEmpty(pHost);
-            } else if (pHost.getId() == 1 ||
-                    pHost.getId() == 3) {
+
+            } else if (pHost.getId() == 8) {
+
+                Assert.assertEquals(0.7, pHost.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
+                Assert.assertEquals(hostCapacity, pHost.getAvailableMipsByPriority(PROD), ACCEPTABLE_DIFFERENCE);
+                Assert.assertEquals(0.7, pHost.getAvailableMipsByPriority(BATCH), ACCEPTABLE_DIFFERENCE);
+                Assert.assertEquals(0.7, pHost.getAvailableMipsByPriority(FREE), ACCEPTABLE_DIFFERENCE);
+
+            } else if (pHost.getId() <= 4) {
 
                 Assert.assertEquals(0d, pHost.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
                 Assert.assertEquals(hostCapacity, pHost.getAvailableMipsByPriority(PROD), ACCEPTABLE_DIFFERENCE);
                 Assert.assertEquals(hostCapacity, pHost.getAvailableMipsByPriority(BATCH), ACCEPTABLE_DIFFERENCE);
                 Assert.assertEquals(0d, pHost.getAvailableMipsByPriority(FREE), ACCEPTABLE_DIFFERENCE);
-            } else if (pHost.getId() == 8) {
 
-                Assert.assertEquals(0.3, pHost.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-                Assert.assertEquals(hostCapacity, pHost.getAvailableMipsByPriority(PROD), ACCEPTABLE_DIFFERENCE);
-                Assert.assertEquals(0.7, pHost.getAvailableMipsByPriority(BATCH), ACCEPTABLE_DIFFERENCE);
-                Assert.assertEquals(0.3, pHost.getAvailableMipsByPriority(FREE), ACCEPTABLE_DIFFERENCE);
             } else {
 
                 Assert.assertEquals(0.1, pHost.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
@@ -1903,44 +1893,52 @@ public class SystemTestBestFitAvalAware {
 
             PreemptableVm pVm = (PreemptableVm) vm;
 
-            if (pVm.getId() <= 47) {
+            if (pVm.getId() <= 39) {
+
+                testVmStatisticsWithOnePreemptionAndOneMigration(pVm);
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+
+                if (pVm.getId() <= 31) {
+                    testVmOutOfSystem(pVm);
+
+                } else {
+
+                    if (pVm.getId() <= 33)
+                        hostId = 3;
+
+                    else if (pVm.getId() <= 36)
+                        hostId = 1;
+
+                    else
+                        hostId = 4;
+
+                    testVmRunning(hostId, pVm);
+                }
+
+            } else if (pVm.getId() <= 47) {
 
                 testVmOutOfSystem(pVm);
+                testVmStatisticsWithDefaultValues(pVm);
+                Assert.assertEquals(5.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
 
-                if (pVm.getId() <= 39) {
-
-                    if (pVm.getId() == 30) {
-                        testVmStatisticsWithOnePreemption(pVm);
-                    } else {
-                        testVmStatisticsWithOnePreemptionAndOneMigration(pVm);
-                    }
-
-                    Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
-                } else {
-                    testVmStatisticsWithDefaultValues(pVm);
-                    Assert.assertEquals(5.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
-                }
             } else {
 
+                Assert.assertEquals(6.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
                 testVmStatisticsWithDefaultValues(pVm);
 
-                if (pVm.getId() <= 49 ||
-                        (pVm.getId() >= 52 && pVm.getId() <= 54))
+                if (pVm.getId() <= 49)
                     hostId = 1;
 
-                else if (pVm.getId() <= 51 || pVm.getId() <= 57)
+                else if (pVm.getId() <= 51)
+                    hostId = 4;
+
+                else if (pVm.getId() <= 56)
+                    hostId = 2;
+
+                else
                     hostId = 3;
 
-                else
-                    hostId = 8;
-
                 testVmRunning(hostId, pVm);
-
-                if (pVm.getId() <= 51)
-                    Assert.assertEquals(6.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
-
-                else
-                    Assert.assertEquals(7.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
             }
         }
     }
@@ -1972,80 +1970,37 @@ public class SystemTestBestFitAvalAware {
     private void testSimulationTenHostsRuntime8() {
 
         for (Host host : datacenter.getHostList()) {
-
             PreemptiveHost pHost = (PreemptiveHost) host;
-
-            if (pHost.getId() == 1 ||
-                    pHost.getId() == 3) {
-
-                Assert.assertEquals(0.4, pHost.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-                Assert.assertEquals(hostCapacity, pHost.getAvailableMipsByPriority(PROD), ACCEPTABLE_DIFFERENCE);
-                Assert.assertEquals(hostCapacity, pHost.getAvailableMipsByPriority(BATCH), ACCEPTABLE_DIFFERENCE);
-                Assert.assertEquals(0.4, pHost.getAvailableMipsByPriority(FREE), ACCEPTABLE_DIFFERENCE);
-
-            } else if (pHost.getId() == 8) {
-                Assert.assertEquals(0.6, pHost.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
-                Assert.assertEquals(hostCapacity, pHost.getAvailableMipsByPriority(PROD), ACCEPTABLE_DIFFERENCE);
-                Assert.assertEquals(hostCapacity, pHost.getAvailableMipsByPriority(BATCH), ACCEPTABLE_DIFFERENCE);
-                Assert.assertEquals(0.6, pHost.getAvailableMipsByPriority(FREE), ACCEPTABLE_DIFFERENCE);
-            } else {
-                testHostEmpty(pHost);
-            }
+            testHostEmpty(pHost);
         }
 
         testVmsP0StatisticsTime7To9With10Hosts();
-        testVmsP1StatisticsTime8And9With10Hosts();
-
-        int hostId;
+        testVmsP1StatisticsTime8With10Hosts();
 
         for (Vm vm : vmsP2) {
 
             PreemptableVm pVm = (PreemptableVm) vm;
+            testVmOutOfSystem(pVm);
 
-            if (pVm.getId() <= 51) {
+            if (pVm.getId() <= 39) {
 
-                testVmOutOfSystem(pVm);
-
-                if (pVm.getId() <= 39) {
-
-                    if (pVm.getId() == 30)
-                        testVmStatisticsWithOnePreemption(pVm);
-
-                    else
-                        testVmStatisticsWithOnePreemptionAndOneMigration(pVm);
-
-                    Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
-
-                } else {
-
-                    testVmStatisticsWithDefaultValues(pVm);
-
-                    if (pVm.getId() <= 47)
-                        Assert.assertEquals(5.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
-
-                    else
-                        Assert.assertEquals(6.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
-                }
+                testVmStatisticsWithOnePreemptionAndOneMigration(pVm);
+                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
 
             } else {
 
                 testVmStatisticsWithDefaultValues(pVm);
 
-                if (pVm.getId() >= 52 && pVm.getId() <= 54)
-                    hostId = 1;
+                if (pVm.getId() <= 47)
+                    Assert.assertEquals(5.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
 
-                else if (pVm.getId() <= 57)
-                    hostId = 3;
                 else
-                    hostId = 8;
-
-                testVmRunning(hostId, pVm);
-                Assert.assertEquals(7.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
+                    Assert.assertEquals(6.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
             }
         }
     }
 
-    private void testVmsP1StatisticsTime8And9With10Hosts() {
+    private void testVmsP1StatisticsTime8With10Hosts() {
         for (Vm vm : vmsP1) {
 
             PreemptableVm pVm = (PreemptableVm) vm;
@@ -2068,49 +2023,6 @@ public class SystemTestBestFitAvalAware {
         }
     }
 
-    private void testSimulationTenHostsRuntime9() {
-
-        for (Host host : datacenter.getHostList()) {
-
-            PreemptiveHost pHost = (PreemptiveHost) host;
-            testHostEmpty(pHost);
-        }
-
-        testVmsP0StatisticsTime7To9With10Hosts();
-        testVmsP1StatisticsTime8And9With10Hosts();
-
-        for (Vm vm : vmsP2) {
-
-            PreemptableVm pVm = (PreemptableVm) vm;
-
-            testVmOutOfSystem(pVm);
-
-            if (pVm.getId() <= 39) {
-
-                if (pVm.getId() == 30)
-                    testVmStatisticsWithOnePreemption(pVm);
-
-                else
-                    testVmStatisticsWithOnePreemptionAndOneMigration(pVm);
-
-                Assert.assertEquals(0d, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
-
-            } else {
-
-                testVmStatisticsWithDefaultValues(pVm);
-
-                if (pVm.getId() <= 47)
-                    Assert.assertEquals(5.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
-
-                else if (pVm.getId() <= 51)
-                    Assert.assertEquals(6.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
-
-                else
-                    Assert.assertEquals(7.0, pVm.getFirstTimeAllocated(), ACCEPTABLE_DIFFERENCE);
-            }
-        }
-    }
-
     private void verifyAvailabilityOfTenHosts() {
         double finishedTime;
 
@@ -2123,6 +2035,7 @@ public class SystemTestBestFitAvalAware {
             if (pVm.getId() <= 19) {
                 finishedTime = 8.0;
                 Assert.assertEquals(0.5, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
+
             } else {
                 finishedTime = 5.0;
                 Assert.assertEquals(1.0, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
@@ -2133,27 +2046,30 @@ public class SystemTestBestFitAvalAware {
 
             PreemptableVm pVm = (PreemptableVm) vm;
 
-            if (pVm.getId() <= 47) {
+
+            if (pVm.getId() >= 32 && pVm.getId() <= 39) {
+                finishedTime = 8d;
+                Assert.assertEquals(0.25, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
+            }
+
+            else if (pVm.getId() <= 47) {
                 finishedTime = 7.0;
 
-                if (pVm.getId() <= 39)
+                if (pVm.getId() <= 31)
                     Assert.assertEquals(0.285714, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
 
                 else
                     Assert.assertEquals(0.333333, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
-            } else if (pVm.getId() <= 51) {
 
-                finishedTime = 8;
+            } else {
+
+                finishedTime = 8d;
 
                 if (pVm.getId() <= 49)
                     Assert.assertEquals(0.285714, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
 
                 else
                     Assert.assertEquals(0.333333, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
-
-            } else { // 50-59
-                finishedTime = 9.0;
-                Assert.assertEquals(0.285714286, pVm.getCurrentAvailability(finishedTime), ACCEPTABLE_DIFFERENCE);
             }
         }
     }
