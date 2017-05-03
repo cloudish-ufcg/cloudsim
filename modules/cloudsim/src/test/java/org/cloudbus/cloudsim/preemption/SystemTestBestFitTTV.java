@@ -30,18 +30,10 @@ public class SystemTestBestFitTTV {
     private Properties properties;
 
     private PreemptiveDatacenter datacenter;
-    private SimEvent event;
     private PreemptiveHost host;
     private PreemptiveHost host1;
     private PreemptiveHost host2;
     private PreemptiveHost host3;
-    private PreemptiveHost host4;
-    private PreemptiveHost host5;
-    private PreemptiveHost host6;
-    private PreemptiveHost host7;
-    private PreemptiveHost host8;
-    private PreemptiveHost host9;
-    private PreemptiveHost host10;
     private SimulationTimeUtil timeUtil;
     private PreemptableVmAllocationPolicy preemptableVmAllocationPolicy;
     private DatacenterCharacteristics characteristics;
@@ -67,8 +59,6 @@ public class SystemTestBestFitTTV {
     public void setUp() throws Exception {
 
 //        Log.disable();
-
-        event = Mockito.mock(SimEvent.class);
 
         int num_user = 1; // number of grid users
         Calendar calendar = Calendar.getInstance();
@@ -121,43 +111,14 @@ public class SystemTestBestFitTTV {
         properties.setProperty("slo_availability_target_priority_1", "0.9");
         properties.setProperty("slo_availability_target_priority_2", "0.5");
 
-        // creating host
-        List<Pe> peList1 = new ArrayList<Pe>();
-        hostCapacity = 10;
-        peList1.add(new Pe(0, new PeProvisionerSimple(hostCapacity)));
-
-        host = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
-                peList1), new TTVBasedPreemptionPolicy(properties));
-
-        // creating list of hosts
-        List<Host> hostList = new ArrayList<Host>();
-        hostList.add(host);
-
         // mocking the characteristics for data center
         characteristics = Mockito.mock(DatacenterCharacteristics.class);
-        Mockito.when(characteristics.getHostList()).thenReturn(hostList);
 
         Mockito.when(characteristics.getNumberOfPes()).thenReturn(1);
 
         timeUtil = Mockito.mock(SimulationTimeUtil.class);
         Mockito.when(timeUtil.clock()).thenReturn(0d);
-
-        List<PreemptiveHost> googleHostList = new ArrayList<PreemptiveHost>();
-        for (Host host : hostList) {
-            googleHostList.add((PreemptiveHost) host);
-        }
-        preemptableVmAllocationPolicy = new BestFitPriorityBasedVmAllocationPolicy(googleHostList);
-
-        // creating data center
-        datacenter = new PreemptiveDatacenter("datacenter", characteristics, preemptableVmAllocationPolicy,
-                new LinkedList<Storage>(), 0, properties);
-
-        datacenter.setSimulationTimeUtil(timeUtil);
-
-        Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
-        Assert.assertTrue(datacenter.getVmsRunning().isEmpty());
     }
-
 
     @After
     public void tearDown() {
