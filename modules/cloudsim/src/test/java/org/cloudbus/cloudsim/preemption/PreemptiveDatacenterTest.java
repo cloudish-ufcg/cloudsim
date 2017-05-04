@@ -2555,7 +2555,7 @@ public class PreemptiveDatacenterTest {
 				priority + 2, runtime);
 
 		// allocating first vm
-		datacenter.allocateHostForVm(false, vm1, false);
+		datacenter.allocateHostForVm(false, vm1);
 
         // checking
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
@@ -2570,7 +2570,7 @@ public class PreemptiveDatacenterTest {
 				priority + 1, runtime);
 
         // allocating 
-        datacenter.allocateHostForVm(false, vm2, false);
+        datacenter.allocateHostForVm(false, vm2);
         
         // checking
         Assert.assertEquals(1, datacenter.getVmsForScheduling().size());
@@ -2592,7 +2592,7 @@ public class PreemptiveDatacenterTest {
         preemptableVmAllocationPolicy.getPriorityToSortedHost().get(priority + 1).add(host2);
         preemptableVmAllocationPolicy.getPriorityToSortedHost().get(priority + 2).add(host2);
         
-        datacenter.allocateHostForVm(false, vm1, false);
+        datacenter.allocateHostForVm(false, vm1);
         
         // checking
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());

@@ -13,6 +13,7 @@ import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
+import org.cloudbus.cloudsim.preemption.util.Utils;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.Assert;
 import org.junit.Before;
@@ -131,9 +132,9 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
         properties = new Properties();
         properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
 
-        properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
-        properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-        properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+        properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "0", "1");
+        properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+        properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 
         int vmId = 1;
         int userId = 1;

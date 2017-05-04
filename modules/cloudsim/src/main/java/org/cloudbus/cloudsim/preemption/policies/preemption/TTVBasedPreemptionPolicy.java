@@ -4,6 +4,7 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.util.PriorityAndTTVBasedPreemptableVmComparator;
@@ -31,5 +32,13 @@ public class TTVBasedPreemptionPolicy extends VmAvailabilityBasedPreemptionPolic
 		}
 		return null;
 	}
+	
+	@Override
+	public SortedSet<PreemptableVm> sortVms(SortedSet<PreemptableVm> vms) {
+		Log.printConcatLine(simulationTimeUtil.clock(), ": Sorting the waiting queue based on priority + TTV.");
 
+		SortedSet<PreemptableVm> sortedVms = new TreeSet<PreemptableVm>(new PriorityAndTTVBasedPreemptableVmComparator(getPriorityToSLOTarget(), simulationTimeUtil));
+		sortedVms.addAll(vms);
+		return sortedVms;
+	}
 }

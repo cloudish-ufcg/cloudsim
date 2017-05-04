@@ -1,21 +1,22 @@
 package org.cloudbus.cloudsim.preemption.policies.preemption;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import gnu.trove.map.hash.THashMap;
+import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
+import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedVmComparator;
+import org.cloudbus.cloudsim.preemption.util.Utils;
 import org.cloudbus.cloudsim.preemption.util.VmAvailabilityBasedPreemptableVmComparator;
 
-public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
+import gnu.trove.map.hash.THashMap;
 
-    public static final String SLO_TARGET_PREFIX_PROP = "slo_availability_target_priority_";
+public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 
     protected Map<Integer, Double> priorityToSLOTarget = new THashMap<Integer, Double>();
     protected Map<Integer, Map<Integer, PreemptableVm>> priorityToRunningVms = new THashMap<Integer, Map<Integer, PreemptableVm>>();
@@ -39,7 +40,7 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
             setNumberOfPriorities(numberOfPriorities);
         }
 
-        Map<Integer, Double> sloAvailabilityTargets = getSLOAvailabilityTargets(properties);
+        Map<Integer, Double> sloAvailabilityTargets = Utils.getSLOAvailabilityTargets(properties);
 
         if (sloAvailabilityTargets.keySet().size() != getNumberOfPriorities()) {
             throw new IllegalArgumentException("The number of priorities and slo targets set are not in concordance.");
@@ -49,43 +50,9 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 
         // initializing maps
         for (int priority = 0; priority < getNumberOfPriorities(); priority++) {
-//			VmAvailabilityBasedPreemptableVmComparator comparator = new VmAvailabilityBasedPreemptableVmComparator(
-//					sloAvailabilityTargets.get(priority), simulationTimeUtil);
-//			getPriorityToVms().put(priority, new TreeSet<PreemptableVm>(comparator));
             priorityToRunningVms.put(priority, new THashMap<Integer, PreemptableVm>());
             getPriorityToInUseMips().put(priority, new Double(0));
         }
-    }
-
-    public static Map<Integer, Double> getSLOAvailabilityTargets(Properties properties) {
-        Map<Integer, Double> sloTargets = new THashMap<Integer, Double>();
-
-        if (properties == null) {
-            throw new IllegalArgumentException("The SLO availability target must be set for each priority");
-        }
-
-        for (Object objectKey : properties.keySet()) {
-            String key = objectKey.toString();
-            if (key.startsWith(SLO_TARGET_PREFIX_PROP)) {
-                try {
-                    int priority = Integer.parseInt(key.replace(
-                            SLO_TARGET_PREFIX_PROP, ""));
-                    double sloTarget = Double.parseDouble(properties
-                            .getProperty(key));
-
-                    if (sloTarget < 0) {
-                        throw new IllegalArgumentException(
-                                "The SLO availability target must be a positive double.");
-                    }
-
-                    sloTargets.put(priority, sloTarget);
-                } catch (Exception e) {
-                    throw new IllegalArgumentException(
-                            "The SLO availability target is not properly set for each priority");
-                }
-            }
-        }
-        return sloTargets;
     }
 
     @Override
@@ -113,7 +80,6 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
             return 0;
         }
 
-//		for (Vm vm : getPriorityToVms().get(arrivingVm.getPriority())) {
         for (Vm vm : priorityToRunningVms.get(arrivingVm.getPriority()).values()) {
             PreemptableVm runningVm = (PreemptableVm) vm;
 
@@ -156,7 +122,6 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
             SortedSet<PreemptableVm> sortedSet = new TreeSet<PreemptableVm>(comparator);
             sortedSet.addAll(priorityToRunningVms.get(i).values());
 
-//			if (!getPriorityToVms().get(i).isEmpty()) {
             if (!sortedSet.isEmpty()) {
                 return sortedSet.last();
             }
@@ -169,10 +134,9 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
         if (vm == null) {
             return;
         }
-
+        
         priorityToRunningVms.get(vm.getPriority()).put(vm.getId(), vm);
 
-//		getPriorityToVms().get(vm.getPriority()).add(vm);
         double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority());
         getPriorityToInUseMips().put(vm.getPriority(),
                 DecimalUtil.format(priorityCurrentUse + vm.getMips()));
@@ -188,9 +152,7 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 
         priorityToRunningVms.get(vm.getPriority()).remove(vm.getId());
 
-//		getPriorityToVms().get(vm.getPriority()).remove(vm);
         double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority());
-
         getPriorityToInUseMips().put(vm.getPriority(),
                 DecimalUtil.format(priorityCurrentUse - vm.getMips()));
 
@@ -231,4 +193,14 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
         double mipsToBeAvilableOfSamePriority = calcMipsOfSamePriorityToBeAvailable(vm);
         return availableMipsByPriority + mipsToBeAvilableOfSamePriority;
     }
+
+	@Override
+	public SortedSet<PreemptableVm> sortVms(SortedSet<PreemptableVm> vms) {
+		Log.printConcatLine(simulationTimeUtil.clock(),
+				": Sorting the waiting queue based on priority + current availability.");
+		
+		SortedSet<PreemptableVm> sortedVms = new TreeSet<PreemptableVm>(new PriorityAndAvailabilityBasedVmComparator(simulationTimeUtil));
+		sortedVms.addAll(vms);
+		return sortedVms;
+	}
 }

@@ -1,31 +1,31 @@
 package org.cloudbus.cloudsim.preemption.policies.preemption;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
-import java.util.TreeSet;
 
-import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Vm;
-import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
 
+import gnu.trove.map.hash.THashMap;
+
 public abstract class PreemptionPolicy {
 	
 	public static final int DEFAULT_NUMBER_OF_PRIORITIES = 3;
+	public static final String NUMBER_OF_PRIORITIES_PROP = "number_of_priorities";
 
 	private Map<Integer, Double> priorityToInUseMips = new THashMap<Integer, Double>();
 	private Map<Integer, SortedSet<PreemptableVm>> priorityToVms = new THashMap<Integer, SortedSet<PreemptableVm>>();
+	protected SimulationTimeUtil simulationTimeUtil = new SimulationTimeUtil();
 	private int numberOfPriorities = DEFAULT_NUMBER_OF_PRIORITIES;
 	private double totalMips;
-	protected SimulationTimeUtil simulationTimeUtil;
-	public static final String NUMBER_OF_PRIORITIES_PROP = "number_of_priorities";
 		
 	public abstract boolean isSuitableFor(PreemptableVm vm);
 	
 	public abstract Vm nextVmForPreempting();
+	
+	public abstract SortedSet<PreemptableVm> sortVms(SortedSet<PreemptableVm> sortedVms);
 	
 	public void allocating(PreemptableVm vm) {
 		if (vm == null) {
@@ -96,7 +96,6 @@ public abstract class PreemptionPolicy {
 
 		return DecimalUtil.format(getTotalMips() - inUseByNonPreemptiveVms);
 	}
-
 
 	public abstract double getAvailableMipsByVm(PreemptableVm vm);
 

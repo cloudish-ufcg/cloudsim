@@ -4,6 +4,7 @@ import java.util.Properties;
 
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
+import org.cloudbus.cloudsim.preemption.util.Utils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,9 +22,9 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 	public void setUp() {
 		properties = new Properties();
 		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "0", "1");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
 		policy = new VmAvailabilityBasedPreemptionPolicy(properties);
 		policy.setTotalMips(10);
@@ -49,9 +50,9 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// setting properties
 		Properties properties = new Properties();
 		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "2");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "0", "1");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
 		new VmAvailabilityBasedPreemptionPolicy(properties);
 	}
@@ -61,8 +62,8 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// setting properties
 		Properties properties = new Properties();
 		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "0", "1");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "1", "0.9");
 				
 		new VmAvailabilityBasedPreemptionPolicy(properties);
 	}
@@ -90,9 +91,9 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// setting properties
 		Properties properties = new Properties();
 		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "zero", "1");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "zero", "1");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
 		new VmAvailabilityBasedPreemptionPolicy(properties);
 	}
@@ -102,9 +103,9 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// setting properties
 		Properties properties = new Properties();
 		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "one");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "0", "one");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
 		new VmAvailabilityBasedPreemptionPolicy(properties);
 	}
@@ -114,9 +115,9 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// setting properties
 		Properties properties = new Properties();
 		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "-1");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "0", "-1");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
 		new VmAvailabilityBasedPreemptionPolicy(properties);
 	}
@@ -126,9 +127,9 @@ public class VmAvailabiltyBasedPreemptionPolicyTest {
 		// setting properties
 		Properties properties = new Properties();
 		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0.0", "1");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-		properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "0.0", "1");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+		properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 				
 		new VmAvailabilityBasedPreemptionPolicy(properties);
 	}

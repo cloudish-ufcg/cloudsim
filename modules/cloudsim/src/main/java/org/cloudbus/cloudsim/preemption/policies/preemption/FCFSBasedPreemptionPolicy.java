@@ -1,8 +1,10 @@
 package org.cloudbus.cloudsim.preemption.policies.preemption;
 
 import java.util.Properties;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 
@@ -52,5 +54,12 @@ public class FCFSBasedPreemptionPolicy extends PreemptionPolicy {
 	@Override
 	public double getAvailableMipsByVm(PreemptableVm vm) {
 		return getAvailableMipsByPriority(vm.getPriority());
+	}
+	
+	@Override
+	public SortedSet<PreemptableVm> sortVms(SortedSet<PreemptableVm> vms) {
+		Log.printConcatLine(simulationTimeUtil.clock(), ": The waiting queue is sorted based on priority + FCFS. This is the default order");
+		// The default order is based on FCFS policy
+		return new TreeSet<PreemptableVm>(vms);
 	}
 }

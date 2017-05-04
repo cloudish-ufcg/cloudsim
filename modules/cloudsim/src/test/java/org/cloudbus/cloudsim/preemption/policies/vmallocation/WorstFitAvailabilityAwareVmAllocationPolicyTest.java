@@ -1,8 +1,10 @@
 package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
-import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
@@ -11,11 +13,14 @@ import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.VmSchedulerMipsBased;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
+import org.cloudbus.cloudsim.preemption.util.Utils;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import gnu.trove.map.hash.THashMap;
 
 
 /**
@@ -24,7 +29,6 @@ import org.mockito.Mockito;
 public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
 
     private static final double HOST_CAPACITY = 0.5;
-    private final double ACCEPTABLE_DIFFERENCE = 0.00001;
 
     private List<PreemptiveHost> hostsWithMockedPolicy;
     private List<PreemptiveHost> hostsWithNoMockedPolicy;
@@ -126,9 +130,9 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
         properties = new Properties();
         properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
 
-        properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "0", "1");
-        properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "1", "0.9");
-        properties.setProperty(VmAvailabilityBasedPreemptionPolicy.SLO_TARGET_PREFIX_PROP + "2", "0.5");
+        properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "0", "1");
+        properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "1", "0.9");
+        properties.setProperty(Utils.SLO_TARGET_PREFIX_PROP + "2", "0.5");
 
         int vmId = 1;
         int userId = 1;
@@ -400,15 +404,15 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
         Assert.assertEquals(hostWithMockedPolicy1, allocationPolicyWithMock.selectHost(MockedVm));
 
         // simulate a allocation of other vm in hostWithMockedPolicy1
-        allocationPolicyWithMock.removePriorityHost(hostWithMockedPolicy1);
+        allocationPolicyWithMock.removeHostFromStructure(hostWithMockedPolicy1);
         Mockito.when(mockedPreemptionPolicy1.getAvailableMipsByPriority(MockedVm.getPriority())).thenReturn(9.0);
-        allocationPolicyWithMock.addPriorityHost(hostWithMockedPolicy1);
+        allocationPolicyWithMock.addHostIntoStructure(hostWithMockedPolicy1);
         Assert.assertEquals(hostWithMockedPolicy2, allocationPolicyWithMock.selectHost(MockedVm));
 
         // simulate a deallocation of other vm in hostWithMockedPolicy4
-        allocationPolicyWithMock.removePriorityHost(hostWithMockedPolicy4);
+        allocationPolicyWithMock.removeHostFromStructure(hostWithMockedPolicy4);
         Mockito.when(mockedPreemptionPolicy4.getAvailableMipsByPriority(MockedVm.getPriority())).thenReturn(11.0);
-        allocationPolicyWithMock.addPriorityHost(hostWithMockedPolicy4);
+        allocationPolicyWithMock.addHostIntoStructure(hostWithMockedPolicy4);
         Assert.assertEquals(hostWithMockedPolicy4, allocationPolicyWithMock.selectHost(MockedVm));
     }
 
@@ -677,11 +681,6 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
     @Test(expected = IllegalArgumentException.class)
     public void testVmNull4() {
         allocationPolicyWithNoMock.selectHost(null);
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void testVmNull5() {
-        allocationPolicyWithNoMock.allocateHostForVm(vm0);
     }
 
     @Test
