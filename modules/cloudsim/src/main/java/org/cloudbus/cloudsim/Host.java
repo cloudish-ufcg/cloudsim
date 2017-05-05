@@ -230,7 +230,7 @@ public class Host {
 			getRamProvisioner().deallocateRamForVm(vm);
 			return false;
 		}
-
+		
 		if (!getVmScheduler().allocatePesForVm(vm, vm.getCurrentRequestedMips())) {
 			Log.printConcatLine("[VmScheduler.vmCreate] Allocation of VM #", vm.getId(), " to Host #", getId(),
 					" failed by MIPS");

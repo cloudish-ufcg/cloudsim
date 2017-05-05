@@ -36,7 +36,6 @@ public class BestFitPriorityBasedVmAllocationPolicy extends PriorityBasedVMAlloc
             getPriorityToSortedHost().put(priority, new TreeSet<>(comparator));
         }
 
-        // creating priority host skins
         for (PreemptiveHost host : hosts) {
             for (int priority = 0; priority < numberOfPriorities; priority++) {
                 getPriorityToSortedHost().get(priority).add(host);
@@ -50,7 +49,9 @@ public class BestFitPriorityBasedVmAllocationPolicy extends PriorityBasedVMAlloc
 
     @Override
     public Host selectHost(Vm vm) {
-        validateVm(vm);
+    	if (vm == null){
+            throw new IllegalArgumentException("The Vm can not be null.");
+        }
 
         PreemptableVm gVm = (PreemptableVm) vm;
 
@@ -80,11 +81,5 @@ public class BestFitPriorityBasedVmAllocationPolicy extends PriorityBasedVMAlloc
             }
         }
         return null;
-    }
-
-    private void validateVm(Vm vm) {
-        if (vm == null){
-            throw new IllegalArgumentException("The Vm can not be null.");
-        }
     }
 }

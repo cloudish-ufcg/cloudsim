@@ -5,60 +5,66 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import org.cloudbus.cloudsim.Host;
+import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
+import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.util.IncreasingCapacityPreemptiveHostComparator;
 import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedIncreasingCapacityPreemptiveHostComparator;
 
 import gnu.trove.map.hash.THashMap;
 
 /**
- * Created by jvmafra on 03/04/17.
+ * Created by jvmafra and giovannifs on 03/04/17.
  */
-public class BestFitAvailabilityAwareVmAllocationPolicy extends PriorityAndAvailabilityBasedVMAllocationPolicy{
+public class BestFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAllocationPolicy {
 
-    private Map<Integer, TreeSet<PreemptiveHost>> priorityToSortedHostAvailabilityAware = new THashMap<>();
-    private Map<Integer, TreeSet<PreemptiveHost>> priorityToSortedHostFCFS = new THashMap<>();
+	private Map<Integer, TreeSet<PreemptiveHost>> priorityToHostsFCFSAware = new THashMap<>();
+    private Map<Integer, TreeSet<PreemptiveHost>> priorityToHostsAvailabilityAware = new THashMap<>();
+    private Map<Integer, Double> priorityToSLOTarget = new THashMap<Integer, Double>();
     private int numberOfPriorities;
 
     public BestFitAvailabilityAwareVmAllocationPolicy(List<PreemptiveHost> hostList, SimulationTimeUtil simulationTimeUtil) {
         super(hostList);
 
-
-        verifyHosts(hostList);
+        if (hostList == null || hostList.isEmpty()) {
+            throw new IllegalArgumentException("The host list must not be null or empty.");
+        } 
 
         setSimulationTimeUtil(simulationTimeUtil);
 
-        numberOfPriorities = hostList.get(0).getNumberOfPriorities();
+        PreemptiveHost aHost = hostList.get(0);
+		numberOfPriorities = aHost.getNumberOfPriorities();
+		configureSLOTargets(aHost);
 
         for (int priority = 0; priority < numberOfPriorities; priority++) {
 
             IncreasingCapacityPreemptiveHostComparator comparatorFCFS = new IncreasingCapacityPreemptiveHostComparator(priority);
             PriorityAndAvailabilityBasedIncreasingCapacityPreemptiveHostComparator comparatorAvailabilityAware = new PriorityAndAvailabilityBasedIncreasingCapacityPreemptiveHostComparator(priority);
 
-            getPriorityToSortedHostFCFS().put(priority, new TreeSet<PreemptiveHost>(comparatorFCFS));
-            getPriorityToSortedHostAvailabilityAware().put(priority, new TreeSet<PreemptiveHost>(comparatorAvailabilityAware));
+            getPriorityToHostsFCFSAware().put(priority, new TreeSet<PreemptiveHost>(comparatorFCFS));
+            getPriorityToHostsAvailabilityAware().put(priority, new TreeSet<PreemptiveHost>(comparatorAvailabilityAware));
         }
 
         for (PreemptiveHost host : hostList) {
             for (int priority = 0; priority < numberOfPriorities; priority++) {
-                getPriorityToSortedHostFCFS().get(priority).add(host);
-                getPriorityToSortedHostAvailabilityAware().get(priority).add(host);
+                getPriorityToHostsFCFSAware().get(priority).add(host);
+                getPriorityToHostsAvailabilityAware().get(priority).add(host);
             }
         }
-
-        setPriorityToSLOTarget(hostList);
     }
 
-    public BestFitAvailabilityAwareVmAllocationPolicy(List<PreemptiveHost> hosts){ this(hosts, new SimulationTimeUtil()); }
+    public BestFitAvailabilityAwareVmAllocationPolicy(List<PreemptiveHost> hosts){ 
+    	this(hosts, new SimulationTimeUtil()); 
+    }
 
 
     @Override
     public void preProcess() {
 
-        priorityToSortedHostAvailabilityAware = new THashMap<>();
+        priorityToHostsAvailabilityAware = new THashMap<>();
 
         int numberOfPriorities = ((PreemptiveHost) getHostList().get(0)).getNumberOfPriorities();
 
@@ -67,7 +73,7 @@ public class BestFitAvailabilityAwareVmAllocationPolicy extends PriorityAndAvail
             PriorityAndAvailabilityBasedIncreasingCapacityPreemptiveHostComparator comparatorAvailabilityAware =
                     new PriorityAndAvailabilityBasedIncreasingCapacityPreemptiveHostComparator(priority);
 
-            getPriorityToSortedHostAvailabilityAware().put(priority,
+            getPriorityToHostsAvailabilityAware().put(priority,
                     new TreeSet<PreemptiveHost>(comparatorAvailabilityAware));
 
         }
@@ -75,15 +81,39 @@ public class BestFitAvailabilityAwareVmAllocationPolicy extends PriorityAndAvail
         for (Host host : getHostList()) {
             PreemptiveHost pHost = (PreemptiveHost) host;
             for (int priority = 0; priority < numberOfPriorities; priority++) {
-                getPriorityToSortedHostAvailabilityAware().get(priority).add(pHost);
+                getPriorityToHostsAvailabilityAware().get(priority).add(pHost);
             }
         }
+    }
+    
+    @Override
+    public boolean preempt(PreemptableVm vm) {
+        
+        if (vm == null) {
+        	throw new IllegalArgumentException("The Vm can not be null.");
+        }
+        
+        PreemptiveHost host = (PreemptiveHost) vm.getHost();
+
+		if (host == null) {
+			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #", vm.getId(), " does not have a host.");
+			return false;
+		}
+		
+        vm.preempt(simulationTimeUtil.clock());
+        removeHostFromStructure(host);
+        host.vmDestroy(vm);
+        addHostIntoStructure(host);
+        vm.setBeingInstantiated(true);
+        return true;
     }
 
     @Override
     public Host selectHost(Vm vm) {
 
-        verifyVm(vm);
+        if (vm == null) {
+        	throw new IllegalArgumentException("The Vm to be allocated can not be null.");
+        }
 
         if (!getHostList().isEmpty()) {
         	PreemptableVm pVm = (PreemptableVm) vm;
@@ -91,10 +121,10 @@ public class BestFitAvailabilityAwareVmAllocationPolicy extends PriorityAndAvail
         	TreeSet<PreemptiveHost> hosts;
             
             if (pVm.getCurrentAvailability(simulationTimeUtil.clock()) > getSLOTarget(pVm.getPriority())) {
-                hosts = (TreeSet<PreemptiveHost>) getPriorityToSortedHostFCFS().get(pVm.getPriority());
+                hosts = (TreeSet<PreemptiveHost>) getPriorityToHostsFCFSAware().get(pVm.getPriority());
 
             } else {
-                hosts = (TreeSet<PreemptiveHost>) getPriorityToSortedHostAvailabilityAware().get(pVm.getPriority());
+                hosts = (TreeSet<PreemptiveHost>) getPriorityToHostsAvailabilityAware().get(pVm.getPriority());
             }
             
 			/*
@@ -119,30 +149,38 @@ public class BestFitAvailabilityAwareVmAllocationPolicy extends PriorityAndAvail
         return null;
     }
 
-    public Map<Integer, TreeSet<PreemptiveHost>> getPriorityToSortedHostAvailabilityAware(){
-        return priorityToSortedHostAvailabilityAware;
-    }
-
-
-    public Map<Integer, TreeSet<PreemptiveHost>> getPriorityToSortedHostFCFS(){
-        return priorityToSortedHostFCFS;
-    }
-
     @Override
-    protected void addPriorityHost(Host host) {
-        PreemptiveHost gHost = (PreemptiveHost) host;
-        for (int priority = 0; priority < gHost.getNumberOfPriorities(); priority++) {
-            getPriorityToSortedHostFCFS().get(priority).add(gHost);
-            getPriorityToSortedHostAvailabilityAware().get(priority).add(gHost);
-        }
+    public void addHostIntoStructure(PreemptiveHost host) {	    
+    	for (int priority = 0; priority < host.getNumberOfPriorities(); priority++) {
+    		getPriorityToHostsFCFSAware().get(priority).add(host);
+    		getPriorityToHostsAvailabilityAware().get(priority).add(host);
+    	}
+    }
+    
+    @Override
+    public void removeHostFromStructure(PreemptiveHost host) {
+    	for (int priority = 0; priority < host.getNumberOfPriorities(); priority++) {
+    		getPriorityToHostsFCFSAware().get(priority).remove(host);
+    		getPriorityToHostsAvailabilityAware().get(priority).remove(host);
+    	}		
+    }
+    
+
+    public Map<Integer, TreeSet<PreemptiveHost>> getPriorityToHostsAvailabilityAware(){
+        return priorityToHostsAvailabilityAware;
     }
 
-    @Override
-    protected void removePriorityHost(Host host) {
-        PreemptiveHost gHost = (PreemptiveHost) host;
-        for (int priority = 0; priority < gHost.getNumberOfPriorities(); priority++) {
-            getPriorityToSortedHostFCFS().get(priority).remove(gHost);
-            getPriorityToSortedHostAvailabilityAware().get(priority).remove(gHost);
-        }
+
+    public Map<Integer, TreeSet<PreemptiveHost>> getPriorityToHostsFCFSAware(){
+        return priorityToHostsFCFSAware;
     }
+    
+    protected double getSLOTarget(int priority) {
+        return priorityToSLOTarget.get(priority);
+    }
+    
+	private void configureSLOTargets(PreemptiveHost host) {
+		VmAvailabilityBasedPreemptionPolicy policy = (VmAvailabilityBasedPreemptionPolicy) host.getPreemptionPolicy();
+		priorityToSLOTarget = policy.getPriorityToSLOTarget();
+	}
 }

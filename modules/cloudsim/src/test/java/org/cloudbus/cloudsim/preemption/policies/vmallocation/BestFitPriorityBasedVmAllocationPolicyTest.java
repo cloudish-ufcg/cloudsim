@@ -1,5 +1,11 @@
 package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
@@ -14,10 +20,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.util.*;
-
-import static org.junit.Assert.*;
-
 /**
  * Created by jvmafra on 03/04/17.
  */
@@ -29,7 +31,6 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
     private static final int PRIORITY_0 = 0;
     private static final int PRIORITY_1 = 1;
     private static final int PRIORITY_2 = 2;
-    private static final double ACCEPTABLE_DIFERENCE = 0.000001;
     private Properties properties;
     private SimulationTimeUtil simulationTimeUtil;
 
@@ -508,79 +509,61 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
         // natural order(BATCH): host2 (0 mips), host1 (0.000000002 mips), host3 (2.000000001 mips), host4 (5 mips)
         // natural order(FREE): host1 (0 mips), host2 (0 mips), host3 (0 mips), host4 (2 mips)
         Assert.assertEquals(host1, preemptablePolicy.selectHost(vm7));
-        Assert.assertFalse(preemptablePolicy.allocateHostForVm(vm7, host1));
-        Assert.assertEquals(null, vm7.getHost());
-
+        
         /*
-        The allocation is not successful because the available mips verified in allocation do not consider preemption,
-        but the preemption can be caused using the correct method.
-        */
-        // make preemption of the vms with less priority
-        Assert.assertTrue(preemptablePolicy.preempt(vm0));
-        Assert.assertTrue(preemptablePolicy.preempt(vm5));
-
-        // natural order(PROD): host1 (1 mips), host2 (3 mips), host3 (5 mips), host4 (5 mips)
-        // natural order(BATCH): host2 (0 mips), host1 (1 mips), host3 (2.000000001 mips), host4 (5 mips)
-        // natural order(FREE): host2 (0 mips), host3 (0 mips), host1 (1 mips),  host4 (2 mips)
-        Assert.assertEquals(host1, preemptablePolicy.selectHost(vm7));
+         * vm7 can be allocated but it will preempt vm0 and vm5
+         */
         Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm7, host1));
         Assert.assertEquals(host1, vm7.getHost());
+        Assert.assertNull(vm0.getHost());
+        Assert.assertNull(vm5.getHost());
 
         // natural order(PROD): host1 (0 mips), host2 (3 mips), host3 (5 mips), host4 (5 mips)
         // natural order(BATCH): host1 (0 mips), host2 (0 mips), host3 (2.000000001 mips), host4 (5 mips)
         // natural order(FREE): host1 (0 mips), host2 (0 mips), host3 (0 mips), host4 (2 mips)
         Assert.assertEquals(host3, preemptablePolicy.selectHost(vm9));
-        Assert.assertFalse(preemptablePolicy.allocateHostForVm(vm9, host3));
-        Assert.assertEquals(null, vm9.getHost());
-
+        
         /*
-        The allocation is not successful because the available mips verified in allocation do not consider preemption,
-        but the preemption can be caused using the correct method.
+         * vm9 can be allocated but it will preempt vm2 and vm3. For here, vm9 can not be created in host3
          */
-
-        // now test deallocate vm
+        Assert.assertFalse(host3.vmCreate(vm9));
+        
+        // deallocating vms
         preemptablePolicy.deallocateHostForVm(vm2);
         preemptablePolicy.deallocateHostForVm(vm3);
-
+        Assert.assertNull(vm2.getHost());
+        Assert.assertNull(vm3.getHost());
+        
         // natural order(PROD): host1 (0 mips), host2 (3 mips), host3 (5 mips), host4 (5 mips)
         // natural order(BATCH): host1 (0 mips), host2 (0 mips), host3 (5 mips), host4 (5 mips)
         // natural order(FREE): host1 (0 mips), host2 (0 mips), host4 (2 mips), host3 (5 mips)
         Assert.assertEquals(host3, preemptablePolicy.selectHost(vm9));
         Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm9, host3));
         Assert.assertEquals(host3, vm9.getHost());
-
+        
         // natural order(PROD): host1 (0 mips), host3 (0 mips), host2 (3 mips), host4 (5 mips)
         // natural order(BATCH): host1 (0 mips), host2 (0 mips), host3 (0 mips), host4 (5 mips)
         // natural order(FREE): host1 (0 mips), host2 (0 mips), host3 (0 mips), host4 (2 mips)
         Assert.assertEquals(host2, preemptablePolicy.selectHost(vm8));
-        Assert.assertFalse(preemptablePolicy.allocateHostForVm(vm8, host2));
-        Assert.assertEquals(null, vm8.getHost());
-
-        //preempt vms in host 2 to allocate most priority vm
-        Assert.assertTrue(preemptablePolicy.preempt(vm1));
-
-        // natural order(PROD): host1 (0 mips), host3 (0 mips), host2 (3 mips), host4 (5 mips)
-        // natural order(BATCH): host1 (0 mips), host3 (0 mips), host2 (3 mips), host4 (5 mips)
-        // natural order(FREE): host1 (0 mips), host3 (0 mips), host2 (3 mips), host4 (2 mips)
-        Assert.assertEquals(host2, preemptablePolicy.selectHost(vm8));
+        
+        /*
+         * vm8 can be allocated but it will preempt vm1
+         */
         Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm8, host2));
         Assert.assertEquals(host2, vm8.getHost());
+        Assert.assertNull(vm1.getHost());
 
         // natural order(PROD): host1 (0 mips), host2 (0 mips),  host3 (0 mips), host4 (5 mips)
         // natural order(BATCH): host1 (0 mips), host2 (0 mips), host3 (0 mips), host4 (5 mips)
         // natural order(FREE): host1 (0 mips), host2 (0 mips), host3 (0 mips), host4 (2 mips)
         Assert.assertEquals(host4, preemptablePolicy.selectHost(vm10));
-        Assert.assertFalse(preemptablePolicy.allocateHostForVm(vm10, host4));
-        Assert.assertEquals(null, vm10.getHost());
-
-        Assert.assertTrue(preemptablePolicy.preempt(vm4));
-        Assert.assertTrue(preemptablePolicy.preempt(vm6));
-
-        // natural order(PROD): host1 (0 mips), host2 (0 mips),  host3 (0 mips), host4 (5 mips)
-        // natural order(BATCH): host1 (0 mips), host2 (0 mips), host3 (0 mips), host4 (5 mips)
-        // natural order(FREE): host1 (0 mips), host2 (0 mips), host3 (0 mips), host4 (5 mips)
-        Assert.assertEquals(host4, preemptablePolicy.selectHost(vm10));
+        
+        /*
+         * vm10 can be allocated but it will preempt vm4 and vm6
+         */
         Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm10, host4));
         Assert.assertEquals(host4, vm10.getHost());
+        Assert.assertNull(vm4.getHost());
+        Assert.assertNull(vm6.getHost());
     }
 }

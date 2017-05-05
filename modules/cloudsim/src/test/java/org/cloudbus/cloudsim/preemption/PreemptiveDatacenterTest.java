@@ -3,9 +3,15 @@ package org.cloudbus.cloudsim.preemption;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.SortedSet;
 
-import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
@@ -27,6 +33,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import gnu.trove.map.hash.THashMap;
 
 public class PreemptiveDatacenterTest {
 
@@ -2536,8 +2544,7 @@ public class PreemptiveDatacenterTest {
 		
 		PreemptiveHost host2 = new PreemptiveHost(2, peList1,
 				new VmSchedulerMipsBased(peList1), new FCFSBasedPreemptionPolicy(properties));
-		
-		datacenter.getHostList().add(host2);
+        
 
 		int priority = 0;
 		double runtime = 2;
@@ -2548,7 +2555,7 @@ public class PreemptiveDatacenterTest {
 				priority + 2, runtime);
 
 		// allocating first vm
-        datacenter.allocateHostForVm(false, vm1, host, false);
+		datacenter.allocateHostForVm(false, vm1);
 
         // checking
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
@@ -2557,12 +2564,13 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
+        Assert.assertEquals(host, vm1.getHost());
 
         PreemptableVm vm2 = new PreemptableVm(vmId++, 0, 6, 0, subtime,
 				priority + 1, runtime);
 
         // allocating 
-        datacenter.allocateHostForVm(false, vm2, host, false);
+        datacenter.allocateHostForVm(false, vm2);
         
         // checking
         Assert.assertEquals(1, datacenter.getVmsForScheduling().size());
@@ -2572,13 +2580,19 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 1);
         Assert.assertEquals(vm1.getNumberOfMigrations(), 0);
+        Assert.assertNull(vm1.getHost());
         
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
         Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
+        Assert.assertEquals(host, vm2.getHost());
 
-		// reallocating 
-        datacenter.allocateHostForVm(false, vm1, host2, false);
+		// adding host2 on structure to be considered on selection        
+        preemptableVmAllocationPolicy.getPriorityToSortedHost().get(priority).add(host2);
+        preemptableVmAllocationPolicy.getPriorityToSortedHost().get(priority + 1).add(host2);
+        preemptableVmAllocationPolicy.getPriorityToSortedHost().get(priority + 2).add(host2);
+        
+        datacenter.allocateHostForVm(false, vm1);
         
         // checking
         Assert.assertTrue(datacenter.getVmsForScheduling().isEmpty());
@@ -2588,9 +2602,11 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(vm1.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm1.getNumberOfPreemptions(), 1);
         Assert.assertEquals(vm1.getNumberOfMigrations(), 1);
+        Assert.assertEquals(host2, vm1.getHost());
         
         Assert.assertEquals(vm2.getNumberOfBackfillingChoice(), 0);
         Assert.assertEquals(vm2.getNumberOfPreemptions(), 0);
-        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);		
+        Assert.assertEquals(vm2.getNumberOfMigrations(), 0);
+        Assert.assertEquals(host, vm2.getHost());
 	}
 }

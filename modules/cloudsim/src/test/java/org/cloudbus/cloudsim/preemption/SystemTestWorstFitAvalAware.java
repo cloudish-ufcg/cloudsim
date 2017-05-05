@@ -110,7 +110,7 @@ public class SystemTestWorstFitAvalAware {
         peList1.add(new Pe(0, new PeProvisionerSimple(hostCapacity)));
 
         host = new PreemptiveHost(1, peList1, new VmSchedulerMipsBased(
-                peList1), new FCFSBasedPreemptionPolicy(properties));
+                peList1), new VmAvailabilityBasedPreemptionPolicy(properties));
 
         // creating list of hosts
         List<Host> hostList = new ArrayList<Host>();

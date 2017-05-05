@@ -7,7 +7,6 @@ import java.util.SortedSet;
 
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
-import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
 
@@ -33,7 +32,7 @@ public abstract class PriorityBasedVMAllocationPolicy extends PreemptableVmAlloc
 		Log.printConcatLine(simulationTimeUtil.clock(),
 				": Preempting VM #", vm.getId(), " in VMAllocationPolicy.");
 
-		Host host = vm.getHost();
+		PreemptiveHost host = (PreemptiveHost) vm.getHost();
 
 		if (host == null) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
@@ -48,66 +47,25 @@ public abstract class PriorityBasedVMAllocationPolicy extends PreemptableVmAlloc
 		vm.preempt(simulationTimeUtil.clock());
 
 		// just to update the sorted set
-		removePriorityHost(host);
+		removeHostFromStructure(host);
 		host.vmDestroy(vm);
-		addPriorityHost(host);
+		addHostIntoStructure(host);
 		vm.setBeingInstantiated(true);
 		return true;
 	}
-
-	protected void addPriorityHost(Host host) {
-		PreemptiveHost gHost = (PreemptiveHost) host;
-		for (int priority = 0; priority < gHost.getNumberOfPriorities(); priority++) {
-			getPriorityToSortedHost().get(priority).add(gHost);
-		}
-	}
-
-	protected void removePriorityHost(Host host) {
-		PreemptiveHost gHost = (PreemptiveHost) host;
-		for (int priority = 0; priority < gHost.getNumberOfPriorities(); priority++) {
-			getPriorityToSortedHost().get(priority).remove(gHost);
-		}
-	}
-
-
+	
 	@Override
-	public boolean allocateHostForVm(Vm vm) {
-		Host host = selectHost(vm);
-		if (host == null) {
-			return false;
-		}
-
-		// just to update the sorted set
-		removePriorityHost(host);
-		boolean result = host.vmCreate(vm);
-		addPriorityHost(host);
-
-		return result;
+	public void addHostIntoStructure(PreemptiveHost host) {	    
+		for (int priority = 0; priority < host.getNumberOfPriorities(); priority++) {
+			getPriorityToSortedHost().get(priority).add(host);
+		}		
 	}
 
 	@Override
-	public boolean allocateHostForVm(Vm vm, Host host) {
-		if (host == null) {
-			return false;
-		}
-		// just to update the sorted set
-		removePriorityHost(host);
-		boolean result = host.vmCreate(vm);
-		addPriorityHost(host);
-
-		return result;
-	}
-
-	@Override
-	public void deallocateHostForVm(Vm vm) {
-
-		Host host = vm.getHost();
-		if (host != null) {
-			// just to update the sorted set
-			removePriorityHost(host);
-			host.vmDestroy(vm);
-			addPriorityHost(host);
-		}
+	public void removeHostFromStructure(PreemptiveHost host) {
+		for (int priority = 0; priority < host.getNumberOfPriorities(); priority++) {
+			getPriorityToSortedHost().get(priority).remove(host);
+		}		
 	}
 
 	@Override

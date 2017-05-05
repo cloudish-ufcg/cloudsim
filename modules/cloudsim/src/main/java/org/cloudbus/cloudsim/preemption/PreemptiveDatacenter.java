@@ -7,8 +7,6 @@
 
 package org.cloudbus.cloudsim.preemption;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,10 +33,7 @@ import org.cloudbus.cloudsim.core.predicates.Predicate;
 import org.cloudbus.cloudsim.preemption.datastore.DatacenterUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.HostUsageDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.PreemptableVmDataStore;
-import org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
-import org.cloudbus.cloudsim.preemption.util.PriorityAndAvailabilityBasedVmComparator;
-import org.cloudbus.cloudsim.preemption.util.PriorityAndTTVBasedPreemptableVmComparator;
 
 import gnu.trove.map.hash.THashMap;
 
@@ -72,18 +67,12 @@ public class PreemptiveDatacenter extends Datacenter {
 	private static final int DEFAULT_CHECKPOINT_INTERVAL_SIZE = 1440; // one day in minutes
 	private static final int DEFAULT_UPDATE_QUOTA_INTERVAL_SIZE = 5;
 
-
 	PreemptableVmAllocationPolicy vmAllocationPolicy;
 	
 	SimulationTimeUtil simulationTimeUtil = new SimulationTimeUtil();
 
-	//TODO structures of vms can be moved to VmAllocationPolicy
-	private SortedSet<PreemptableVm> vmsRunning = new TreeSet<PreemptableVm>();
-	private SortedSet<PreemptableVm> vmsForScheduling = new TreeSet<PreemptableVm>();
-
 	private List<DatacenterInfo> datacenterInfo;
 	private boolean tryAllocateWaitingQueue;
-//	private int smallerPriorityOfCurrentDestoy = Integer.MAX_VALUE;
 	
 	// data stores
 	private HostUsageDataStore hostUsageDataStore;
@@ -100,7 +89,6 @@ public class PreemptiveDatacenter extends Datacenter {
 	private boolean makeCheckpoint = false;
 	private boolean calculateQuotaEventTrigged = false;
 	private Properties properties;
-	private static double lastProcessTime;
 	private AdmissionController admController;
 	private Map<Integer, Double> admittedRequests;
 	
@@ -148,9 +136,6 @@ public class PreemptiveDatacenter extends Datacenter {
         
         setHostUsageStoringIntervalSize(hostUsageStoringIntervalSize);
         setDatacenterInfo(new LinkedList<DatacenterInfo>());
-        
-        // There is no last event processed, then lastProcessTime must be invalid one
-        lastProcessTime = INVALID_INTERVAL_SIZE;
        
 		if (properties.getProperty("make_checkpoint") != null
 				&& properties.getProperty("make_checkpoint")
@@ -292,19 +277,9 @@ public class PreemptiveDatacenter extends Datacenter {
 	}
 
 	private void tryToAllocateWaitingQueue() {
-    	if (firstProcessNow()) {
-			Log.printConcatLine(simulationTimeUtil.clock(),
-					": First processing at this time. Pre processing and updating last process time to ", simulationTimeUtil.clock());
-			lastProcessTime = simulationTimeUtil.clock();
-			getVmAllocationPolicy().preProcess();
-			
-			allocatingWaitingQueue();
-		} else {
-			Log.printConcatLine(simulationTimeUtil.clock(),
-					": The waiting queue already was tried to be alocated at this time.");
-		}	
-    	
-    	send(getId(), getAllocateWaitingQueueIntervalSize(), PreemptiveDatacenter.TRY_TO_ALLOCATE_WAITING_QUEUE_EVENT);
+		allocatingWaitingQueue();
+
+		send(getId(), getAllocateWaitingQueueIntervalSize(), PreemptiveDatacenter.TRY_TO_ALLOCATE_WAITING_QUEUE_EVENT);
 	}
 
 	protected void initializeFromCheckpoint(PreemptableVmDataStore vmDataStore) {
@@ -350,12 +325,12 @@ public class PreemptiveDatacenter extends Datacenter {
 				
 				getAdmittedRequests().put(vm.getPriority(), admittedRequests.get(vm.getPriority()) + vm.getMips());
 
-				getVmsRunning().add(vm);
+				getVmAllocationPolicy().getVmsRunning().add(vm);
 
 			}
 		}
-		sendNow(getId(), SCHEDULE_DATACENTER_EVENTS_EVENT);
 
+		sendNow(getId(), SCHEDULE_DATACENTER_EVENTS_EVENT);
 	}
 
 	private Map<Integer, PreemptiveHost> generateMapOfHosts(){
@@ -386,7 +361,7 @@ public class PreemptiveDatacenter extends Datacenter {
 							": There was an error while making checkpoint of vms for scheduling.");
 				}
 				
-				if (!vmDataStore.addRunningVms(new TreeSet<PreemptableVm>(getVmsRunning()))) {
+				if (!vmDataStore.addRunningVms(new TreeSet<PreemptableVm>(getVmAllocationPolicy().getVmsRunning()))) {
 					Log.printConcatLine(simulationTimeUtil.clock(),
 							": There was an error while making checkpoint of vms running.");	
 				}
@@ -394,7 +369,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		});
 		 
 		//scheduling next checkpoint event
-		if (!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) {
+		if (getVmAllocationPolicy().thereIsVmsRunning() || getVmAllocationPolicy().thereIsVmsWaiting()) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
 					": Scheduling next checkpoint event will be in ",
 					getCheckpointIntervalSize(), " time units.");
@@ -406,15 +381,12 @@ public class PreemptiveDatacenter extends Datacenter {
 	private void scheduleDatacenterEvents() {
 		Log.printConcatLine(simulationTimeUtil.clock(), ": Scheduling the first datacenter events.");
 
-//		// creating the first utilization store event
-//		send(getId(), getHostUsageStoringIntervalSize(),
-//				PreemptiveDatacenter.STORE_HOST_UTILIZATION_EVENT);
-
 		// creating the first update quota event
 		if (getCalculateQuotaEventTrigged()) {
 			sendPriorityEvent(getId(), getUpdateQuotaIntervalSize(),
 					PreemptiveDatacenter.UPDATE_QUOTAS_EVENT, null, -1);
 		}
+
 		// creating the first datacenter store event
 		if (collectDatacenterInfo) {
 			send(getId(), getDatacenterCollectInfoIntervalSize(), PreemptiveDatacenter.COLLECT_DATACENTER_INFO_EVENT);
@@ -435,13 +407,13 @@ public class PreemptiveDatacenter extends Datacenter {
 
 	private void terminateSimulation() {
 		Log.printConcatLine(simulationTimeUtil.clock(),
-				": Finishing all VMs (", getVmsRunning().size(),
+				": Finishing all VMs (", getVmAllocationPolicy().getVmsRunning().size(),
 				" running and ", getVmsForScheduling().size(), " waiting).");
 
 		Set<Integer> brokerIds = new HashSet<Integer>();
 		
 		// terminating Vms running
-		for (PreemptableVm vmRunning : getVmsRunning()) {
+		for (PreemptableVm vmRunning : new TreeSet<PreemptableVm>(getVmAllocationPolicy().getVmsRunning())) {
 			PreemptiveHost host = (PreemptiveHost) vmRunning.getHost();
 			getVmAllocationPolicy().deallocateHostForVm(vmRunning);
 		
@@ -455,10 +427,10 @@ public class PreemptiveDatacenter extends Datacenter {
 			brokerIds.add(vmRunning.getUserId());
 		}
 
-		getVmsRunning().clear();
+		getVmAllocationPolicy().getVmsRunning().clear();
 
 		// terminating Vms waiting
-		for (PreemptableVm vmForScheduling : getVmsForScheduling()) {
+		for (PreemptableVm vmForScheduling : new TreeSet<PreemptableVm>(getVmsForScheduling())) {
 			double now = simulationTimeUtil.clock();
 			
 			vmForScheduling.setRuntime(vmForScheduling.getActualRuntime(now));
@@ -488,10 +460,10 @@ public class PreemptiveDatacenter extends Datacenter {
 		double resourcesRunningP0 = 0;
 		double resourcesRunningP1 = 0;
 		double resourcesRunningP2 = 0;
-		int vmsRunning = getVmsRunning().size();
+		int vmsRunning = getVmAllocationPolicy().getVmsRunning().size();
 		int vmsForScheduling = getVmsForScheduling().size();
 		
-		for (PreemptableVm vm : getVmsRunning()) {
+		for (PreemptableVm vm : getVmAllocationPolicy().getVmsRunning()) {
 			if (vm.getPriority() == 0) {
 				vmsRunningP0++;
 				resourcesRunningP0 += vm.getMips();
@@ -540,7 +512,7 @@ public class PreemptiveDatacenter extends Datacenter {
 						resourcesWaitingP2));
 
 		// creating next event if the are more vms to be concluded
-		if ((!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) && !endOfSimulation) {
+		if ((getVmAllocationPolicy().thereIsVmsRunning() || getVmAllocationPolicy().thereIsVmsWaiting()) && !endOfSimulation) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
 					": Scheduling next collect datacenter info event will be in ",
 					getHostUsageStoringIntervalSize(),
@@ -556,7 +528,7 @@ public class PreemptiveDatacenter extends Datacenter {
 		}
 
 		// creating next event if the are more vms to be concluded
-		if ((!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) && !endOfSimulation) {
+		if ((getVmAllocationPolicy().thereIsVmsRunning() || getVmAllocationPolicy().thereIsVmsWaiting()) && !endOfSimulation) {
 			Log.printConcatLine(simulationTimeUtil.clock(),
 					": Scheduling next store datacenter info event in be in ",
 					getHostUsageStoringIntervalSize(), " time units.");
@@ -579,15 +551,6 @@ public class PreemptiveDatacenter extends Datacenter {
 		Log.printConcatLine(simulationTimeUtil.clock(), ":", usageEntries.size()," will be stored into database now.");
 		
 		hostUsageDataStore.addUsageEntries(usageEntries);
-		
-		// creating next event if the are more vms to be concluded
-//		if ((!getVmsRunning().isEmpty() || !getVmsForScheduling().isEmpty()) && !endOfSimulation) {
-//			Log.printConcatLine(simulationTimeUtil.clock(),
-//					": Scheduling next store host utilization event in be in ",
-//					getHostUsageStoringIntervalSize(), " time units.");
-//			send(getId(), getHostUsageStoringIntervalSize(),
-//					STORE_HOST_UTILIZATION_EVENT);
-//		}
 	}
 	
 	public List<UsageEntry> getHostUtilizationEntries() {
@@ -626,72 +589,31 @@ public class PreemptiveDatacenter extends Datacenter {
 			double currentAdmitted = admittedRequests.get(vm.getPriority());
 			getAdmittedRequests().put(priority, currentAdmitted + vm.getMips());
 
-			allocateHostForVm(ack, vm, null, false);
+			allocateHostForVm(ack, vm);
 		} else {
 			Log.printConcatLine(simulationTimeUtil.clock(),
 					": VM #", vm.getId(), " - ", vm.getPriority(), " was not accepted by Admission Controler.");
 		}
 	}
 
-	//TODO this method logic can be moved to VmAllocationPolicy
-	protected boolean allocateHostForVm(boolean ack, PreemptableVm vm, PreemptiveHost host, boolean isBackfilling) {
-		Log.printConcatLine(simulationTimeUtil.clock(),
-				": Trying to allocate host for VM #", vm.getId());
+	protected boolean allocateHostForVm(boolean ack, PreemptableVm vm) {
+		Log.printConcatLine(simulationTimeUtil.clock(),	": Trying to allocate host for VM #", vm.getId());
 		
-		if (firstProcessNow()) {
-			Log.printConcatLine(simulationTimeUtil.clock(),
-					": Time passed out. Pre processing and updating last process time to ", simulationTimeUtil.clock());
-			lastProcessTime = simulationTimeUtil.clock();
-			getVmAllocationPolicy().preProcess();			
-		}
-		
-		if (host == null) {			
-			host = (PreemptiveHost) getVmAllocationPolicy().selectHost(vm);	
-		}
-		
-		boolean result = tryingAllocateOnHost(vm, host);
+		boolean result = getVmAllocationPolicy().allocateHostForVm(vm);
 
+		if (result) {
+						
+			// updating host utilization
+			((PreemptiveHost) vm.getHost()).updateUsage(simulationTimeUtil.clock());
+
+			scheduleVmDestroyEvent(vm);
+		}
+		
 		if (ack) {
 			sendingAck(vm, result);
 		}
 		
-		if (result) {
-			getVmsRunning().add(vm);
-			
-			//TODO we can move these calls to into vmCreate method in Host or to allocateVm in VmAllocationPolicy
-			vm.setStartExec(simulationTimeUtil.clock());
-			vm.allocatingToHost(host.getId());
-			
-			if (isBackfilling) {
-				vm.setNumberOfBackfillingChoice(vm.getNumberOfBackfillingChoice() + 1);				
-			}
-			
-			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
-					vm.getId(), " was allocated on host #", host.getId(),
-					" successfully.");
-			
-			//updating host utilization
-			host.updateUsage(simulationTimeUtil.clock());
-			
-			if (vm.isBeingInstantiated()) {
-				vm.setBeingInstantiated(false);
-			}
-			
-			getVmsForScheduling().remove(vm);
-			
-			double remainingTime = vm.getRuntime() - vm.getActualRuntime(simulationTimeUtil.clock());
-			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
-					vm.getId(), " will be destroyed in ", remainingTime,
-					" microseconds.");
-
-			sendFirst(getId(), remainingTime, CloudSimTags.VM_DESTROY_ACK, vm);
-			
-		}
 		return result;
-	}
-
-	private boolean firstProcessNow() {
-		return simulationTimeUtil.clock() > lastProcessTime;
 	}
 
 	protected void sendFirst(int entityId, double delay, int cloudSimTag, Object data) {
@@ -749,47 +671,6 @@ public class PreemptiveDatacenter extends Datacenter {
 		
 		CloudSim.send(getId(), entityId, delay, cloudSimTag, data, serial);
 	}
-	
-	private boolean tryingAllocateOnHost(PreemptableVm vm, PreemptiveHost host) {
-		if (host == null) {
-			Log.printConcatLine(simulationTimeUtil.clock(),
-					": There is not resource to allocate VM #" + vm.getId()
-							+ " now, it will be tryed in the future.");
-			if (!getVmsForScheduling().contains(vm)) {
-				getVmsForScheduling().add(vm);
-			}
-			return false;
-		}
-		
-		// trying to allocate
-		boolean result = getVmAllocationPolicy().allocateHostForVm(vm, host);
-
-		if (!result) {
-			Log.printConcatLine(simulationTimeUtil.clock(),
-					": There is not resource to allocate VM #" + vm.getId()
-							+ " right now.");
-			
-			PreemptableVm vmToPreempt = (PreemptableVm) host.nextVmForPreempting();
-			if (vmToPreempt != null && vmToPreempt.getPriority() >= vm.getPriority()) {
-				Log.printConcatLine(simulationTimeUtil.clock(),
-						": Preempting VM #" + vmToPreempt.getId()
-								+ " (priority " + vmToPreempt.getPriority()
-								+ ") to allocate VM #" + vm.getId()
-								+ " (priority " + vm.getPriority() + ")");
-				getVmAllocationPolicy().preempt(vmToPreempt);
-//				smallerPriorityOfCurrentDestoy = Math.min(smallerPriorityOfCurrentDestoy, vm.getPriority());
-				getVmsRunning().remove(vmToPreempt);
-				getVmsForScheduling().add(vmToPreempt);
-				return tryingAllocateOnHost(vm, host);
-			} else if (!getVmsForScheduling().contains(vm)) {
-				Log.printConcatLine(simulationTimeUtil.clock(),
-						": There are not VMs to preempt. VM #" + vm.getId()
-								+ " will be scheduled in the future.");
-				getVmsForScheduling().add(vm);
-			}
-		}
-		return result;
-	}
 
 	private void sendingAck(PreemptableVm vm, boolean result) {
 		int[] data = new int[3];
@@ -804,7 +685,6 @@ public class PreemptiveDatacenter extends Datacenter {
 		send(vm.getUserId(), 0, CloudSimTags.VM_CREATE_ACK, data);
 	}
 
-	//TODO the interactions in a host can be executed by the VmAllocationPolicy
 	@Override
 	protected void processVmDestroy(SimEvent ev, boolean ack) {
 		PreemptableVm vm = (PreemptableVm) ev.getData();
@@ -812,36 +692,26 @@ public class PreemptiveDatacenter extends Datacenter {
 		if (vm.achievedRuntime(simulationTimeUtil.clock())) {
 			tryAllocateWaitingQueue = true;
 			
-//			smallerPriorityOfCurrentDestoy = Math.min(smallerPriorityOfCurrentDestoy, vm.getPriority());
-			if (getVmsRunning().remove(vm)) {		
-				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
-						vm.getId(), " will be terminated.");
-								
-				PreemptiveHost host = (PreemptiveHost) vm.getHost();
-				getVmAllocationPolicy().deallocateHostForVm(vm);
-			
-				if (ack) {
-					sendNow(vm.getUserId(), CloudSimTags.VM_DESTROY_ACK, vm);
-				}
+			PreemptiveHost host = (PreemptiveHost) vm.getHost();
+			getVmAllocationPolicy().deallocateHostForVm(vm);
 
-				//updating host utilization				
-				host.updateUsage(simulationTimeUtil.clock());
-				
-				// updating the admitted resources
-				getAdmittedRequests().put(
-						vm.getPriority(),
-						getAdmittedRequests().get(vm.getPriority())	- vm.getMips());
-			} else {
-				Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
-						vm.getId(), " was terminated previously.");
+			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #", vm.getId(), " was terminated.");					
+			
+			if (ack) {
+				sendNow(vm.getUserId(), CloudSimTags.VM_DESTROY_ACK, vm);
 			}
+
+			// updating host utilization
+			host.updateUsage(simulationTimeUtil.clock());
+
+			// updating the admitted resources
+			getAdmittedRequests().put(vm.getPriority(), getAdmittedRequests().get(vm.getPriority()) - vm.getMips());
 		} else {
 			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #",
 					vm.getId(), " doesn't achieve the runtime yet.");
 		}
 
-
-		if (!getVmsForScheduling().isEmpty() && !nextEventIsDestroy() && tryAllocateWaitingQueue) {
+		if (getVmAllocationPolicy().thereIsVmsWaiting() && !nextEventIsDestroy() && tryAllocateWaitingQueue) {
 			allocatingWaitingQueue();
 			tryAllocateWaitingQueue = false;
 		}
@@ -863,52 +733,35 @@ public class PreemptiveDatacenter extends Datacenter {
 		return false;
 	}
 
-	//TODO method can be moved to VmAllocationPolicy once the structures of waiting and running are moved too
-	private void allocatingWaitingQueue() {	
-		Log.printConcatLine(simulationTimeUtil.clock(), ": Trying to allocate the VMs in waiting queue.");
+	private void allocatingWaitingQueue() {
+		List<PreemptableVm> allocatedVms = getVmAllocationPolicy().tryToAllocateWaitingQueue();
 
-		boolean isBackfilling = false;
-		
-		ArrayList<PreemptableVm> waitingQueue = new ArrayList<PreemptableVm>(getVmsForScheduling());
-		
-		// TODO Think better about how to configure it
-		String preemptionPolicyClass = properties
-				.getProperty("preemption_policy_class");
-		if (preemptionPolicyClass != null
-				&& "org.cloudbus.cloudsim.preemption.policies.preemption.VmAvailabilityBasedPreemptionPolicy"
-						.equals(preemptionPolicyClass)) {
-
-			Log.printConcatLine(simulationTimeUtil.clock(),
-					": Sorting the waiting queue based on priority + current availability.");
-
-			Collections.sort(waitingQueue,
-					new PriorityAndAvailabilityBasedVmComparator(
-							simulationTimeUtil));
-		} else if (preemptionPolicyClass != null
-				&& "org.cloudbus.cloudsim.preemption.policies.preemption.TTVBasedPreemptionPolicy"
-						.equals(preemptionPolicyClass)) {
-
-			Log.printConcatLine(simulationTimeUtil.clock(),
-					": Sorting the waiting queue based on priority + TTV.");
-
-			Map<Integer, Double> sloTargets = VmAvailabilityBasedPreemptionPolicy
-					.getSLOAvailabilityTargets(properties);
+		for (PreemptableVm vm : allocatedVms) {
+			PreemptiveHost host = (PreemptiveHost) vm.getHost();
 			
-			Collections.sort(waitingQueue, new PriorityAndTTVBasedPreemptableVmComparator(sloTargets, simulationTimeUtil));
-		}
-		for (PreemptableVm currentVm : waitingQueue) {
-			if (!allocateHostForVm(false, currentVm, null, isBackfilling)) {
-				isBackfilling = true;
+			if (host != null) {
+				// updating host utilization
+				host.updateUsage(simulationTimeUtil.clock());
+				
+				scheduleVmDestroyEvent(vm);
 			}
 		}
 	}
 
+	private void scheduleVmDestroyEvent(PreemptableVm vm) {
+		double remainingTime = vm.getRuntime() - vm.getActualRuntime(simulationTimeUtil.clock());
+		Log.printConcatLine(simulationTimeUtil.clock(), ": VM #", vm.getId(), " will be destroyed in ",
+				remainingTime, " time units.");
+
+		sendFirst(getId(), remainingTime, CloudSimTags.VM_DESTROY_ACK, vm);
+	}
+
 	public SortedSet<PreemptableVm> getVmsRunning() {
-		return vmsRunning;
+		return getVmAllocationPolicy().getVmsRunning();
 	}
 
 	public SortedSet<PreemptableVm> getVmsForScheduling() {
-		return vmsForScheduling;
+		return getVmAllocationPolicy().getVmsWaiting();
 	}
 	
 	@Override
