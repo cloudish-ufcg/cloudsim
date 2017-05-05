@@ -223,4 +223,9 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 
 	public double getAvailableMipsByVm(PreemptableVm vm) {
 		return preemptionPolicy.getAvailableMipsByVm(vm);
+	}
+
+	public Map<Integer, List<CapacityCost>> getCapacityCosts(double minCPUReq, double maxCPUReq) {
+		// TODO Auto-generated method stub
+		return null;
 	}}
