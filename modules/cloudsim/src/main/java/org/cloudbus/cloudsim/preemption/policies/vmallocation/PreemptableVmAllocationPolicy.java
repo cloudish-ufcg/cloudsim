@@ -54,10 +54,8 @@ public abstract class PreemptableVmAllocationPolicy extends VmAllocationPolicy {
 	}
 	
 	public boolean allocateHostForVm(Vm vm, boolean isBackfilling) {
-		if (vm == null) {
-			throw new IllegalArgumentException("The Vm can not be null.");
-		}
-		
+		validateVm(vm);
+
 		PreemptableVm pVm = (PreemptableVm) vm;
 		
 		if (simulationTimeUtil.clock() > lastProcessTime) {
@@ -82,10 +80,8 @@ public abstract class PreemptableVmAllocationPolicy extends VmAllocationPolicy {
 	}
 	
     public boolean allocateHostForVm(Vm vm, Host host, boolean isBackfilling) {
-    	if (vm == null) {
-			throw new IllegalArgumentException("The Vm can not be null.");
-		}
-		
+		validateVm(vm);
+
 		if (host == null) {
 			return false;
 		}
@@ -105,34 +101,14 @@ public abstract class PreemptableVmAllocationPolicy extends VmAllocationPolicy {
 					Log.printConcatLine(simulationTimeUtil.clock(),
 							": Preempting VM #" + vmToPreempt.getId() + " (priority " + vmToPreempt.getPriority()
 									+ ") to allocate VM #" + vm.getId() + " (priority " + pVm.getPriority() + ")");
-				
-					// preempting vm
-					vmToPreempt.preempt(simulationTimeUtil.clock());
-					pHost.vmDestroy(vmToPreempt);					
-					vmToPreempt.setBeingInstantiated(true);
-					
-					getVmsRunning().remove(vmToPreempt);
-					getVmsWaiting().add(vmToPreempt);
-					
-					result = pHost.vmCreate(pVm);					
+
+					preemptVm(pHost, vmToPreempt);
+					result = pHost.vmCreate(pVm);
 				}
 			}
 		}    
         
-		// updating allocation structures
-		getVmsRunning().add(pVm);
-		getVmsWaiting().remove(pVm);
-
-		pVm.setStartExec(simulationTimeUtil.clock());
-		pVm.allocatingToHost(host.getId());
-		
-		if (isBackfilling) {
-			pVm.setNumberOfBackfillingChoice(pVm.getNumberOfBackfillingChoice() + 1);				
-		}
-
-		if (pVm.isBeingInstantiated()) {
-			pVm.setBeingInstantiated(false);
-		}
+		allocateVm(host, isBackfilling, pVm);
 
 		Log.printConcatLine(simulationTimeUtil.clock(), ": VM #", vm.getId(), " was allocated on host #", host.getId(),
 				" successfully.");
@@ -141,7 +117,38 @@ public abstract class PreemptableVmAllocationPolicy extends VmAllocationPolicy {
 
         return result;
 	}
-    
+
+	private void validateVm(Vm vm) {
+		if (vm == null) {
+            throw new IllegalArgumentException("The Vm can not be null.");
+        }
+	}
+
+	private void allocateVm(Host host, boolean isBackfilling, PreemptableVm pVm) {
+		getVmsRunning().add(pVm);
+		getVmsWaiting().remove(pVm);
+
+		pVm.setStartExec(simulationTimeUtil.clock());
+		pVm.allocatingToHost(host.getId());
+
+		if (isBackfilling) {
+			pVm.setNumberOfBackfillingChoice(pVm.getNumberOfBackfillingChoice() + 1);
+		}
+
+		if (pVm.isBeingInstantiated()) {
+			pVm.setBeingInstantiated(false);
+		}
+	}
+
+	private void preemptVm(PreemptiveHost pHost, PreemptableVm vmToPreempt) {
+		vmToPreempt.preempt(simulationTimeUtil.clock());
+		pHost.vmDestroy(vmToPreempt);
+		vmToPreempt.setBeingInstantiated(true);
+
+		getVmsRunning().remove(vmToPreempt);
+		getVmsWaiting().add(vmToPreempt);
+	}
+
 	@Override
     public boolean allocateHostForVm(Vm vm, Host host) {
 		return allocateHostForVm(vm, host, false);
@@ -149,11 +156,10 @@ public abstract class PreemptableVmAllocationPolicy extends VmAllocationPolicy {
 
 	@Override
     public void deallocateHostForVm(Vm vm) {
-		
-    	if (vm == null)
-            throw new IllegalArgumentException("The Vm can not be null.");
-		
-        PreemptiveHost host = (PreemptiveHost) vm.getHost();
+
+		validateVm(vm);
+
+		PreemptiveHost host = (PreemptiveHost) vm.getHost();
 
         if (host != null) {        	
 			if (!getVmsRunning().remove(vm)) {
