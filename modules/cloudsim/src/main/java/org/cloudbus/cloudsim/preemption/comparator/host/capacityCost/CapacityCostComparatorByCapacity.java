@@ -18,7 +18,7 @@ public class CapacityCostComparatorByCapacity implements Comparator<CapacityCost
         if (capacity1 != capacity2)
             return Double.compare(capacity1, capacity2);
 
-        return Double.compare(capacityCost.getpHost().getId(),
+        return Integer.compare(capacityCost.getpHost().getId(),
                 capacityCost2.getpHost().getId());
     }
 }
