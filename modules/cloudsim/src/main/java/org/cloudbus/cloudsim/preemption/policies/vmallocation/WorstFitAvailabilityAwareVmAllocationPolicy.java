@@ -78,28 +78,6 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
         }
     }
     
-    @Override
-    public boolean preempt(PreemptableVm vm) {
-
-    	if (vm == null) {
-    		throw new IllegalArgumentException("The Vm to be preempted can not be null.");
-    	}
-    	
-        PreemptiveHost host = (PreemptiveHost) vm.getHost();
-
-		if (host == null) {
-			Log.printConcatLine(simulationTimeUtil.clock(), ": VM #", vm.getId(), " does not have a host.");
-			return false;
-		}
-
-        vm.preempt(simulationTimeUtil.clock());
-        removeHostFromStructure(host);
-        host.vmDestroy(vm);
-        addHostIntoStructure(host);
-        vm.setBeingInstantiated(true);
-        return true;
-    }
-
 	@Override
 	public void addHostIntoStructure(PreemptiveHost host) {	    
         for (int priority = 0; priority < host.getNumberOfPriorities(); priority++) {

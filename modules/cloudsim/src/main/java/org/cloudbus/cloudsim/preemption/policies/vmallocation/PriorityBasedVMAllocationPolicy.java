@@ -28,33 +28,6 @@ public abstract class PriorityBasedVMAllocationPolicy extends PreemptableVmAlloc
 	}
 
 	@Override
-	public boolean preempt(PreemptableVm vm) {
-		Log.printConcatLine(simulationTimeUtil.clock(),
-				": Preempting VM #", vm.getId(), " in VMAllocationPolicy.");
-
-		PreemptiveHost host = (PreemptiveHost) vm.getHost();
-
-		if (host == null) {
-			Log.printConcatLine(simulationTimeUtil.clock(),
-					": VM #", vm.getId(), " is not present in VMTable.");
-
-			return false;
-		}
-
-		Log.printConcatLine(simulationTimeUtil.clock(),
-				": VM #", vm.getId(), " is allocated in Host #", host.getId());
-
-		vm.preempt(simulationTimeUtil.clock());
-
-		// just to update the sorted set
-		removeHostFromStructure(host);
-		host.vmDestroy(vm);
-		addHostIntoStructure(host);
-		vm.setBeingInstantiated(true);
-		return true;
-	}
-	
-	@Override
 	public void addHostIntoStructure(PreemptiveHost host) {	    
 		for (int priority = 0; priority < host.getNumberOfPriorities(); priority++) {
 			getPriorityToSortedHost().get(priority).add(host);

@@ -34,7 +34,6 @@ public abstract class PreemptableVmAllocationPolicy extends VmAllocationPolicy {
 	public abstract void preProcess();
 
 	//TODO Think about remove this method
-	public abstract boolean preempt(PreemptableVm vm);
 
 	public abstract Host selectHost(Vm vm);
 	

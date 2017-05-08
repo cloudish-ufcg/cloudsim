@@ -445,13 +445,9 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
         selectedHost = (PreemptiveHost) allocationPolicyWithNoMock.selectHost(vm1);
         Assert.assertEquals(host1, selectedHost);
 
-        allocationPolicyWithNoMock.preempt(vm0);
+        allocationPolicyWithNoMock.allocateHostForVm(vm1, selectedHost);
         Assert.assertFalse(host1.getVmList().contains(vm0));
         Assert.assertNull(vm0.getHost());
-        Assert.assertNull(vm1.getHost());
-
-
-        allocationPolicyWithNoMock.allocateHostForVm(vm1, selectedHost);
         Assert.assertEquals(host1, vm1.getHost());
         Assert.assertTrue(host1.getVmList().contains(vm1));
 
@@ -517,10 +513,8 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
         selectedHost = allocationPolicyWithNoMock.selectHost(vm0);
         Assert.assertEquals(host1, selectedHost);
 
-        allocationPolicyWithNoMock.preempt(vm0P2);
-        Assert.assertFalse(host1.getVmList().contains(vm0P2));
-
         allocationPolicyWithNoMock.allocateHostForVm(vm0, selectedHost);
+        Assert.assertFalse(host1.getVmList().contains(vm0P2));
         Assert.assertEquals(host1, vm0.getHost());
         Assert.assertTrue(host1.getVmList().contains(vm0));
         Assert.assertNull(vm0P2.getHost());
@@ -589,11 +583,8 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
         selectedHost = allocationPolicyWithNoMock.selectHost(vm0P1);
         Assert.assertEquals(host1, selectedHost);
 
-        allocationPolicyWithNoMock.preempt(vm0);
-        Assert.assertNull(vm0.getHost());
-        Assert.assertNull(vm0P1.getHost());
-
         allocationPolicyWithNoMock.allocateHostForVm(vm0P1, selectedHost);
+        Assert.assertNull(vm0.getHost());
         Assert.assertEquals(host1, vm0P1.getHost());
         Assert.assertTrue(host1.getVmList().contains(vm0P1));
         Assert.assertFalse(host1.getVmList().contains(vm0));
@@ -601,11 +592,8 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
         selectedHost = allocationPolicyWithNoMock.selectHost(vm0P0);
         Assert.assertEquals(host1, selectedHost);
 
-        allocationPolicyWithNoMock.preempt(vm0P1);
-        Assert.assertNull(vm0P0.getHost());
-        Assert.assertNull(vm0P1.getHost());
-
         allocationPolicyWithNoMock.allocateHostForVm(vm0P0, selectedHost);
+        Assert.assertNull(vm0P1.getHost());
         Assert.assertEquals(host1, vm0P0.getHost());
         Assert.assertTrue(host1.getVmList().contains(vm0P0));
         Assert.assertFalse(host1.getVmList().contains(vm0P1));
@@ -613,17 +601,12 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
         selectedHost = allocationPolicyWithNoMock.selectHost(vm1P0);
         Assert.assertEquals(host2, selectedHost);
 
-        allocationPolicyWithNoMock.preempt(vm1P2);
-        Assert.assertNull(vm1P2.getHost());
-        Assert.assertNull(vm1P0.getHost());
-        Assert.assertEquals(host2, vm1.getHost());
-        Assert.assertTrue(host2.getVmList().contains(vm1));
-        Assert.assertFalse(host2.getVmList().contains(vm1P0));
-
         allocationPolicyWithNoMock.allocateHostForVm(vm1P0, selectedHost);
+        Assert.assertNull(vm1P2.getHost());
         Assert.assertEquals(host2, vm1P0.getHost());
         Assert.assertTrue(host2.getVmList().contains(vm1P0));
         Assert.assertTrue(host2.getVmList().contains(vm1));
+        Assert.assertEquals(host2, vm1.getHost());
 
         // check final status of timeStamp 2s
 
@@ -674,22 +657,8 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testVmNull3() {
-        allocationPolicyWithNoMock.preempt(null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void testVmNull4() {
         allocationPolicyWithNoMock.selectHost(null);
-    }
-
-    @Test
-    public void testHostNull() {
-
-        Assert.assertNull(vm0.getHost());
-        Assert.assertFalse(allocationPolicyWithMock.allocateHostForVm(vm0, null));
-        Assert.assertFalse(allocationPolicyWithMock.preempt(vm0));
-        allocationPolicyWithNoMock.deallocateHostForVm(vm0);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -701,6 +670,4 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
     public void testHostListNull2() {
         allocationPolicyWithNoMock = new WorstFitAvailabilityAwareVmAllocationPolicy(new ArrayList<PreemptiveHost>());
     }
-
-
 }

@@ -78,14 +78,6 @@ public class CostEffectivePreemptionVmAllocationPolicy extends PreemptableVmAllo
 
 	}
 
-	// TODO this method may be removed from the interface. The preemption is
-	// being done inside of allocate method
-	@Override
-	public boolean preempt(PreemptableVm vm) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 	@Override
 	public Host selectHost(Vm vm) {
 		// TODO Implement selection of host in two stages: 1 considering only

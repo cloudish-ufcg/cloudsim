@@ -285,13 +285,9 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
         selectedHost = (PreemptiveHost) bestFitVmAllocationPolicy.selectHost(vm1);
         Assert.assertEquals(host1, selectedHost);
 
-        bestFitVmAllocationPolicy.preempt(vm0);
+        bestFitVmAllocationPolicy.allocateHostForVm(vm1, selectedHost);
         Assert.assertFalse(host1.getVmList().contains(vm0));
         Assert.assertNull(vm0.getHost());
-        Assert.assertNull(vm1.getHost());
-
-
-        bestFitVmAllocationPolicy.allocateHostForVm(vm1, selectedHost);
         Assert.assertEquals(host1, vm1.getHost());
         Assert.assertTrue(host1.getVmList().contains(vm1));
 
@@ -348,13 +344,9 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
         selectedHost = (PreemptiveHost) bestFitVmAllocationPolicy.selectHost(vm0P1);
         Assert.assertEquals(host1, selectedHost);
 
-        bestFitVmAllocationPolicy.preempt(vm1);
+        bestFitVmAllocationPolicy.allocateHostForVm(vm0P1, selectedHost);
         Assert.assertFalse(host1.getVmList().contains(vm1));
         Assert.assertNull(vm1.getHost());
-        Assert.assertNull(vm0P1.getHost());
-
-
-        bestFitVmAllocationPolicy.allocateHostForVm(vm0P1, selectedHost);
         Assert.assertEquals(host1, vm0P1.getHost());
         Assert.assertTrue(host1.getVmList().contains(vm0P1));
 
@@ -430,11 +422,10 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
         selectedHost = bestFitVmAllocationPolicy.selectHost(vm0);
         Assert.assertEquals(host1, selectedHost);
 
-        bestFitVmAllocationPolicy.preempt(vm0P2);
-        Assert.assertFalse(host1.getVmList().contains(vm0P2));
 
         bestFitVmAllocationPolicy.allocateHostForVm(vm0, selectedHost);
         Assert.assertEquals(host1, vm0.getHost());
+        Assert.assertFalse(host1.getVmList().contains(vm0P2));
         Assert.assertTrue(host1.getVmList().contains(vm0));
         Assert.assertNull(vm0P2.getHost());
 
@@ -506,11 +497,8 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
         selectedHost = bestFitVmAllocationPolicy.selectHost(vm0P1);
         Assert.assertEquals(host1, selectedHost);
 
-        bestFitVmAllocationPolicy.preempt(vm0);
-        Assert.assertNull(vm0.getHost());
-        Assert.assertNull(vm0P1.getHost());
-
         bestFitVmAllocationPolicy.allocateHostForVm(vm0P1, selectedHost);
+        Assert.assertNull(vm0.getHost());
         Assert.assertEquals(host1, vm0P1.getHost());
         Assert.assertTrue(host1.getVmList().contains(vm0P1));
         Assert.assertFalse(host1.getVmList().contains(vm0));
@@ -520,11 +508,8 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
         selectedHost = bestFitVmAllocationPolicy.selectHost(vm0P0);
         Assert.assertEquals(host1, selectedHost);
 
-        bestFitVmAllocationPolicy.preempt(vm0P1);
-        Assert.assertNull(vm0P0.getHost());
-        Assert.assertNull(vm0P1.getHost());
-
         bestFitVmAllocationPolicy.allocateHostForVm(vm0P0, selectedHost);
+        Assert.assertNull(vm0P1.getHost());
         Assert.assertEquals(host1, vm0P0.getHost());
         Assert.assertTrue(host1.getVmList().contains(vm0P0));
         Assert.assertFalse(host1.getVmList().contains(vm0P1));
@@ -534,15 +519,10 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
         selectedHost = bestFitVmAllocationPolicy.selectHost(vm1P0);
         Assert.assertEquals(host2, selectedHost);
 
-        bestFitVmAllocationPolicy.preempt(vm1P2);
-        Assert.assertNull(vm1P2.getHost());
-        Assert.assertNull(vm1P0.getHost());
-        Assert.assertEquals(host2, vm1.getHost());
-        Assert.assertTrue(host2.getVmList().contains(vm1));
-        Assert.assertFalse(host2.getVmList().contains(vm1P0));
-
         bestFitVmAllocationPolicy.allocateHostForVm(vm1P0, selectedHost);
+        Assert.assertNull(vm1P2.getHost());
         Assert.assertEquals(host2, vm1P0.getHost());
+        Assert.assertEquals(host2, vm1.getHost());
         Assert.assertTrue(host2.getVmList().contains(vm1P0));
         Assert.assertTrue(host2.getVmList().contains(vm1));
 
@@ -638,16 +618,14 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
 
         // natural order: host1 (0.5 mips), host2 (0.5 mips), host3 (0.5 mips)
         Assert.assertEquals(host1, bestFitVmAllocationPolicy.selectHost(vm3));
-        Assert.assertTrue(bestFitVmAllocationPolicy.preempt(vm0)); // preempting vm with availability = 1.0
-        Assert.assertNull(vm0.getHost());
         Assert.assertTrue(bestFitVmAllocationPolicy.allocateHostForVm(vm3, host1));
+        Assert.assertNull(vm0.getHost());
         Assert.assertEquals(host1, vm3.getHost());
 
         // natural order: host1 (0.2 mips), host2 (0.5 mips), host3 (0.5 mips)
         Assert.assertEquals(host2, bestFitVmAllocationPolicy.selectHost(vm4));
-        Assert.assertTrue(bestFitVmAllocationPolicy.preempt(vm1)); // preempting vm with availability = 1.0
-        Assert.assertNull(vm1.getHost());
         Assert.assertTrue(bestFitVmAllocationPolicy.allocateHostForVm(vm4, host2));
+        Assert.assertNull(vm1.getHost());
         Assert.assertEquals(host2, vm4.getHost());
 
         // natural order: host2 (0.000000002 mips), host1 (0.2 mips), host3 (0.5 mips)
@@ -662,10 +640,8 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
 
         // natural order: host1 (0.2 mips), host2 (0.000000001 mips), host3 (0.5 mips)
         Assert.assertEquals(host3, bestFitVmAllocationPolicy.selectHost(vm7));
-        Assert.assertTrue(bestFitVmAllocationPolicy.preempt(vm2)); // preempting vm with availability = 1.0
-        Assert.assertNull(vm2.getHost());
         Assert.assertTrue(bestFitVmAllocationPolicy.allocateHostForVm(vm7, host3));
+        Assert.assertNull(vm2.getHost());
         Assert.assertEquals(host3, vm7.getHost());
-
     }
 }
