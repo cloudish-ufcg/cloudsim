@@ -1,5 +1,6 @@
 package org.cloudbus.cloudsim.preemption.policies.preemption;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
@@ -7,6 +8,7 @@ import java.util.TreeSet;
 
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
+import org.cloudbus.cloudsim.preemption.CapacityCost;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
@@ -202,5 +204,10 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 		SortedSet<PreemptableVm> sortedVms = new TreeSet<PreemptableVm>(new PriorityAndAvailabilityBasedVmComparator(simulationTimeUtil));
 		sortedVms.addAll(vms);
 		return sortedVms;
+	}
+
+	@Override
+	public Map<Integer, List<CapacityCost>> getCapacityCosts(double minCPUReq, double maxCPUReq) {
+		throw new RuntimeException("This class does not support this method.");
 	}
 }

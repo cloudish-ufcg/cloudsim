@@ -1,9 +1,11 @@
 package org.cloudbus.cloudsim.preemption.policies.preemption;
 
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
 import org.cloudbus.cloudsim.Vm;
+import org.cloudbus.cloudsim.preemption.CapacityCost;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
@@ -100,4 +102,6 @@ public abstract class PreemptionPolicy {
 	public abstract double getAvailableMipsByVm(PreemptableVm vm);
 
 	public abstract double getAvailableMipsByPriorityAndAvailability(int priority);
+
+	public abstract Map<Integer, List<CapacityCost>> getCapacityCosts(double minCPUReq, double maxCPUReq);
 }

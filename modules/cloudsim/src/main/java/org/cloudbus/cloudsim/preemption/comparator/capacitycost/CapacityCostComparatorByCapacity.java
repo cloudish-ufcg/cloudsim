@@ -1,4 +1,4 @@
-package org.cloudbus.cloudsim.preemption.comparator.host.capacityCost;
+package org.cloudbus.cloudsim.preemption.comparator.capacitycost;
 
 import org.cloudbus.cloudsim.preemption.CapacityCost;
 
@@ -18,7 +18,7 @@ public class CapacityCostComparatorByCapacity implements Comparator<CapacityCost
         if (capacity1 != capacity2)
             return Double.compare(capacity1, capacity2);
 
-        return Integer.compare(capacityCost.getpHost().getId(),
-                capacityCost2.getpHost().getId());
+        return Integer.compare(capacityCost.getHost().getId(),
+                capacityCost2.getHost().getId());
     }
 }

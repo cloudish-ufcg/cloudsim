@@ -1,11 +1,14 @@
 package org.cloudbus.cloudsim.preemption.policies.preemption;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
+import org.cloudbus.cloudsim.preemption.CapacityCost;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 
 public class FCFSBasedPreemptionPolicy extends PreemptionPolicy {
@@ -61,5 +64,10 @@ public class FCFSBasedPreemptionPolicy extends PreemptionPolicy {
 		Log.printConcatLine(simulationTimeUtil.clock(), ": The waiting queue is sorted based on priority + FCFS. This is the default order");
 		// The default order is based on FCFS policy
 		return new TreeSet<PreemptableVm>(vms);
+	}
+
+	@Override
+	public Map<Integer, List<CapacityCost>> getCapacityCosts(double minCPUReq, double maxCPUReq) {
+		throw new RuntimeException("This class does not support this method.");
 	}
 }

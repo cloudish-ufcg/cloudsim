@@ -226,6 +226,5 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 	}
 
 	public Map<Integer, List<CapacityCost>> getCapacityCosts(double minCPUReq, double maxCPUReq) {
-		// TODO Auto-generated method stub
-		return null;
+		return preemptionPolicy.getCapacityCosts(minCPUReq, maxCPUReq);
 	}}

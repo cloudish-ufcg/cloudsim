@@ -1,4 +1,6 @@
-package org.cloudbus.cloudsim.preemption.comparator.host.capacityCost;
+package org.cloudbus.cloudsim.preemption.comparator.capacitycost;
+
+import java.util.TreeSet;
 
 import org.cloudbus.cloudsim.preemption.CapacityCost;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
@@ -6,10 +8,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import java.util.TreeSet;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by Alessandro Lia Fook Santos on 08/05/17.

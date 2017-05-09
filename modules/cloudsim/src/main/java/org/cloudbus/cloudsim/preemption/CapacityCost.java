@@ -4,12 +4,12 @@ public class CapacityCost {
 	
 	private double capacity;
 	private double cost;
-	private PreemptiveHost pHost;
+	private PreemptiveHost host;
 	
-	public CapacityCost(double capacity, double cost, PreemptiveHost pHost) {
+	public CapacityCost(double capacity, double cost, PreemptiveHost host) {
 		setCapacity(capacity);
 		setCost(cost);
-		setpHost(pHost);
+		setHost(host);
 	}
 
 	@Override
@@ -21,7 +21,7 @@ public class CapacityCost {
 
 		if (Double.compare(cost1.getCapacity(), getCapacity()) != 0) return false;
 		if (Double.compare(cost1.getCost(), getCost()) != 0) return false;
-		return getpHost().equals(cost1.getpHost());
+		return getHost().equals(cost1.getHost());
 	}
 
 	@Override
@@ -32,7 +32,7 @@ public class CapacityCost {
 		result = (int) (temp ^ (temp >>> 32));
 		temp = Double.doubleToLongBits(getCost());
 		result = 31 * result + (int) (temp ^ (temp >>> 32));
-		result = 31 * result + getpHost().hashCode();
+		result = 31 * result + getHost().hashCode();
 		return result;
 	}
 
@@ -41,7 +41,7 @@ public class CapacityCost {
 		return "CapacityCost{" +
 				"capacity=" + capacity +
 				", cost=" + cost +
-				", pHost=" + pHost +
+				", host=" + host +
 				'}';
 	}
 
@@ -61,11 +61,11 @@ public class CapacityCost {
 		this.cost = cost;
 	}
 
-	public PreemptiveHost getpHost() {
-		return pHost;
+	public PreemptiveHost getHost() {
+		return host;
 	}
 
-	public void setpHost(PreemptiveHost pHost) {
-		this.pHost = pHost;
+	public void setHost(PreemptiveHost host) {
+		this.host = host;
 	}
 }
