@@ -1,7 +1,6 @@
 package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
 import java.util.List;
-import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -15,14 +14,10 @@ import org.cloudbus.cloudsim.preemption.comparator.capacitycost.CapacityCostComp
 import org.cloudbus.cloudsim.preemption.comparator.capacitycost.CapacityCostComparatorByCost;
 import org.cloudbus.cloudsim.preemption.comparator.host.HostComparatorByAvailableCapacity;
 
-import gnu.trove.map.hash.THashMap;
-
 public class CostFitVmAllocationPolicy extends PreemptableVmAllocationPolicy {
 
 	private SortedSet<PreemptiveHost> sortedHostsByAvailableCapacity;
-	
-	//TODO Think about if we really need a Map here or just capacity costs
-	private Map<Integer, TreeSet<CapacityCost>> priorityToCapacityCosts;
+	private SortedSet<CapacityCost> sortedCapacityCostsByCapacity;
 	
 	private double minCPUReq = 0;
 	private double maxCPUReq = 0.5;
@@ -39,6 +34,9 @@ public class CostFitVmAllocationPolicy extends PreemptableVmAllocationPolicy {
 		
 		numberOfPriorities = ((PreemptiveHost) getHostList().get(0)).getNumberOfPriorities();
 		
+		CapacityCostComparatorByCapacity comparator = new CapacityCostComparatorByCapacity();
+		sortedCapacityCostsByCapacity = new TreeSet<>(comparator);
+		
 		preProcess();		
 	}
 	
@@ -47,30 +45,19 @@ public class CostFitVmAllocationPolicy extends PreemptableVmAllocationPolicy {
 	}
 
 	@Override
-	public void preProcess() {
-		
-		priorityToCapacityCosts = new THashMap<>();
-
-
-        for (int priority = 0; priority < numberOfPriorities; priority++) {
-        	CapacityCostComparatorByCapacity comparator = new CapacityCostComparatorByCapacity();
-        	getPriorityToCapacityCosts().put(priority, new TreeSet<CapacityCost>(comparator));
-        }
+	public void preProcess() {		
+		getSortedCapacityCostsByCapacity().clear();
 
 		for (Host host : getHostList()) {
 			PreemptiveHost pHost = (PreemptiveHost) host;
+			List<CapacityCost> capacityCosts = pHost.getCapacityCosts(getMinCPUReq(), getMaxCPUReq());
 
-			Map<Integer, List<CapacityCost>> capacityCosts = pHost.getCapacityCosts(getMinCPUReq(), getMaxCPUReq());
-
-			for (Integer priority : capacityCosts.keySet()) {
-				getPriorityToCapacityCosts().get(priority).addAll(capacityCosts.get(priority));
-			}
+			getSortedCapacityCostsByCapacity().addAll(capacityCosts);
 		}
 	}
 
 	@Override
 	public Host selectHost(Vm vm) {
-		
 		// phase 1: selecting host considering only available capacity
 		PreemptiveHost selectedHost = selectHostByAvailableCapcity(vm);
 				
@@ -86,34 +73,30 @@ public class CostFitVmAllocationPolicy extends PreemptableVmAllocationPolicy {
 		if (vm == null){
             throw new IllegalArgumentException("The Vm can not be null.");
         }
-	
-        if (getPriorityToCapacityCosts().containsKey(vm.getPriority())) {
-        	
-        	TreeSet<CapacityCost> capacityCostsForVmPriority = getPriorityToCapacityCosts().get(vm.getPriority());
-        	
-        	// creating fake requested capacity
-        	CapacityCost requestedCapacity = new CapacityCost(vm.getMips(), 0, new PreemptiveHost(vm.getMips(), numberOfPriorities));
-        	
-        	CapacityCostComparatorByCost comparatorByCost = new CapacityCostComparatorByCost();
-        	SortedSet<CapacityCost> elegibleCapacities = new  TreeSet<>(comparatorByCost);
-        	elegibleCapacities.addAll(capacityCostsForVmPriority.tailSet(requestedCapacity)); 
-
-        	if (!elegibleCapacities.isEmpty() ) {        		
-        		CapacityCost lowestCapacityCost = elegibleCapacities.first();
-        		
-        		/*
-				 * In this case, the method isSuitableForVM must check which has
-				 * the lowest cost: put vm in the waiting queue or preempt some
-				 * vms to allocate it?
-				 */
-        		if (lowestCapacityCost.getHost().isSuitableForVm(vm)){
-        			return lowestCapacityCost.getHost();
-        		}
-            }
-        }
-        return null;
-        
 		
+		// creating fake requested capacity
+		CapacityCost requestedCapacity = new CapacityCost(vm.getMips(), 0,
+				new PreemptiveHost(vm.getMips(), numberOfPriorities));
+
+		CapacityCostComparatorByCost comparatorByCost = new CapacityCostComparatorByCost();
+		SortedSet<CapacityCost> elegibleCapacities = new TreeSet<>(comparatorByCost);
+		
+		elegibleCapacities.addAll(getSortedCapacityCostsByCapacity().tailSet(requestedCapacity));
+
+		if (!elegibleCapacities.isEmpty()) {
+			CapacityCost lowestCapacityCost = elegibleCapacities.first();
+
+			/*
+			 * In this case, the method isSuitableForVM must check which has the
+			 * lowest cost: put vm in the waiting queue or preempt some vms to
+			 * allocate it?
+			 */
+			if (lowestCapacityCost.getHost().isSuitableForVm(vm)) {
+				return lowestCapacityCost.getHost();
+			}
+		}
+
+        return null;
 	}
 
 	private PreemptiveHost selectHostByAvailableCapcity(Vm vm) {
@@ -125,30 +108,24 @@ public class CostFitVmAllocationPolicy extends PreemptableVmAllocationPolicy {
 	public void addHostIntoStructure(PreemptiveHost host) {
 		getSortedHostsByAvailableCapacity().add(host);
 
-		Map<Integer, List<CapacityCost>> costsToAdd = host.getCapacityCosts(getMinCPUReq(), getMaxCPUReq());
-
-		for (int priority = 0; priority < host.getNumberOfPriorities(); priority++) {
-			getPriorityToCapacityCosts().get(priority).addAll(costsToAdd.get(priority));
-		}
+		List<CapacityCost> costsToAdd = host.getCapacityCosts(getMinCPUReq(), getMaxCPUReq());
+		getSortedCapacityCostsByCapacity().addAll(costsToAdd);
 	}
 
 	@Override
 	public void removeHostFromStructure(PreemptiveHost host) {
 		getSortedHostsByAvailableCapacity().remove(host);
-		
-		Map<Integer, List<CapacityCost>> costsToRemove = host.getCapacityCosts(getMinCPUReq(), getMaxCPUReq());
-		
-		for (int priority = 0; priority < host.getNumberOfPriorities(); priority++) {
-			getPriorityToCapacityCosts().get(priority).removeAll(costsToRemove.get(priority));
-		}
+
+		List<CapacityCost> costsToRemove = host.getCapacityCosts(getMinCPUReq(), getMaxCPUReq());
+		getSortedCapacityCostsByCapacity().removeAll(costsToRemove);
 	}
 
 	public SortedSet<PreemptiveHost> getSortedHostsByAvailableCapacity() {
 		return sortedHostsByAvailableCapacity;
 	}
 
-	public Map<Integer, TreeSet<CapacityCost>> getPriorityToCapacityCosts() {
-		return priorityToCapacityCosts;
+	public SortedSet<CapacityCost> getSortedCapacityCostsByCapacity() {
+		return sortedCapacityCostsByCapacity;
 	}
 
 	public double getMinCPUReq() {

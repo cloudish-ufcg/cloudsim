@@ -1,7 +1,6 @@
 package org.cloudbus.cloudsim.preemption.policies.preemption;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -67,7 +66,7 @@ public class FCFSBasedPreemptionPolicy extends PreemptionPolicy {
 	}
 
 	@Override
-	public Map<Integer, List<CapacityCost>> getCapacityCosts(double minCPUReq, double maxCPUReq) {
+	public List<CapacityCost> getCapacityCosts(double minCPUReq, double maxCPUReq) {
 		throw new RuntimeException("This class does not support this method.");
 	}
 }

@@ -225,6 +225,7 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 		return preemptionPolicy.getAvailableMipsByVm(vm);
 	}
 
-	public Map<Integer, List<CapacityCost>> getCapacityCosts(double minCPUReq, double maxCPUReq) {
+	public List<CapacityCost> getCapacityCosts(double minCPUReq, double maxCPUReq) {
 		return preemptionPolicy.getCapacityCosts(minCPUReq, maxCPUReq);
-	}}
+	}
+}

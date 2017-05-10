@@ -103,5 +103,5 @@ public abstract class PreemptionPolicy {
 
 	public abstract double getAvailableMipsByPriorityAndAvailability(int priority);
 
-	public abstract Map<Integer, List<CapacityCost>> getCapacityCosts(double minCPUReq, double maxCPUReq);
+	public abstract List<CapacityCost> getCapacityCosts(double minCPUReq, double maxCPUReq);
 }
