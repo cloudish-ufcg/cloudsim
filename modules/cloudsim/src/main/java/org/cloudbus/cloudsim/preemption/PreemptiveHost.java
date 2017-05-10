@@ -35,8 +35,10 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 		
 		setUsageMap(new THashMap<Double, UsageInfo>());
 		setPreemptionPolicy(preemptionPolicy);
+
 		preemptionPolicy.setTotalMips(((VmSchedulerMipsBased) getVmScheduler())
 				.getTotalMips());
+		preemptionPolicy.setHost(this);
 	}
 
 	public PreemptiveHost(double mips, int numberOfPriorities) {
