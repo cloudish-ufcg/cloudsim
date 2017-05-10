@@ -193,4 +193,8 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 //				", availability=" + getCurrentAvailability(CloudSim.clock()) +
 				"}\n";
 	}
+	
+	public double getTTV() {
+		return 0;
+	}
 }
