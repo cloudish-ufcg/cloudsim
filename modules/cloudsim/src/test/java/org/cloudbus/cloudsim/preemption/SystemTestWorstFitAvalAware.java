@@ -339,7 +339,7 @@ public class SystemTestWorstFitAvalAware {
         double runtime = 7;
         double submitTime = 0;
         double cpuReq = 0.5;
-
+        double availabilityTarget = 1;
 
         for (int i = 0; i < NUMBER_OF_VMS_P0; i++) {
 
@@ -351,7 +351,7 @@ public class SystemTestWorstFitAvalAware {
                 runtime = 6;
             }
 
-            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, submitTime, priority, runtime);
+            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, submitTime, priority, runtime, availabilityTarget);
             vmsP0.add(vm);
         }
 
@@ -362,7 +362,7 @@ public class SystemTestWorstFitAvalAware {
         runtime = 4;
         cpuReq = 0.3;
         submitTime = 0;
-
+        availabilityTarget = 0.9;
 
         for (int i = 0; i < NUMBER_OF_VMS_P1; i++) {
 
@@ -371,7 +371,7 @@ public class SystemTestWorstFitAvalAware {
                 submitTime = 1;
             }
 
-            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, submitTime, priority, runtime);
+            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, submitTime, priority, runtime, availabilityTarget);
             vmsP1.add(vm);
         }
 
@@ -382,7 +382,7 @@ public class SystemTestWorstFitAvalAware {
         runtime = 2;
         cpuReq = 0.2;
         submitTime = 0;
-
+        availabilityTarget = 0.5;
 
         for (int i = 0; i < NUMBER_OF_VMS_P2; i++) {
 
@@ -392,7 +392,7 @@ public class SystemTestWorstFitAvalAware {
                 submitTime = 2;
             }
 
-            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, submitTime, priority, runtime);
+            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, submitTime, priority, runtime, availabilityTarget);
             vmsP2.add(vm);
         }
     }

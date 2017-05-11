@@ -89,11 +89,11 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testSelectHostForVm() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 0.9, 1.0, 0, PRIORITY_0, 0);
-        PreemptableVm vm2 = new PreemptableVm(2, 1, 2, 1.0, 0, PRIORITY_0, 0);
-        PreemptableVm vm3 = new PreemptableVm(3, 1, 3, 1.0, 0, PRIORITY_0, 0);
-        PreemptableVm vm4 = new PreemptableVm(4, 1, 4, 1.0, 0, PRIORITY_0, 0);
-        PreemptableVm vm5 = new PreemptableVm(5, 1, 5.1, 1.0, 0, PRIORITY_0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 0.9, 1.0, 0, PRIORITY_0, 0, 1);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, 2, 1.0, 0, PRIORITY_0, 0, 1);
+        PreemptableVm vm3 = new PreemptableVm(3, 1, 3, 1.0, 0, PRIORITY_0, 0, 1);
+        PreemptableVm vm4 = new PreemptableVm(4, 1, 4, 1.0, 0, PRIORITY_0, 0, 1);
+        PreemptableVm vm5 = new PreemptableVm(5, 1, 5.1, 1.0, 0, PRIORITY_0, 0, 1);
 
         // host1 has 1 mips available is suitable for Vm1
         Assert.assertEquals(host1, preemptablePolicy.selectHost(vm1));
@@ -114,10 +114,10 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testSelectHostForVm2() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 0.9, 1.0, 0, PRIORITY_0, 0);
-        PreemptableVm vm2 = new PreemptableVm(1, 1, 2.2, 1.0, 0, PRIORITY_0, 0);
-        PreemptableVm vm3 = new PreemptableVm(1, 1, 0.8, 1.0, 0, PRIORITY_0, 0);
-        PreemptableVm vm4 = new PreemptableVm(1, 1, 4.1, 1.0, 0, PRIORITY_0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 0.9, 1.0, 0, PRIORITY_0, 0, 1);
+        PreemptableVm vm2 = new PreemptableVm(1, 1, 2.2, 1.0, 0, PRIORITY_0, 0, 1);
+        PreemptableVm vm3 = new PreemptableVm(1, 1, 0.8, 1.0, 0, PRIORITY_0, 0, 1);
+        PreemptableVm vm4 = new PreemptableVm(1, 1, 4.1, 1.0, 0, PRIORITY_0, 0, 1);
 
         // host1 has 1 mips available and it is suitable for Vm1.
         Assert.assertEquals(host1, preemptablePolicy.selectHost(vm1));
@@ -158,12 +158,12 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testSelectHostForVm3() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 0.9, 1.0, 0, PRIORITY_0, 0);
-        PreemptableVm vm2 = new PreemptableVm(2, 1, 4.1, 1.0, 0, PRIORITY_1, 0);
-        PreemptableVm vm3 = new PreemptableVm(3, 1, 2.8, 1.0, 0, PRIORITY_0, 0);
-        PreemptableVm vm4 = new PreemptableVm(4, 1, 2, 1.0, 0, PRIORITY_2, 0);
-        PreemptableVm vm5 = new PreemptableVm(5, 1, 5.1, 1.0, 0, PRIORITY_2, 0);
-        PreemptableVm vm6 = new PreemptableVm(5, 1, 3, 1.0, 0, PRIORITY_1, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 0.9, 1.0, 0, PRIORITY_0, 0, 1);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, 4.1, 1.0, 0, PRIORITY_1, 0, 0.9);
+        PreemptableVm vm3 = new PreemptableVm(3, 1, 2.8, 1.0, 0, PRIORITY_0, 0, 1);
+        PreemptableVm vm4 = new PreemptableVm(4, 1, 2, 1.0, 0, PRIORITY_2, 0, 0.5);
+        PreemptableVm vm5 = new PreemptableVm(5, 1, 5.1, 1.0, 0, PRIORITY_2, 0, 0.5);
+        PreemptableVm vm6 = new PreemptableVm(5, 1, 3, 1.0, 0, PRIORITY_1, 0, 0.9);
 
         // host1 has 1 mips available and it is suitable for Vm1.
         Assert.assertEquals(host1, preemptablePolicy.selectHost(vm1));
@@ -221,17 +221,17 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
         double runtime = 0;
 
         double cpuReq = 2.0;
-        PreemptableVm vm0 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
-        PreemptableVm vm1 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
-        PreemptableVm vm2 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
-        PreemptableVm vm3 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
+        PreemptableVm vm0 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
+        PreemptableVm vm1 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
+        PreemptableVm vm2 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
+        PreemptableVm vm3 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
 
         cpuReq = 0.9;
-        PreemptableVm vm4 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
+        PreemptableVm vm4 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
 
         cpuReq = 0.1;
 
-        PreemptableVm vm5 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
+        PreemptableVm vm5 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
 
 
         // natural order: host1 (1 mips), host2 (3 mips), host4 (5 mips), host3 (5 mips)
@@ -286,24 +286,24 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
         double runtime = 0;
 
         double cpuReq = 2.0;
-        PreemptableVm vm0 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
-        PreemptableVm vm1 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
-        PreemptableVm vm2 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
-        PreemptableVm vm3 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
-        PreemptableVm vm4 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
+        PreemptableVm vm0 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
+        PreemptableVm vm1 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
+        PreemptableVm vm2 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
+        PreemptableVm vm3 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
+        PreemptableVm vm4 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
 
         cpuReq = 0.9;
-        PreemptableVm vm5 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
-        PreemptableVm vm6 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
-        PreemptableVm vm7 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
-        PreemptableVm vm8 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
+        PreemptableVm vm5 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
+        PreemptableVm vm6 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
+        PreemptableVm vm7 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
+        PreemptableVm vm8 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
 
         cpuReq = 0.1;
 
-        PreemptableVm vm9 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
-        PreemptableVm vm10 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
-        PreemptableVm vm11 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
-        PreemptableVm vm12 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime);
+        PreemptableVm vm9 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
+        PreemptableVm vm10 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
+        PreemptableVm vm11 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
+        PreemptableVm vm12 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, PROD, runtime, 1);
 
 
         // natural order: host1 (1 mips), host2 (3 mips), host3 (5 mips), host4 (5 mips)
@@ -363,7 +363,7 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testDeallocateVMNonExistent() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0, 1);
         preemptablePolicy.deallocateHostForVm(vm1);
 
         Assert.assertTrue(host1.getVmList().isEmpty());
@@ -374,7 +374,7 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testDeallocateVMNonexistentAfterDeallocateExistingVM() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 5.0, 1.0, 0, 0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 5.0, 1.0, 0, 0, 0, 1);
 
 //		// mocking host selector
 //		Mockito.when(hostSelector.select(sortedHosts, vm1)).thenReturn(host1);
@@ -423,37 +423,40 @@ public class BestFitPriorityBasedVmAllocationPolicyTest {
         double runtime = 0;
 
         int priority = BATCH;
+        double availabilityTarget = 0.9;
 
         double cpuReq = 0.499999998;
-        PreemptableVm vm0 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+		PreemptableVm vm0 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         cpuReq = 3.0;
-        PreemptableVm vm1 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm1 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         cpuReq = 2.999999999;
-        PreemptableVm vm2 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm2 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         cpuReq = 2.000000001;
-        PreemptableVm vm3 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm3 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         priority = FREE;
-        PreemptableVm vm4 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        availabilityTarget = 0.5;
+        PreemptableVm vm4 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         cpuReq = 0.000000002;
-        PreemptableVm vm5 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm5 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         cpuReq = 1.0;
-        PreemptableVm vm6 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm6 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         priority = PROD;
-        PreemptableVm vm7 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        availabilityTarget = 1;
+        PreemptableVm vm7 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         cpuReq = 3.0;
-        PreemptableVm vm8 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm8 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         cpuReq = 5.0;
-        PreemptableVm vm9 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
-        PreemptableVm vm10 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm9 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
+        PreemptableVm vm10 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
 
         // natural order(PROD): host1 (1 mips), host2 (3 mips), host3 (5 mips), host4 (5 mips)

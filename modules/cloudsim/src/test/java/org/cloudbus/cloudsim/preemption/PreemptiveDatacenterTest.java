@@ -144,8 +144,9 @@ public class PreemptiveDatacenterTest {
     public void testAllocateVm() {
         int priority = 0;
         double runtime = 10;
+        double availabilityTarget = 1;
 
-        PreemptableVm vm0 = new PreemptableVm(1, 1, 5, 1, 0, priority, runtime);
+        PreemptableVm vm0 = new PreemptableVm(1, 1, 5, 1, 0, priority, runtime, availabilityTarget);
 
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
         Mockito.when(event.getData()).thenReturn(vm0);
@@ -182,9 +183,10 @@ public class PreemptiveDatacenterTest {
 
         int priority = 0;
         double runtime = 10;
+        double availabilityTarget = 1;
 
-        PreemptableVm vm0 = new PreemptableVm(1, 1, 5, 1, 0, priority, runtime);
-        PreemptableVm vm1 = new PreemptableVm(2, 1, 11, 1, 0, priority, runtime);
+        PreemptableVm vm0 = new PreemptableVm(1, 1, 5, 1, 0, priority, runtime, availabilityTarget);
+        PreemptableVm vm1 = new PreemptableVm(2, 1, 11, 1, 0, priority, runtime, availabilityTarget);
 
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
         Mockito.when(event.getData()).thenReturn(vm1);
@@ -221,12 +223,13 @@ public class PreemptiveDatacenterTest {
         setGreedyAdmController();
         int priority = 0;
         double runtime = 10;
+        double availabilityTarget = 1;
 
-        PreemptableVm vm0 = new PreemptableVm(1, 1, 5, 1, 0, priority, runtime);
-        PreemptableVm vm1 = new PreemptableVm(2, 1, 4.99999999, 1, 0, priority, runtime);
-        PreemptableVm vm2 = new PreemptableVm(3, 1, 0.00000001, 1, 0, priority, runtime);
-        PreemptableVm vm3 = new PreemptableVm(4, 1, 5.00000001, 1, 0, priority, runtime);
-        PreemptableVm vm4 = new PreemptableVm(3, 1, 0.00000002, 1, 0, priority, runtime);
+        PreemptableVm vm0 = new PreemptableVm(1, 1, 5, 1, 0, priority, runtime, availabilityTarget);
+        PreemptableVm vm1 = new PreemptableVm(2, 1, 4.99999999, 1, 0, priority, runtime, availabilityTarget);
+        PreemptableVm vm2 = new PreemptableVm(3, 1, 0.00000001, 1, 0, priority, runtime, availabilityTarget);
+        PreemptableVm vm3 = new PreemptableVm(4, 1, 5.00000001, 1, 0, priority, runtime, availabilityTarget);
+        PreemptableVm vm4 = new PreemptableVm(3, 1, 0.00000002, 1, 0, priority, runtime, availabilityTarget);
 
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
         Mockito.when(event.getData()).thenReturn(vm0);
@@ -309,17 +312,17 @@ public class PreemptiveDatacenterTest {
         setGreedyAdmController();
         double runtime = 10;
 
-        PreemptableVm vm0P0 = new PreemptableVm(1, 1, 5, 1, 0, PROD, runtime);
+        PreemptableVm vm0P0 = new PreemptableVm(1, 1, 5, 1, 0, PROD, runtime, 1);
 
-        PreemptableVm vm1P1 = new PreemptableVm(2, 1, 4.99999999, 1, 0, BATCH, runtime);
-        PreemptableVm vm2P1 = new PreemptableVm(3, 1, 0.55555557, 1, 0, BATCH, runtime);
-        PreemptableVm vm3P1 = new PreemptableVm(4, 1, 0.55555556, 1, 0, BATCH, runtime);
+        PreemptableVm vm1P1 = new PreemptableVm(2, 1, 4.99999999, 1, 0, BATCH, runtime, 0.9);
+        PreemptableVm vm2P1 = new PreemptableVm(3, 1, 0.55555557, 1, 0, BATCH, runtime, 0.9);
+        PreemptableVm vm3P1 = new PreemptableVm(4, 1, 0.55555556, 1, 0, BATCH, runtime, 0.9);
 
-        PreemptableVm vm4P2 = new PreemptableVm(5, 1, 8.88888888, 1, 0, FREE, runtime);
-        PreemptableVm vm5P2 = new PreemptableVm(6, 1, 0.00000002, 1, 0, FREE, runtime);
-        PreemptableVm vm6P2 = new PreemptableVm(7, 1, 0.00000001, 1, 0, FREE, runtime);
+        PreemptableVm vm4P2 = new PreemptableVm(5, 1, 8.88888888, 1, 0, FREE, runtime, 0.5);
+        PreemptableVm vm5P2 = new PreemptableVm(6, 1, 0.00000002, 1, 0, FREE, runtime, 0.5);
+        PreemptableVm vm6P2 = new PreemptableVm(7, 1, 0.00000001, 1, 0, FREE, runtime, 0.5);
 
-        PreemptableVm vm7P0 = new PreemptableVm(8, 1, 5, 1, 0, PROD, runtime);
+        PreemptableVm vm7P0 = new PreemptableVm(8, 1, 5, 1, 0, PROD, runtime, 1);
 
         // set create of vm0P0 that requests 5.0 mips
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -453,17 +456,17 @@ public class PreemptiveDatacenterTest {
         setGreedyAdmController();
         double runtime = 10;
 
-        PreemptableVm vm0P0 = new PreemptableVm(1, 1, 5, 1, 0, PROD, runtime);
+        PreemptableVm vm0P0 = new PreemptableVm(1, 1, 5, 1, 0, PROD, runtime, 1);
 
-        PreemptableVm vm1P1 = new PreemptableVm(2, 1, 4.99999999, 1, 0, BATCH, runtime);
-        PreemptableVm vm2P1 = new PreemptableVm(3, 1, 0.55555557, 1, 0, BATCH, runtime);
+        PreemptableVm vm1P1 = new PreemptableVm(2, 1, 4.99999999, 1, 0, BATCH, runtime, 0.9);
+        PreemptableVm vm2P1 = new PreemptableVm(3, 1, 0.55555557, 1, 0, BATCH, runtime, 0.9);
 
-        PreemptableVm vm4P2 = new PreemptableVm(5, 1, 8.88888888, 1, 0, FREE, runtime);
-        PreemptableVm vm5P2 = new PreemptableVm(6, 1, 0.00000002, 1, 0, FREE, runtime);
-        PreemptableVm vm6P2 = new PreemptableVm(7, 1, 0.00000001, 1, 0, FREE, runtime);
+        PreemptableVm vm4P2 = new PreemptableVm(5, 1, 8.88888888, 1, 0, FREE, runtime, 0.5);
+        PreemptableVm vm5P2 = new PreemptableVm(6, 1, 0.00000002, 1, 0, FREE, runtime, 0.5);
+        PreemptableVm vm6P2 = new PreemptableVm(7, 1, 0.00000001, 1, 0, FREE, runtime, 0.5);
 
-        PreemptableVm vm3P1 = new PreemptableVm(4, 1, 0.55555556, 1, 0, BATCH, runtime);
-        PreemptableVm vm7P0 = new PreemptableVm(8, 1, 5, 1, 0, PROD, runtime);
+        PreemptableVm vm3P1 = new PreemptableVm(4, 1, 0.55555556, 1, 0, BATCH, runtime, 0.9);
+        PreemptableVm vm7P0 = new PreemptableVm(8, 1, 5, 1, 0, PROD, runtime, 1);
 
         // set create of vm0P0 that requests 5.0 mips
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -606,7 +609,9 @@ public class PreemptiveDatacenterTest {
     public void testAllocateTwoVmWithSamePriority() {
         int priority = 0;
         double runtime = 10;
-        PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 1.0, 0, priority, runtime);
+        double availabilityTarget = 1;
+        
+        PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 1.0, 0, priority, runtime, availabilityTarget);
 
         // allocating first vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -626,7 +631,7 @@ public class PreemptiveDatacenterTest {
         admittedRequests.put(vm0.getPriority(), vm0.getMips() + admittedRequests.get(vm0.getPriority()));
         validateAdmitedRequests();
 
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 1.0, 0, priority, runtime);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 1.0, 0, priority, runtime, availabilityTarget);
 
         // allocating second vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -656,7 +661,9 @@ public class PreemptiveDatacenterTest {
     public void testAllocateThreeVmWithSamePriorityWithWaiting() {
         int priority = 0;
         double runtime = 10;
-        PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 1.0, 0, priority, runtime);
+        double availabilityTarget = 1;
+
+        PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 1.0, 0, priority, runtime, availabilityTarget);
 
         // allocating first vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -677,7 +684,7 @@ public class PreemptiveDatacenterTest {
         admittedRequests.put(vm0.getPriority(), vm0.getMips() + admittedRequests.get(vm0.getPriority()));
         validateAdmitedRequests();
 
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 1.0, 0, priority, runtime);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 1.0, 0, priority, runtime, availabilityTarget);
 
         // allocating second vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -700,7 +707,7 @@ public class PreemptiveDatacenterTest {
         admittedRequests.put(vm1.getPriority(), vm1.getMips() + admittedRequests.get(vm1.getPriority()));
         validateAdmitedRequests();
 
-        PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 1.0, 0, priority, runtime);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 1.0, 0, priority, runtime, availabilityTarget);
 
         // checking and simulating host selector
         Assert.assertFalse(host.isSuitableForVm(vm2));
@@ -739,9 +746,10 @@ public class PreemptiveDatacenterTest {
     public void testVmDestroy() {
         int priority = 0;
         double runtime = 10;
+        double availabilityTarget = 1;
 
         // allocating first Vm
-        PreemptableVm vm0 = new PreemptableVm(1, 1, 5, 1, 0, priority, runtime);
+        PreemptableVm vm0 = new PreemptableVm(1, 1, 5, 1, 0, priority, runtime, availabilityTarget);
 
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
         Mockito.when(event.getData()).thenReturn(vm0);
@@ -783,7 +791,9 @@ public class PreemptiveDatacenterTest {
     public void testVmDestroyWithTwoVm() {
         int priority = 0;
         double runtime = 10;
-        PreemptableVm vm0 = new PreemptableVm(0, 1, 4.9, 1.0, 0, priority, 0);
+        double availabilityTarget = 1;
+
+        PreemptableVm vm0 = new PreemptableVm(0, 1, 4.9, 1.0, 0, priority, 0, availabilityTarget);
 
         // allocating first vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -804,7 +814,7 @@ public class PreemptiveDatacenterTest {
         admittedRequests.put(vm0.getPriority(), admittedRequests.get(vm0.getPriority()) + vm0.getMips());
         validateAdmitedRequests();
 
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 5.1, 1.0, 0, priority, runtime + 0.1);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 5.1, 1.0, 0, priority, runtime + 0.1, availabilityTarget);
 
         // allocating second vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -859,7 +869,9 @@ public class PreemptiveDatacenterTest {
 
         int priority = 0;
         double runtime = 10;
-        PreemptableVm vm0 = new PreemptableVm(0, 1, 5.1, 1.0, 0, priority, runtime - 0.1);
+        double availabilityTarget = 1;
+
+        PreemptableVm vm0 = new PreemptableVm(0, 1, 5.1, 1.0, 0, priority, runtime - 0.1, availabilityTarget);
 
         // allocating first vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -880,7 +892,7 @@ public class PreemptiveDatacenterTest {
         admittedRequests.put(vm0.getPriority(), admittedRequests.get(vm0.getPriority()) + vm0.getMips());
         validateAdmitedRequests();
 
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 4.9, 1.0, 0, priority, runtime);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 4.9, 1.0, 0, priority, runtime, availabilityTarget);
 
         // allocating second vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -905,7 +917,7 @@ public class PreemptiveDatacenterTest {
         admittedRequests.put(vm1.getPriority(), admittedRequests.get(vm1.getPriority()) + vm1.getMips());
         validateAdmitedRequests();
 
-        PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 1.0, 0, priority, runtime);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 1.0, 0, priority, runtime, availabilityTarget);
 
         // checking and simulating host selector
         Assert.assertFalse(host.isSuitableForVm(vm2));
@@ -969,7 +981,9 @@ public class PreemptiveDatacenterTest {
 
         int priority = 0;
         double runtime = 10;
-        PreemptableVm vm0 = new PreemptableVm(0, 1, 5.1, 1.0, 0, priority, runtime - 0.1);
+        double availabilityTarget = 1;
+
+        PreemptableVm vm0 = new PreemptableVm(0, 1, 5.1, 1.0, 0, priority, runtime - 0.1, availabilityTarget);
 
         // allocating first vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -988,7 +1002,7 @@ public class PreemptiveDatacenterTest {
         admittedRequests.put(vm0.getPriority(), admittedRequests.get(vm0.getPriority()) + vm0.getMips());
         validateAdmitedRequests();
 
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 4.9, 1.0, 0, priority, runtime);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 4.9, 1.0, 0, priority, runtime, availabilityTarget);
 
         // allocating second vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -1013,7 +1027,7 @@ public class PreemptiveDatacenterTest {
         admittedRequests.put(vm1.getPriority(), admittedRequests.get(vm1.getPriority()) + vm1.getMips());
         validateAdmitedRequests();
 
-        PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 1.0, 0, priority, runtime);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 1.0, 0, priority, runtime, availabilityTarget);
 
         // checking and simulating host selector
         Assert.assertFalse(host.isSuitableForVm(vm2));
@@ -1036,7 +1050,7 @@ public class PreemptiveDatacenterTest {
         validateAdmitedRequests();
 
 
-        PreemptableVm vm3 = new PreemptableVm(3, 1, 0.1, 1.0, 0, priority, runtime);
+        PreemptableVm vm3 = new PreemptableVm(3, 1, 0.1, 1.0, 0, priority, runtime, availabilityTarget);
 
         // checking and simulating host selector
         Assert.assertFalse(host.isSuitableForVm(vm2));
@@ -1118,11 +1132,11 @@ public class PreemptiveDatacenterTest {
         double ACCEPTABLE_DIFFERENCE = 0.000000001;
 
         PreemptableVm vm0 = new PreemptableVm(0, 1, 2 * cpuReq, 1.0, 0, priority - 1,
-                runtime - 0.5);
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 2 * cpuReq, 1.0, 0, priority, 0.4);
-        PreemptableVm vm2 = new PreemptableVm(2, 1, cpuReq, 1.0, 0, priority + 1, 0.1);
+                runtime - 0.5, 1);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 2 * cpuReq, 1.0, 0, priority, 0.4, 0.9);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, cpuReq, 1.0, 0, priority + 1, 0.1, 0.5);
         PreemptableVm vm3 = new PreemptableVm(3, 1, 9.9999998, 1.0, 0, priority - 1,
-                runtime);
+                runtime, 1);
 
         Mockito.when(
                 hostSelector.select(preemptableVmAllocationPolicy
@@ -1399,7 +1413,7 @@ public class PreemptiveDatacenterTest {
     @Test
     public void testVmDestroyWithVmForSchedulingDifferentPriorities() {
         double runtime = 10;
-        PreemptableVm vm0P0 = new PreemptableVm(0, 1, 5, 1.0, 0, 0, runtime - 0.1);
+        PreemptableVm vm0P0 = new PreemptableVm(0, 1, 5, 1.0, 0, 0, runtime - 0.1, 1);
 
         // allocating vm priority 0
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -1424,7 +1438,7 @@ public class PreemptiveDatacenterTest {
         admittedRequests.put(vm0P0.getPriority(), admittedRequests.get(vm0P0.getPriority()) + vm0P0.getMips());
         validateAdmitedRequests();
 
-        PreemptableVm vm1P1 = new PreemptableVm(1, 1, 2, 1.0, 0, 1, runtime);
+        PreemptableVm vm1P1 = new PreemptableVm(1, 1, 2, 1.0, 0, 1, runtime, 0.9);
 
         // allocating vm priority 1
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -1457,7 +1471,7 @@ public class PreemptiveDatacenterTest {
         validateAdmitedRequests();
 
         // allocating vm priority 2
-        PreemptableVm vm2P2 = new PreemptableVm(2, 1, 2, 1.0, 0, 2, runtime);
+        PreemptableVm vm2P2 = new PreemptableVm(2, 1, 2, 1.0, 0, 2, runtime, 0.5);
 
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
         Mockito.when(event.getData()).thenReturn(vm2P2);
@@ -1493,7 +1507,7 @@ public class PreemptiveDatacenterTest {
         validateAdmitedRequests();
 
         // allocating vm priority 0
-        PreemptableVm vm3P0 = new PreemptableVm(3, 1, 3, 1.0, 0, 0, runtime);
+        PreemptableVm vm3P0 = new PreemptableVm(3, 1, 3, 1.0, 0, 0, runtime, 1);
 
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
         Mockito.when(event.getData()).thenReturn(vm3P0);
@@ -1583,7 +1597,7 @@ public class PreemptiveDatacenterTest {
         // creating vms priorities 2
         for (int i = 0; i < 10; i++) {
 
-            PreemptableVm vmP2 = new PreemptableVm(vmId++, userId, 1.0, 1.0, 0, 2, runtime);
+            PreemptableVm vmP2 = new PreemptableVm(vmId++, userId, 1.0, 1.0, 0, 2, runtime, 0.5);
 
             Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
             Mockito.when(event.getData()).thenReturn(vmP2);
@@ -1618,7 +1632,7 @@ public class PreemptiveDatacenterTest {
         // creating vms priorities 1
         for (int i = 0; i < 10; i++) {
             PreemptableVm vmP1 = new PreemptableVm(vmId++, userId, 1.0, 1.0, 0, 1,
-                    runtime - 0.1);
+                    runtime - 0.1, 0.9);
 
             Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
             Mockito.when(event.getData()).thenReturn(vmP1);
@@ -1671,7 +1685,7 @@ public class PreemptiveDatacenterTest {
         }
         Assert.assertEquals(vmsP1.size(), datacenter.getVmsRunning().size());
 
-        PreemptableVm vmP0 = new PreemptableVm(vmId++, userId, 5, 1.0, 0, 0, runtime - 0.1);
+        PreemptableVm vmP0 = new PreemptableVm(vmId++, userId, 5, 1.0, 0, 0, runtime - 0.1, 1);
 
         // allocating vm priority 0
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -1877,7 +1891,7 @@ public class PreemptiveDatacenterTest {
         int userId = 1;
         double cpuReq = 5;
 
-        PreemptableVm vm0P0 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 0, runtime - 0.1);
+        PreemptableVm vm0P0 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 0, runtime - 0.1, 1);
 
         // allocating first vm
         Assert.assertEquals(10, host.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
@@ -1908,7 +1922,7 @@ public class PreemptiveDatacenterTest {
         validateAdmitedRequests();
 
         cpuReq = 2;
-        PreemptableVm vm1P1 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 1, runtime);
+        PreemptableVm vm1P1 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 1, runtime, 0.9);
 
         // allocating second vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -1943,7 +1957,7 @@ public class PreemptiveDatacenterTest {
         validateAdmitedRequests();
 
         cpuReq = 3;
-        PreemptableVm vm2P2 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 2, runtime);
+        PreemptableVm vm2P2 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 2, runtime, 0.5);
 
         // allocating third vm
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -1983,7 +1997,7 @@ public class PreemptiveDatacenterTest {
 
         // allocation one more VM with priority 0
         cpuReq = 6;
-        PreemptableVm vm3P0 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 0, runtime);
+        PreemptableVm vm3P0 = new PreemptableVm(vmId++, userId, cpuReq, 1.0, 0, 0, runtime, 1);
 
         // checking and simulating host selector
         Assert.assertFalse(host.isSuitableForVm(vm3P0));
@@ -2116,11 +2130,11 @@ public class PreemptiveDatacenterTest {
         int userId = 1;
 
         // creating VMs with different priorities
-        PreemptableVm vm0 = new PreemptableVm(vmId++, userId, 5, 1.0, 0, 0, runtime - 0.3); // 5 mips
-        PreemptableVm vm1 = new PreemptableVm(vmId++, userId, 5, 1.0, 0, 0, runtime - 0.2); // 5 mips
-        PreemptableVm vm2 = new PreemptableVm(vmId++, userId, 6, 1.0, 0, 0, runtime); // 6 mips
-        PreemptableVm vm3 = new PreemptableVm(vmId++, userId, 4, 1.0, 0, 1, runtime); // 4 mips
-        PreemptableVm vm4 = new PreemptableVm(vmId++, userId, 1, 1.0, 0, 2, runtime); // 1 mips
+        PreemptableVm vm0 = new PreemptableVm(vmId++, userId, 5, 1.0, 0, 0, runtime - 0.3, 1); // 5 mips
+        PreemptableVm vm1 = new PreemptableVm(vmId++, userId, 5, 1.0, 0, 0, runtime - 0.2, 1); // 5 mips
+        PreemptableVm vm2 = new PreemptableVm(vmId++, userId, 6, 1.0, 0, 0, runtime, 1); // 6 mips
+        PreemptableVm vm3 = new PreemptableVm(vmId++, userId, 4, 1.0, 0, 1, runtime, 0.9); // 4 mips
+        PreemptableVm vm4 = new PreemptableVm(vmId++, userId, 1, 1.0, 0, 2, runtime, 0.5); // 1 mips
 
         // trying to allocate all Vms. At the first moment, just Vm0 and Vm1 will be allocated
         Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_CREATE);
@@ -2323,12 +2337,12 @@ public class PreemptiveDatacenterTest {
         double cpuReq = 0.6;
         int vmId = 0;
 
-        PreemptableVm vm1 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm2 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm3 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime);
-        PreemptableVm vm4 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime);
-        PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
-        PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
+        PreemptableVm vm1 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, 1);
+        PreemptableVm vm2 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, 1);
+        PreemptableVm vm3 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime, 0.9);
+        PreemptableVm vm4 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime, 0.9);
+        PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime, 0.5);
+        PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime, 0.5);
         vm1.setHost(host);
         vm2.setHost(host);
         vm3.setHost(host);
@@ -2364,12 +2378,12 @@ public class PreemptiveDatacenterTest {
         double cpuReq = 0.6;
         int vmId = 0;
 
-        PreemptableVm vm1 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm2 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm3 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime);
-        PreemptableVm vm4 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime);
-        PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
-        PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
+        PreemptableVm vm1 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, 1);
+        PreemptableVm vm2 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, 1);
+        PreemptableVm vm3 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime, 0.9);
+        PreemptableVm vm4 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime, 0.9);
+        PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime, 0.5);
+        PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime, 0.5);
 
         vm1.setLastHostId(host.getId());
         vm3.setLastHostId(host.getId());
@@ -2421,24 +2435,25 @@ public class PreemptiveDatacenterTest {
         double subtime = 1;
         double cpuReq = 0.6;
         int vmId = 0;
+        double availabilityTarget = 1;
 
-        PreemptableVm vm1 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm2 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm3 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm4 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm1 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
+        PreemptableVm vm2 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
+        PreemptableVm vm3 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
+        PreemptableVm vm4 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
+        PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
+        PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
 
         vm1.setLastHostId(host.getId());
         vm3.setLastHostId(host.getId());
         vm5.setLastHostId(host.getId());
 
-        PreemptableVm vm7 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm8 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm9 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm10 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm11 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm12 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+        PreemptableVm vm7 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
+        PreemptableVm vm8 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
+        PreemptableVm vm9 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
+        PreemptableVm vm10 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
+        PreemptableVm vm11 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
+        PreemptableVm vm12 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
 
         vm7.setLastHostId(host2.getId());
         vm9.setLastHostId(host2.getId());
@@ -2502,12 +2517,12 @@ public class PreemptiveDatacenterTest {
         double cpuReq = 0.6;
         int vmId = 0;
 
-        PreemptableVm vm1 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm2 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
-        PreemptableVm vm3 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime);
-        PreemptableVm vm4 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime);
-        PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
-        PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime);
+        PreemptableVm vm1 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, 1);
+        PreemptableVm vm2 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, 1);
+        PreemptableVm vm3 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime, 0.9);
+        PreemptableVm vm4 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 1, runtime, 0.9);
+        PreemptableVm vm5 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime, 0.5);
+        PreemptableVm vm6 = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority + 2, runtime, 0.5);
 
         vm1.setLastHostId(host2.getId());
         vm3.setLastHostId(host2.getId());
@@ -2552,7 +2567,7 @@ public class PreemptiveDatacenterTest {
 		int vmId = 0;
 
 		PreemptableVm vm1 = new PreemptableVm(vmId++, 0, 5, 0, subtime,
-				priority + 2, runtime);
+				priority + 2, runtime, 0.5);
 
 		// allocating first vm
 		datacenter.allocateHostForVm(false, vm1);
@@ -2567,7 +2582,7 @@ public class PreemptiveDatacenterTest {
         Assert.assertEquals(host, vm1.getHost());
 
         PreemptableVm vm2 = new PreemptableVm(vmId++, 0, 6, 0, subtime,
-				priority + 1, runtime);
+				priority + 1, runtime, 0.9);
 
         // allocating 
         datacenter.allocateHostForVm(false, vm2);

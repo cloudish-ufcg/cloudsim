@@ -8,8 +8,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
@@ -19,10 +21,8 @@ import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
-import org.cloudbus.cloudsim.preemption.policies.hostselection.WorstFitMipsBasedHostSelectionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.FCFSBasedPreemptionPolicy;
 import org.cloudbus.cloudsim.preemption.policies.preemption.PreemptionPolicy;
-import org.cloudbus.cloudsim.preemption.policies.vmallocation.PreemptableVmAllocationPolicy;
 import org.cloudbus.cloudsim.preemption.policies.vmallocation.WorstFitPriorityBasedVmAllocationPolicy;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import org.junit.After;
@@ -53,10 +53,16 @@ public class TraceDatacenterBrokerTest {
 
     private static double DEFAULT_RUNTIME = 1000;
     private static int NUMBER_OF_TASKS = 100;
+    private static Map<Integer, Double> sloTargets;
 
     @BeforeClass
     public static void setUp() throws Exception{
         createAndPopulateTestDatabase();
+        
+        sloTargets = new HashMap<>();
+        sloTargets.put(0, 1d);
+        sloTargets.put(1, 0.9);
+        sloTargets.put(2, 0.5);
     }
 
     private static void createAndPopulateTestDatabase() throws ClassNotFoundException, SQLException {
@@ -165,6 +171,9 @@ public class TraceDatacenterBrokerTest {
         properties.setProperty("datacenter_database_url", databaseOutputUrl);
         properties.setProperty("collect_datacenter_summary_info", "no");
         properties.setProperty("make_checkpoint", "no");
+        properties.setProperty("slo_availability_target_priority_0", "1");
+        properties.setProperty("slo_availability_target_priority_1", "0.9");
+        properties.setProperty("slo_availability_target_priority_2", "0.5");
 
         return properties;
     }
@@ -272,7 +281,7 @@ public class TraceDatacenterBrokerTest {
         for (TaskState taskState : taskStates) {
             PreemptableVm vm = new PreemptableVm(taskState.getTaskId(), userId, taskState.getCpuReq(), memReq,
                                                  taskState.getSubmitTime(), taskState.getPriority(),
-                                                 taskState.getPriority());
+                                                 taskState.getRuntime(), sloTargets.get(taskState.getPriority()));
 
             Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY_ACK);
             Mockito.when(event.getData()).thenReturn(vm);
@@ -297,7 +306,7 @@ public class TraceDatacenterBrokerTest {
         for (TaskState taskState : taskStates) {
             PreemptableVm vm = new PreemptableVm(taskState.getTaskId(), userId, taskState.getCpuReq(), memReq,
                     taskState.getSubmitTime(), taskState.getPriority(),
-                    taskState.getPriority());
+                    taskState.getRuntime(), sloTargets.get(taskState.getPriority()));
 
             Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY_ACK);
             Mockito.when(event.getData()).thenReturn(vm);
@@ -328,7 +337,7 @@ public class TraceDatacenterBrokerTest {
         for (TaskState taskState : taskStates) {
             PreemptableVm vm = new PreemptableVm(taskState.getTaskId(), userId, taskState.getCpuReq(), memReq,
                     taskState.getSubmitTime(), taskState.getPriority(),
-                    taskState.getPriority());
+                    taskState.getRuntime(), sloTargets.get(taskState.getPriority()));
 
             Mockito.when(event.getTag()).thenReturn(CloudSimTags.VM_DESTROY_ACK);
             Mockito.when(event.getData()).thenReturn(vm);

@@ -81,13 +81,13 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         hostList.add(host6);
 
         // creating Vm's
-        vm1000 = new PreemptableVm(1, 1, 1000, 0, 0, 0, 0);
-        vm500 = new PreemptableVm(2, 1, 500, 0, 0, 0, 0);
-        vm250 = new PreemptableVm(3, 1, 250, 0, 0, 0, 0);
-        vm125 = new PreemptableVm(4, 1, 125, 0, 0, 0, 0);
-        vm62 = new PreemptableVm(5, 1, 62.5, 0, 0, 0, 0);
-        vm0 = new PreemptableVm(6, 1, 0, 0, 0, 0, 0);
-        vm1200 = new PreemptableVm(7, 1, 1200, 0, 0, 0, 0);
+        vm1000 = new PreemptableVm(1, 1, 1000, 0, 0, 0, 0, 1);
+        vm500 = new PreemptableVm(2, 1, 500, 0, 0, 0, 0, 1);
+        vm250 = new PreemptableVm(3, 1, 250, 0, 0, 0, 0, 1);
+        vm125 = new PreemptableVm(4, 1, 125, 0, 0, 0, 0, 1);
+        vm62 = new PreemptableVm(5, 1, 62.5, 0, 0, 0, 0, 1);
+        vm0 = new PreemptableVm(6, 1, 0, 0, 0, 0, 0, 1);
+        vm1200 = new PreemptableVm(7, 1, 1200, 0, 0, 0, 0, 1);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -202,7 +202,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         hosts.add(host2);
         
         // creating a VM with priority 0
-        PreemptableVm vm500P0 = new PreemptableVm(1, 1, 500, 0, 0, 0, 0);
+        PreemptableVm vm500P0 = new PreemptableVm(1, 1, 500, 0, 0, 0, 0, 1);
         
         Assert.assertEquals(host1, selectionPolicy.select(hosts, vm500P0));
 
@@ -212,7 +212,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         hosts.add(host1);
     	
         // creating a VM with priority 2
-        PreemptableVm vm700P2 = new PreemptableVm(2, 1, 700, 0, 0, 2, 0);
+        PreemptableVm vm700P2 = new PreemptableVm(2, 1, 700, 0, 0, 2, 0, 0.5);
         
         Assert.assertEquals(host2, selectionPolicy.select(hosts, vm700P2));
 
@@ -222,7 +222,7 @@ public class WorstFitMipsBasedHostSelectionPolicyTest {
         hosts.add(host2);
 
         // creating a VM with priority 1
-        PreemptableVm vm700P1 = new PreemptableVm(3, 1, 700, 0, 0, 1, 0);
+        PreemptableVm vm700P1 = new PreemptableVm(3, 1, 700, 0, 0, 1, 0, 0.9);
         
 		/*
 		 * besides host1 is that with more available mips, only host2 is

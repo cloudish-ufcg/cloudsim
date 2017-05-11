@@ -320,12 +320,12 @@ public class VmSchedulerMipsBasedTest {
         peList1.add(new Pe(0, new PeProvisionerSimple(5 * cpuReq)));
         VmScheduler schedulerMipsBased = new VmSchedulerMipsBased(peList1);
 
-        Vm vm1 = new PreemptableVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime);
-        Vm vm2 = new PreemptableVm(id++, userId, 5 * cpuReq, memReq, subTime, priority - 1 , runTime);
-        Vm vm3 = new PreemptableVm(id++, userId, 2 * cpuReq, memReq, subTime, priority, runTime);
-        Vm vm4 = new PreemptableVm(id++, userId, 3 * cpuReq, memReq, subTime, priority, runTime);
-        Vm vm5 = new PreemptableVm(id++, userId, 4 * cpuReq, memReq, subTime, priority + 1, runTime);
-        Vm vm6 = new PreemptableVm(id++, userId, 6 * cpuReq, memReq, subTime, priority + 1, runTime);
+        Vm vm1 = new PreemptableVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime, 1);
+        Vm vm2 = new PreemptableVm(id++, userId, 5 * cpuReq, memReq, subTime, priority - 1 , runTime, 1);
+        Vm vm3 = new PreemptableVm(id++, userId, 2 * cpuReq, memReq, subTime, priority, runTime, 0.9);
+        Vm vm4 = new PreemptableVm(id++, userId, 3 * cpuReq, memReq, subTime, priority, runTime, 0.9);
+        Vm vm5 = new PreemptableVm(id++, userId, 4 * cpuReq, memReq, subTime, priority + 1, runTime, 0.5);
+        Vm vm6 = new PreemptableVm(id++, userId, 6 * cpuReq, memReq, subTime, priority + 1, runTime, 0.5);
 
         Assert.assertEquals(5*cpuReq, schedulerMipsBased.getAvailableMips(), ACCETABLE_DIFFERENCE);
 
@@ -377,12 +377,12 @@ public class VmSchedulerMipsBasedTest {
         peList1.add(new Pe(0, new PeProvisionerSimple(cpuCapacity)));
         VmScheduler schedulerMipsBased = new VmSchedulerMipsBased(peList1);
 
-        Vm vm1 = new PreemptableVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime);
-        Vm vm2 = new PreemptableVm(id++, userId, 5 * cpuReq, memReq, subTime, priority - 1 , runTime);
-        Vm vm3 = new PreemptableVm(id++, userId, 2 * cpuReq, memReq, subTime, priority, runTime);
-        Vm vm4 = new PreemptableVm(id++, userId, 3 * cpuReq, memReq, subTime, priority, runTime);
-        Vm vm5 = new PreemptableVm(id++, userId, 4 * cpuReq, memReq, subTime, priority + 1, runTime);
-        Vm vm6 = new PreemptableVm(id++, userId, 6 * cpuReq, memReq, subTime, priority + 1, runTime);
+        Vm vm1 = new PreemptableVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime, 1);
+        Vm vm2 = new PreemptableVm(id++, userId, 5 * cpuReq, memReq, subTime, priority - 1 , runTime, 1);
+        Vm vm3 = new PreemptableVm(id++, userId, 2 * cpuReq, memReq, subTime, priority, runTime, 0.9);
+        Vm vm4 = new PreemptableVm(id++, userId, 3 * cpuReq, memReq, subTime, priority, runTime, 0.9);
+        Vm vm5 = new PreemptableVm(id++, userId, 4 * cpuReq, memReq, subTime, priority + 1, runTime, 0.5);
+        Vm vm6 = new PreemptableVm(id++, userId, 6 * cpuReq, memReq, subTime, priority + 1, runTime, 0.5);
 
         Assert.assertEquals(cpuCapacity, schedulerMipsBased.getAvailableMips(), ACCEPTABLE_DIFFERENCE);
 

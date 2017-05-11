@@ -25,11 +25,11 @@ public class VmAvailabilityBasedPreemptableVmComparatorTest {
 		comparator.setSimulationTimeUtil(timeUtil);
 
 		// availability on time 5 is 0.8
-		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm0.setStartExec(1);
 		
 		// availability on time 5 is 0.6 
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm1.setStartExec(2);
 
 		// vm0 is farer from violate slo target (0.5)
@@ -48,19 +48,19 @@ public class VmAvailabilityBasedPreemptableVmComparatorTest {
 		comparator.setSimulationTimeUtil(timeUtil);
 
 		// availability on time 5 is 1.0
-		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm0.setStartExec(0);
 		
 		// availability on time 5 is 0.8
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm1.setStartExec(1);
 		
 		// availability on time 5 is 0.6
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm2.setStartExec(2);
 		
 		// availability on time 5 is 0.4 
-		PreemptableVm vm3 = new PreemptableVm(3, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm3 = new PreemptableVm(3, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm3.setStartExec(3);
 
 		// checking
@@ -101,19 +101,19 @@ public class VmAvailabilityBasedPreemptableVmComparatorTest {
 		comparator.setSimulationTimeUtil(timeUtil);
 
 		// availability on time 5 is 1.0
-		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm0.setStartExec(0);
 		
 		// availability on time 5 is 0.8
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm1.setStartExec(1);
 		
 		// availability on time 5 is 0.6
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm2.setStartExec(2);
 		
 		// availability on time 5 is 0.4 
-		PreemptableVm vm3 = new PreemptableVm(3, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm3 = new PreemptableVm(3, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm3.setStartExec(3);
 		
 		// adding vms into a sorted set in a not sorted way
@@ -159,22 +159,22 @@ public class VmAvailabilityBasedPreemptableVmComparatorTest {
 		comparator.setSimulationTimeUtil(timeUtil);
 
 		// availability on time 5 is 1.0
-		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm0.setStartExec(0);
 		
 		// availability on time 5 is 0.8
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm1.setStartExec(0);
 		
 		// availability on time 5 is 0.6
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm2.setStartExec(0);
 		
 		// availability on time 5 is 0.4 
-		PreemptableVm vm3 = new PreemptableVm(3, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm3 = new PreemptableVm(3, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm3.setStartExec(0);
 	
-		PreemptableVm vm4 = new PreemptableVm(4, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm4 = new PreemptableVm(4, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm4.setStartExec(0);
 		
 		// adding vms into a sorted set in a not sorted way
@@ -216,22 +216,22 @@ public class VmAvailabilityBasedPreemptableVmComparatorTest {
 		comparator.setSimulationTimeUtil(timeUtil);
 
 		// availability on time 5 is 1.0
-		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm0.setStartExec(0);
 		
 		// availability on time 5 is 0.8
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm1.setStartExec(0);
 		
 		// availability on time 5 is 0.6
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm2.setStartExec(0);
 		
 		// availability on time 5 is 0.4 
-		PreemptableVm vm3 = new PreemptableVm(3, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm3 = new PreemptableVm(3, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm3.setStartExec(0);
 	
-		PreemptableVm vm4 = new PreemptableVm(4, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm4 = new PreemptableVm(4, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm4.setStartExec(0);
 		
 		// adding vms into a sorted set in a not sorted way
@@ -281,23 +281,23 @@ public class VmAvailabilityBasedPreemptableVmComparatorTest {
 		comparator.setSimulationTimeUtil(timeUtil);
 
 		// availability on time 5 is 1.0
-		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm0.setStartExec(0);
 		
 		// availability on time 5 is 1.0
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm1.setStartExec(0);
 		
 		// availability on time 5 is 1.0
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm2 = new PreemptableVm(2, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm2.setStartExec(0);
 		
 		// availability on time 5 is 1.0 
-		PreemptableVm vm3 = new PreemptableVm(3, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm3 = new PreemptableVm(3, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm3.setStartExec(0);
 	
 		// availability on time 5 is 1.0 
-		PreemptableVm vm4 = new PreemptableVm(4, 1, 5, 0, 5, 0, runtime);
+		PreemptableVm vm4 = new PreemptableVm(4, 1, 5, 0, 5, 0, runtime, 1);
 		vm4.setStartExec(5);
 		
 		// adding vms into a sorted set in a not sorted way

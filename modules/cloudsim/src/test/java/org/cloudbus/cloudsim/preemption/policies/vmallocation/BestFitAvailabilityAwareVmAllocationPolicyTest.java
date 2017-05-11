@@ -143,8 +143,9 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
         double submitTime = 0d;
         priority = 1;
         double runtime = 10;
-        vm0 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
-        vm1 = new PreemptableVm(vmId++, userId, (cpuReq / 2), memReq, submitTime, priority, runtime);
+        double availabilityTarget = 0.9;
+        vm0 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
+        vm1 = new PreemptableVm(vmId++, userId, (cpuReq / 2), memReq, submitTime, priority, runtime, availabilityTarget);
 
         preemptionPolicy1 = new VmAvailabilityBasedPreemptionPolicy(properties, simulationTimeUtil);
         preemptionPolicy2 = new VmAvailabilityBasedPreemptionPolicy(properties, simulationTimeUtil);
@@ -175,6 +176,7 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
 
         // SLA is not being fulfilled
         Mockito.when(MockedVm.getCurrentAvailability(0d)).thenReturn(0.89);
+        Mockito.when(MockedVm.isAvailabilityAboveOfTarget(0d)).thenReturn(false);
         Mockito.when(mockedPreemptionPolicy1.getAvailableMipsByPriorityAndAvailability(MockedVm.getPriority())).thenReturn(10.0);
         Mockito.when(mockedPreemptionPolicy2.getAvailableMipsByPriorityAndAvailability(MockedVm.getPriority())).thenReturn(8.0);
         Mockito.when(mockedPreemptionPolicy3.getAvailableMipsByPriorityAndAvailability(MockedVm.getPriority())).thenReturn(5.0);
@@ -191,10 +193,12 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
 
         // SLA is being fulfilled
         Mockito.when(MockedVm.getCurrentAvailability(0d)).thenReturn(0.91);
+        Mockito.when(MockedVm.isAvailabilityAboveOfTarget(0d)).thenReturn(true);
         Assert.assertEquals(hostWithMockedPolicy1, bestFitVmAllocationPolicyWithMock.selectHost(MockedVm));
 
         // Availability is equals to target
         Mockito.when(MockedVm.getCurrentAvailability(0d)).thenReturn(0.9);
+        Mockito.when(MockedVm.isAvailabilityAboveOfTarget(0d)).thenReturn(false);
         Assert.assertEquals(hostWithMockedPolicy4, bestFitVmAllocationPolicyWithMock.selectHost(MockedVm));
 
     }
@@ -309,10 +313,10 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
     public void testAllocateHostForVm2() {
 
         // cpuReq = 0.3
-        PreemptableVm vm0P1 = new PreemptableVm(1, 1, 0.3, 0, 0, 1, 10);
+        PreemptableVm vm0P1 = new PreemptableVm(1, 1, 0.3, 0, 0, 1, 10, 0.9);
 
         // cpuReq = 0.2
-        PreemptableVm vm1P1 = new PreemptableVm(1, 1, 0.2, 0, 0, 1, 10);
+        PreemptableVm vm1P1 = new PreemptableVm(1, 1, 0.2, 0, 0, 1, 10, 0.9);
 
         // checking initial state
         Assert.assertNull(vm0.getHost());
@@ -376,14 +380,16 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
         double submitTime = 0d;
         int priority = 2;
         double runtime = 10;
+        double availabilityTarget = 0.5;
 
-        PreemptableVm vm0P2 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
-        PreemptableVm vm1P2 = new PreemptableVm(vmId++, userId, (cpuReq / 2), memReq, submitTime, priority, runtime);
+        PreemptableVm vm0P2 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
+        PreemptableVm vm1P2 = new PreemptableVm(vmId++, userId, (cpuReq / 2), memReq, submitTime, priority, runtime, availabilityTarget);
 
         priority = 0;
         submitTime = 2;
-        PreemptableVm vm0P0 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
-        PreemptableVm vm1P0 = new PreemptableVm(vmId++, userId, (cpuReq / 2), memReq, submitTime, priority, runtime);
+        availabilityTarget = 1;
+        PreemptableVm vm0P0 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
+        PreemptableVm vm1P0 = new PreemptableVm(vmId++, userId, (cpuReq / 2), memReq, submitTime, priority, runtime, availabilityTarget);
 
         Mockito.when(simulationTimeUtil.clock()).thenReturn(0d);
         bestFitVmAllocationPolicy.preProcess();
@@ -489,7 +495,8 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
         //test methods of the vm allocation policy
 
         priority = 1;
-        PreemptableVm vm0P1 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        availabilityTarget = 0.9;
+        PreemptableVm vm0P1 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
 
         // order of hosts by available for priority1: host1: 0.5 (vm0 can be preempted), host2: 0.5 (vm1
@@ -572,30 +579,31 @@ public class BestFitAvailabilityAwareVmAllocationPolicyTest {
         double runtime = 10;
 
         int priority = BATCH;
+        double availabilityTarget = 0.9;
 
         double submitTime = 0;
         double cpuReq = 0.5;
-        PreemptableVm vm0 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
-        PreemptableVm vm1 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm0 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
+        PreemptableVm vm1 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         cpuReq = 0.499999999;
-        PreemptableVm vm2 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm2 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         submitTime = 1;
         cpuReq = 0.3;
-        PreemptableVm vm3 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm3 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         cpuReq = 0.499999998;
-        PreemptableVm vm4 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm4 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         cpuReq = 0.2;
-        PreemptableVm vm5 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm5 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         cpuReq = 0.000000001;
-        PreemptableVm vm6 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm6 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         cpuReq = 0.5;
-        PreemptableVm vm7 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm7 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         Mockito.when(simulationTimeUtil.clock()).thenReturn(0d);
 

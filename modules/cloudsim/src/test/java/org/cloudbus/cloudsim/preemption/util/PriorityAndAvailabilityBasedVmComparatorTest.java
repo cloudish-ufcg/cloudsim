@@ -20,11 +20,11 @@ public class PriorityAndAvailabilityBasedVmComparatorTest {
 		PriorityAndAvailabilityBasedVmComparator comparator = new PriorityAndAvailabilityBasedVmComparator(simulationTimeUtil );
 		
 		// availability on time 5 is 0.6
-		PreemptableVm vm0 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm0 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm0.setStartExec(2);
 		
 		// availability on time 5 is 0.8 
-		PreemptableVm vm1 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm1 = new PreemptableVm(0, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm1.setStartExec(1);
 	
 		// smaller availability before
@@ -40,11 +40,11 @@ public class PriorityAndAvailabilityBasedVmComparatorTest {
 		PriorityAndAvailabilityBasedVmComparator comparator = new PriorityAndAvailabilityBasedVmComparator(simulationTimeUtil );
 		
 		// availability on time 5 is 1.0
-		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, 0, 0, runtime);
+		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, 0, 0, runtime, 1);
 		vm0.setStartExec(0);
 		
 		// availability on time 5 is 1.0 
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, 1, 0, runtime);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, 1, 0, runtime, 1);
 		vm1.setStartExec(1);
 	
 		// smaller submitTime before
@@ -61,11 +61,11 @@ public class PriorityAndAvailabilityBasedVmComparatorTest {
 		PriorityAndAvailabilityBasedVmComparator comparator = new PriorityAndAvailabilityBasedVmComparator(simulationTimeUtil );
 		
 		// availability on time 5 is 0.6
-		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 1, runtime);
+		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, 0, submitTime, 1, runtime, 0.9);
 		vm0.setStartExec(2);
 		
 		// availability on time 5 is 0.8 
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 5, 0, submitTime, 0, runtime, 1);
 		vm1.setStartExec(1);
 	
 		// higher priority before

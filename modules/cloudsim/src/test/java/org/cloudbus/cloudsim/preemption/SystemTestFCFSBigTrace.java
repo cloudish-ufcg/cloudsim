@@ -767,11 +767,11 @@ public class SystemTestFCFSBigTrace {
         double runtime = 8;
         double subtime = 0;
         double cpuReq = 0.5;
-
+        double availabilityTarget = 1;
 
         for (int i = 0; i < NUMBER_OF_VMS; i++) {
 
-            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
             vmP0S0.add(vm);
         }
 
@@ -781,11 +781,11 @@ public class SystemTestFCFSBigTrace {
         priority = 1;
         runtime = 5;
         cpuReq = 0.3;
-
+        availabilityTarget = 0.0;
 
         for (int i = 0; i < NUMBER_OF_VMS; i++) {
 
-            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
             vmP1S0.add(vm);
         }
 
@@ -795,11 +795,11 @@ public class SystemTestFCFSBigTrace {
         priority = 2;
         runtime = 2;
         cpuReq = 0.2;
-
+        availabilityTarget = 0.5;
 
         for (int i = 0; i < NUMBER_OF_VMS; i++) {
 
-            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
             vmP2S0.add(vm);
         }
 
@@ -810,11 +810,11 @@ public class SystemTestFCFSBigTrace {
         runtime = 2;
         subtime = 1;
         cpuReq = 0.6;
-
+        availabilityTarget = 1;
 
         for (int i = 0; i < NUMBER_OF_VMS; i++) {
 
-            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime);
+            Vm vm = new PreemptableVm(vmId++, 0, cpuReq, 0, subtime, priority, runtime, availabilityTarget);
             vmP0S1.add(vm);
         }
     }

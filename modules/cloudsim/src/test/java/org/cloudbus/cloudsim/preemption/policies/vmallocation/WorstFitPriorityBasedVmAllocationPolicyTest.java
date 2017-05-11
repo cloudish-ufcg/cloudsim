@@ -72,7 +72,7 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testAllocateHostForVm() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0, 1);
 
         // checking
         Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm1));
@@ -83,8 +83,8 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testAllocateHostForVm2() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
-        PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0, 1);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0, 1);
 
 //		// mocking host selector
 //		Mockito.when(hostSelector.select(sortedHosts, vm1)).thenReturn(host1);
@@ -106,12 +106,8 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testAllocateHostForVm3() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 400, 1.0, 0, 0, 0);
-        PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
-
-//		// mocking host selector
-//		Mockito.when(hostSelector.select(sortedHosts, vm1)).thenReturn(host1);
-//		Mockito.when(hostSelector.select(sortedHosts, vm2)).thenReturn(host2);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 400, 1.0, 0, 0, 0, 1);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0, 1);
 
         // checking
         Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm1));
@@ -132,16 +128,10 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testAllocateVMsToSameHost() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 200, 1.0, 0, 0, 0);
-        PreemptableVm vm2 = new PreemptableVm(2, 1, 100, 1.0, 0, 0, 0);
-        PreemptableVm vm3 = new PreemptableVm(3, 1, 100, 1.0, 0, 0, 0);
-        PreemptableVm vm4 = new PreemptableVm(4, 1, 1.0, 1.0, 0, 0, 0);
-
-//		// mocking host selector
-//		Mockito.when(hostSelector.select(sortedHosts, vm1)).thenReturn(host1);
-//		Mockito.when(hostSelector.select(sortedHosts, vm2)).thenReturn(host1);
-//		Mockito.when(hostSelector.select(sortedHosts, vm3)).thenReturn(host1);
-//		Mockito.when(hostSelector.select(sortedHosts, vm4)).thenReturn(host2);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 200, 1.0, 0, 0, 0, 1);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, 100, 1.0, 0, 0, 0, 1);
+        PreemptableVm vm3 = new PreemptableVm(3, 1, 100, 1.0, 0, 0, 0, 1);
+        PreemptableVm vm4 = new PreemptableVm(4, 1, 1.0, 1.0, 0, 0, 0, 1);
 
         // checking vm1 allocation
         Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm1));
@@ -170,7 +160,7 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
     @Test
     public void testDeallocateHostForVm() {
         // setting environment
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0, 1);
         Assert.assertTrue(host1.vmCreate(vm1));
 
         // checking
@@ -191,10 +181,10 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
     @Test
     public void testDeallocateHostForVm2() {
         // setting environment
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0, 1);
         Assert.assertTrue(host1.vmCreate(vm1));
 
-        PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0, 1);
         Assert.assertTrue(host2.vmCreate(vm2));
 
         // checking
@@ -227,7 +217,7 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testDeallocateVMNonExistent() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0, 1);
         preemptablePolicy.deallocateHostForVm(vm1);
 
         Assert.assertTrue(host1.getVmList().isEmpty());
@@ -236,7 +226,7 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testDeallocateVMNonexistentAfterDeallocateExistingVM() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0, 1);
 
 //		// mocking host selector
 //		Mockito.when(hostSelector.select(sortedHosts, vm1)).thenReturn(host1);
@@ -262,10 +252,10 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
     @Test
     public void testDeallocateMoreThanOneVMFromSameHost() {
         // setting environment
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0, 1);
         Assert.assertTrue(host1.vmCreate(vm1));
 
-        PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0, 1);
         Assert.assertTrue(host1.vmCreate(vm2));
 
         // checking
@@ -298,7 +288,7 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testAllocateVMAtNullHost() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 500.00001, 1.0, 0, 0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 500.00001, 1.0, 0, 0, 0, 1);
 
         // checking
         Assert.assertFalse(preemptablePolicy.allocateHostForVm(vm1));
@@ -309,10 +299,10 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testAllocateAtSpecificHost() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
-        PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
-        PreemptableVm vm3 = new PreemptableVm(3, 1, 1.0, 1.0, 0, 0, 0);
-        PreemptableVm vm4 = new PreemptableVm(4, 1, 1.0, 1.0, 0, 0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0, 1);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0, 1);
+        PreemptableVm vm3 = new PreemptableVm(3, 1, 1.0, 1.0, 0, 0, 0, 1);
+        PreemptableVm vm4 = new PreemptableVm(4, 1, 1.0, 1.0, 0, 0, 0, 1);
 
         // checking vm1 allocation at null host
         Assert.assertFalse(preemptablePolicy.allocateHostForVm(vm1, null));
@@ -348,10 +338,10 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
 
     @Test
     public void testGetHostByUserId() {
-        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0);
-        PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0);
-        PreemptableVm vm3 = new PreemptableVm(3, 2, 1.0, 1.0, 0, 0, 0);
-        PreemptableVm vm4 = new PreemptableVm(4, 3, 1.0, 1.0, 0, 0, 0);
+        PreemptableVm vm1 = new PreemptableVm(1, 1, 1.0, 1.0, 0, 0, 0, 1);
+        PreemptableVm vm2 = new PreemptableVm(2, 1, 1.0, 1.0, 0, 0, 0, 1);
+        PreemptableVm vm3 = new PreemptableVm(3, 2, 1.0, 1.0, 0, 0, 0, 1);
+        PreemptableVm vm4 = new PreemptableVm(4, 3, 1.0, 1.0, 0, 0, 0, 1);
 
         Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm1, host1));
         Assert.assertTrue(preemptablePolicy.allocateHostForVm(vm2, host1));
@@ -404,7 +394,7 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
         }
 
         // allocating VM with priority 1
-        PreemptableVm vmPriority1 = new PreemptableVm(1, 1, 50.2, 1.0, 0, 1, 0);
+        PreemptableVm vmPriority1 = new PreemptableVm(1, 1, 50.2, 1.0, 0, 1, 0, 0.9);
 //		Mockito.when(hostSelector.select(preemptablePolicy.getPriorityToSortedHost().get(vmPriority1.getPriority()), vmPriority1)).thenReturn(host1);
         preemptablePolicy.allocateHostForVm(vmPriority1);
 
@@ -439,7 +429,7 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
         Assert.assertEquals(host3.getAvailableMipsByPriority(PRIORITY_2), 100.5, ACCEPTABLE_DIFERENCE);
 
         // allocating VM with priority 2
-        PreemptableVm vmPriority2 = new PreemptableVm(1, 1, 50.3, 1.0, 0, 2, 0);
+        PreemptableVm vmPriority2 = new PreemptableVm(1, 1, 50.3, 1.0, 0, 2, 0, 0.5);
 //		Mockito.when(hostSelector.select(preemptablePolicy.getPriorityToSortedHost().get(vmPriority2.getPriority()), vmPriority2)).thenReturn(host2);
         preemptablePolicy.allocateHostForVm(vmPriority2);
 
@@ -469,7 +459,7 @@ public class WorstFitPriorityBasedVmAllocationPolicyTest {
 
 
         // allocating VM with priority 1 again
-        PreemptableVm vmPriority1_2 = new PreemptableVm(1, 1, 4.2, 1.0, 0, 1, 0);
+        PreemptableVm vmPriority1_2 = new PreemptableVm(1, 1, 4.2, 1.0, 0, 1, 0, 0.9);
 //		Mockito.when(hostSelector.select(preemptablePolicy.getPriorityToSortedHost().get(vmPriority1_2.getPriority()), vmPriority1_2)).thenReturn(host3);
         preemptablePolicy.allocateHostForVm(vmPriority1_2);
 

@@ -1,17 +1,16 @@
 package org.cloudbus.cloudsim.preemption.policies.preemption;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import gnu.trove.map.hash.THashMap;
-import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import gnu.trove.map.hash.THashMap;
 
 public class FCFSBasedPreemptionPolicyTest {
 
@@ -64,7 +63,7 @@ public class FCFSBasedPreemptionPolicyTest {
 		double submitTime = 0;
 		double runtime = 0;
 		
-		PreemptableVm vm = new PreemptableVm(1, 1, 5, memReq, submitTime, 0, runtime);
+		PreemptableVm vm = new PreemptableVm(1, 1, 5, memReq, submitTime, 0, runtime, 1);
 		
 		preemptionPolicy.allocating(vm);
 		
@@ -86,9 +85,9 @@ public class FCFSBasedPreemptionPolicyTest {
 		double submitTime = 0;
 		double runtime = 0;
 		
-		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, memReq, submitTime, 0, runtime);
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 3, memReq, submitTime, 1, runtime);
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 2, memReq, submitTime, 2, runtime);
+		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, memReq, submitTime, 0, runtime, 1);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 3, memReq, submitTime, 1, runtime, 0.9);
+		PreemptableVm vm2 = new PreemptableVm(2, 1, 2, memReq, submitTime, 2, runtime, 0.5);
 		
 		preemptionPolicy.allocating(vm0);
 		
@@ -139,7 +138,7 @@ public class FCFSBasedPreemptionPolicyTest {
 		double submitTime = 0;
 		double runtime = 0;
 		
-		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, memReq, submitTime, 0, runtime);
+		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, memReq, submitTime, 0, runtime, 1);
 		
 		preemptionPolicy.allocating(vm0);
 		
@@ -173,9 +172,9 @@ public class FCFSBasedPreemptionPolicyTest {
 		double submitTime = 0;
 		double runtime = 0;
 		
-		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, memReq, submitTime, 0, runtime);
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 3, memReq, submitTime, 1, runtime);
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 2, memReq, submitTime, 2, runtime);
+		PreemptableVm vm0 = new PreemptableVm(0, 1, 5, memReq, submitTime, 0, runtime, 1);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 3, memReq, submitTime, 1, runtime, 0.9);
+		PreemptableVm vm2 = new PreemptableVm(2, 1, 2, memReq, submitTime, 2, runtime, 0.5);
 		
 		preemptionPolicy.allocating(vm0);
 		preemptionPolicy.allocating(vm1);
@@ -252,9 +251,9 @@ public class FCFSBasedPreemptionPolicyTest {
 		// allocating Vms
 		for (int id = 0; id < totalVms; id++) {
 			if (id % 2 == 0) {
-				preemptionPolicy.allocating(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 0, 0));
+				preemptionPolicy.allocating(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 0, 0, 1));
 			} else {
-				preemptionPolicy.allocating(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 1, 0));
+				preemptionPolicy.allocating(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 1, 0, 0.9));
 			}
 		}
 
@@ -277,19 +276,19 @@ public class FCFSBasedPreemptionPolicyTest {
 
 		// checking if is suitable for priority 1
 		for (int requiredMips = 1; requiredMips <= freeCapacity; requiredMips++) {
-			Assert.assertTrue(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1, requiredMips, 1.0, 0, 1, 0)));
+			Assert.assertTrue(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1, requiredMips, 1.0, 0, 1, 0, 0.9)));
 		}
 
-		Assert.assertFalse(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1, freeCapacity + 1, 1.0, 0, 1, 0)));
+		Assert.assertFalse(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1, freeCapacity + 1, 1.0, 0, 1, 0, 0.9)));
 
 		// checking if is suitable for priority 0
 		for (int requiredMips = 1; requiredMips <= freeCapacity
 				+ (totalVms / 2); requiredMips++) {
-			Assert.assertTrue(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1, requiredMips, 1.0, 0, 0, 0)));
+			Assert.assertTrue(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1, requiredMips, 1.0, 0, 0, 0, 1)));
 		}
 
 		Assert.assertFalse(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1,
-				freeCapacity + (totalVms / 2) + 1, 1.0, 0, 0, 0)));
+				freeCapacity + (totalVms / 2) + 1, 1.0, 0, 0, 0, 1)));
 	}
 	
 	@Test
@@ -307,9 +306,9 @@ public class FCFSBasedPreemptionPolicyTest {
 		// allocating Vms
 		for (int id = 0; id < totalVms; id++) {
 			if (id % 2 == 0) {
-				preemptionPolicy.allocating(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 0, 0));
+				preemptionPolicy.allocating(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 0, 0, 1));
 			} else {
-				preemptionPolicy.allocating(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 1, 0));
+				preemptionPolicy.allocating(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 1, 0, 0.9));
 			}
 		}
 
@@ -330,19 +329,19 @@ public class FCFSBasedPreemptionPolicyTest {
 
 		// checking if is suitable for priority 1
 		for (int requiredMips = 1; requiredMips <= freeCapacity; requiredMips++) {
-			Assert.assertTrue(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1, requiredMips, 1.0, 0, 1, 0)));
+			Assert.assertTrue(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1, requiredMips, 1.0, 0, 1, 0, 0.9)));
 		}
 
-		Assert.assertFalse(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1, freeCapacity + 1, 1.0, 0, 1, 0)));
+		Assert.assertFalse(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1, freeCapacity + 1, 1.0, 0, 1, 0, 0.9)));
 
 		// checking if is suitable for priority 0
 		for (int requiredMips = 1; requiredMips <= freeCapacity
 				+ (totalVms / 2); requiredMips++) {
-			Assert.assertTrue(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1, requiredMips, 1.0, 0, 0, 0)));
+			Assert.assertTrue(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1, requiredMips, 1.0, 0, 0, 0, 1)));
 		}
 
 		Assert.assertFalse(preemptionPolicy.isSuitableFor(new PreemptableVm(100, 1,
-				freeCapacity + (totalVms / 2) + 1, 1.0, 0, 0, 0)));
+				freeCapacity + (totalVms / 2) + 1, 1.0, 0, 0, 0, 1)));
 	}
 	
 	@Test
@@ -352,14 +351,14 @@ public class FCFSBasedPreemptionPolicyTest {
 		
 		int vmId = 0;
 
-		PreemptableVm vm0_1 = new PreemptableVm(vmId++, 1, 23.7, 1.0, 0, 0, 0);
-		PreemptableVm vm0_2 = new PreemptableVm(vmId++, 1, 26.3, 1.0, 0.2, 0, 0);
+		PreemptableVm vm0_1 = new PreemptableVm(vmId++, 1, 23.7, 1.0, 0, 0, 0, 1);
+		PreemptableVm vm0_2 = new PreemptableVm(vmId++, 1, 26.3, 1.0, 0.2, 0, 0, 1);
 
-		PreemptableVm vm1_1 = new PreemptableVm(vmId++, 1, 24.3, 1.0, 0, 1, 0);
-		PreemptableVm vm1_2 = new PreemptableVm(vmId++, 1, 0.7, 1.0, 0.1, 1, 0);
+		PreemptableVm vm1_1 = new PreemptableVm(vmId++, 1, 24.3, 1.0, 0, 1, 0, 0.9);
+		PreemptableVm vm1_2 = new PreemptableVm(vmId++, 1, 0.7, 1.0, 0.1, 1, 0, 0.9);
 
-		PreemptableVm vm2_1 = new PreemptableVm(vmId++, 1,24.99, 1.0, 0, 2, 0);
-		PreemptableVm vm2_2 = new PreemptableVm(vmId++, 1, 0.01, 1.0, 0.1, 2, 0);
+		PreemptableVm vm2_1 = new PreemptableVm(vmId++, 1,24.99, 1.0, 0, 2, 0, 0.5);
+		PreemptableVm vm2_2 = new PreemptableVm(vmId++, 1, 0.01, 1.0, 0.1, 2, 0, 0.5);
 
 		preemptionPolicy.allocating(vm0_1);
 		preemptionPolicy.allocating(vm0_2);
@@ -374,22 +373,22 @@ public class FCFSBasedPreemptionPolicyTest {
 		Assert.assertFalse(preemptionPolicy.isSuitableFor(null));
 
 		//testing initial state
-		PreemptableVm vm2_3 = new PreemptableVm(VM_ID, USER_ID, 0.000001, 0, 0, 2, 0);
+		PreemptableVm vm2_3 = new PreemptableVm(VM_ID, USER_ID, 0.000001, 0, 0, 2, 0, 0.5);
 		Assert.assertTrue(preemptionPolicy.isSuitableFor(vm2_3));
 
-		PreemptableVm vm2_4 = new PreemptableVm(VM_ID, USER_ID, 0.6, 0, 0, 2, 0);
+		PreemptableVm vm2_4 = new PreemptableVm(VM_ID, USER_ID, 0.6, 0, 0, 2, 0, 0.5);
 		Assert.assertFalse(preemptionPolicy.isSuitableFor(vm2_4));
 
-		PreemptableVm vm1_3 = new PreemptableVm(VM_ID, USER_ID, 25.5, 0, 0, 1, 0);
+		PreemptableVm vm1_3 = new PreemptableVm(VM_ID, USER_ID, 25.5, 0, 0, 1, 0, 0.9);
 		Assert.assertTrue(preemptionPolicy.isSuitableFor(vm1_3));
 
-		PreemptableVm vm1_4 = new PreemptableVm(VM_ID, USER_ID, 25.5000001, 0, 0, 1, 0);
+		PreemptableVm vm1_4 = new PreemptableVm(VM_ID, USER_ID, 25.5000001, 0, 0, 1, 0, 0.9);
 		Assert.assertFalse(preemptionPolicy.isSuitableFor(vm1_4));
 
-		PreemptableVm vm0_3 = new PreemptableVm(VM_ID, USER_ID, 50.5, 0, 0, 0, 0);
+		PreemptableVm vm0_3 = new PreemptableVm(VM_ID, USER_ID, 50.5, 0, 0, 0, 0, 1);
 		Assert.assertTrue(preemptionPolicy.isSuitableFor(vm0_3));
 
-		PreemptableVm vm0_4 = new PreemptableVm(VM_ID, USER_ID, 50.5000001, 0, 0, 0, 0);
+		PreemptableVm vm0_4 = new PreemptableVm(VM_ID, USER_ID, 50.5000001, 0, 0, 0, 0, 1);
 		Assert.assertFalse(preemptionPolicy.isSuitableFor(vm0_4));
 
 		//testing after destroy a vm with priority 0
@@ -397,22 +396,22 @@ public class FCFSBasedPreemptionPolicyTest {
 		Assert.assertEquals(24.2, preemptionPolicy.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(24.2, preemptionPolicy.getAvailableMipsByPriorityAndAvailability(2), ACCEPTABLE_DIFFERENCE);
 
-		vm2_3 = new PreemptableVm(VM_ID, USER_ID, 24.19999, 0, 0, 2, 0);
+		vm2_3 = new PreemptableVm(VM_ID, USER_ID, 24.19999, 0, 0, 2, 0, 0.5);
 		Assert.assertTrue(preemptionPolicy.isSuitableFor(vm2_3));
 
-		vm2_4 = new PreemptableVm(VM_ID, USER_ID, 24.200001, 0, 0, 2, 0);
+		vm2_4 = new PreemptableVm(VM_ID, USER_ID, 24.200001, 0, 0, 2, 0, 0.5);
 		Assert.assertFalse(preemptionPolicy.isSuitableFor(vm2_4));
 
-		vm1_3 = new PreemptableVm(VM_ID, USER_ID, 49.2, 0, 0, 1, 0);
+		vm1_3 = new PreemptableVm(VM_ID, USER_ID, 49.2, 0, 0, 1, 0, 1);
 		Assert.assertTrue(preemptionPolicy.isSuitableFor(vm1_3));
 
-		vm1_4 = new PreemptableVm(VM_ID, USER_ID, 49.3, 0, 0, 1, 0);
+		vm1_4 = new PreemptableVm(VM_ID, USER_ID, 49.3, 0, 0, 1, 0, 1);
 		Assert.assertFalse(preemptionPolicy.isSuitableFor(vm1_4));
 
-		vm0_3 = new PreemptableVm(VM_ID, USER_ID, 74.2, 0, 0, 0, 0);
+		vm0_3 = new PreemptableVm(VM_ID, USER_ID, 74.2, 0, 0, 0, 0, 1);
 		Assert.assertTrue(preemptionPolicy.isSuitableFor(vm0_3));
 
-		vm0_4 = new PreemptableVm(VM_ID, USER_ID, 75, 0, 0, 0, 0);
+		vm0_4 = new PreemptableVm(VM_ID, USER_ID, 75, 0, 0, 0, 0, 1);
 		Assert.assertFalse(preemptionPolicy.isSuitableFor(vm0_4));
 
 		// testing after destroy a vm with priority 1
@@ -421,22 +420,22 @@ public class FCFSBasedPreemptionPolicyTest {
 		Assert.assertEquals(24.9, preemptionPolicy.getAvailableMipsByPriorityAndAvailability(2), ACCEPTABLE_DIFFERENCE);
 
 
-		vm2_3 = new PreemptableVm(VM_ID, USER_ID, 24.9, 0, 0, 2, 0);
+		vm2_3 = new PreemptableVm(VM_ID, USER_ID, 24.9, 0, 0, 2, 0, 0.5);
 		Assert.assertTrue(preemptionPolicy.isSuitableFor(vm2_3));
 
-		vm2_4 = new PreemptableVm(VM_ID, USER_ID, 25.000001, 0, 0, 2, 0);
+		vm2_4 = new PreemptableVm(VM_ID, USER_ID, 25.000001, 0, 0, 2, 0, 0.5);
 		Assert.assertFalse(preemptionPolicy.isSuitableFor(vm2_4));
 
-		vm1_3 = new PreemptableVm(VM_ID, USER_ID, 49.9, 0, 0, 1, 0);
+		vm1_3 = new PreemptableVm(VM_ID, USER_ID, 49.9, 0, 0, 1, 0, 0.9);
 		Assert.assertTrue(preemptionPolicy.isSuitableFor(vm1_3));
 
-		vm1_4 = new PreemptableVm(VM_ID, USER_ID, 50, 0, 0, 1, 0);
+		vm1_4 = new PreemptableVm(VM_ID, USER_ID, 50, 0, 0, 1, 0, 0.9);
 		Assert.assertFalse(preemptionPolicy.isSuitableFor(vm1_4));
 
-		vm0_3 = new PreemptableVm(VM_ID, USER_ID, 74.2, 0, 0, 0, 0);
+		vm0_3 = new PreemptableVm(VM_ID, USER_ID, 74.2, 0, 0, 0, 0, 1);
 		Assert.assertTrue(preemptionPolicy.isSuitableFor(vm0_3));
 
-		vm0_4 = new PreemptableVm(VM_ID, USER_ID, 75, 0, 0, 0, 0);
+		vm0_4 = new PreemptableVm(VM_ID, USER_ID, 75, 0, 0, 0, 0, 1);
 		Assert.assertFalse(preemptionPolicy.isSuitableFor(vm0_4));
 	}
 	
@@ -448,14 +447,14 @@ public class FCFSBasedPreemptionPolicyTest {
 		double cpuReq = 1.0;
 
 		//priority 0
-		PreemptableVm vm0 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 0, 0);
+		PreemptableVm vm0 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 0, 0, 1);
 		priorityToMipsInUse.put(0, cpuReq);
 		SortedSet<PreemptableVm> priority0Vms = new TreeSet<PreemptableVm>();
 		priority0Vms.add(vm0);
 		priorityToVms.put(0, priority0Vms);
 		
 		// priority 1
-		PreemptableVm vm1 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 1, 0);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 1, 0, 0.9);
 		priorityToMipsInUse.put(1, cpuReq);
 		SortedSet<PreemptableVm> priority1Vms = new TreeSet<PreemptableVm>();
 		priority1Vms.add(vm1);
@@ -514,14 +513,14 @@ public class FCFSBasedPreemptionPolicyTest {
 		
 		int vmId = 0;
 
-		PreemptableVm vm0_1 = new PreemptableVm(vmId++, 1, 23.7, 1.0, 0, 0, 0);
-		PreemptableVm vm0_2 = new PreemptableVm(vmId++, 1, 26.3, 1.0, 0.2, 0, 0);
+		PreemptableVm vm0_1 = new PreemptableVm(vmId++, 1, 23.7, 1.0, 0, 0, 0, 1);
+		PreemptableVm vm0_2 = new PreemptableVm(vmId++, 1, 26.3, 1.0, 0.2, 0, 0, 1);
 
-		PreemptableVm vm1_1 = new PreemptableVm(vmId++, 1, 24.3, 1.0, 0, 1, 0);
-		PreemptableVm vm1_2 = new PreemptableVm(vmId++, 1, 0.7, 1.0, 0.1, 1, 0);
+		PreemptableVm vm1_1 = new PreemptableVm(vmId++, 1, 24.3, 1.0, 0, 1, 0, 0.9);
+		PreemptableVm vm1_2 = new PreemptableVm(vmId++, 1, 0.7, 1.0, 0.1, 1, 0, 0.9);
 
-		PreemptableVm vm2_1 = new PreemptableVm(vmId++, 1,24.99, 1.0, 0, 2, 0);
-		PreemptableVm vm2_2 = new PreemptableVm(vmId++, 1, 0.01, 1.0, 0.1, 2, 0);
+		PreemptableVm vm2_1 = new PreemptableVm(vmId++, 1,24.99, 1.0, 0, 2, 0, 0.5);
+		PreemptableVm vm2_2 = new PreemptableVm(vmId++, 1, 0.01, 1.0, 0.1, 2, 0, 0.5);
 
 		preemptionPolicy.allocating(vm0_1);
 		preemptionPolicy.allocating(vm0_2);
@@ -541,7 +540,7 @@ public class FCFSBasedPreemptionPolicyTest {
 		Assert.assertEquals(2, preemptionPolicy.getPriorityToVms().get(2).size());
 		
 		// allocating a new vm with priority 0 
-		PreemptableVm vmTest = new PreemptableVm(7, 1, 0.3, 1.0, 0.2, 0, 0);		
+		PreemptableVm vmTest = new PreemptableVm(7, 1, 0.3, 1.0, 0.2, 0, 0, 1);		
 		preemptionPolicy.allocating(vmTest);
 		
 		// checking number of vms for each priority
@@ -563,7 +562,7 @@ public class FCFSBasedPreemptionPolicyTest {
 		Assert.assertEquals(2, preemptionPolicy.getPriorityToVms().get(2).size());
 		
 		// allocating a new vm with priority 2
-		PreemptableVm vm2_3 = new PreemptableVm(7, 1, 0.1, 1.0, 0.2, 2, 0);
+		PreemptableVm vm2_3 = new PreemptableVm(7, 1, 0.1, 1.0, 0.2, 2, 0, 0.5);
 		preemptionPolicy.allocating(vm2_3);
 		
 		// checking number of vms for each priority
@@ -602,7 +601,7 @@ public class FCFSBasedPreemptionPolicyTest {
 		Assert.assertEquals(vm1_2, preemptionPolicy.nextVmForPreempting());
 
 		// allocating a new Vm with priority 1
-		PreemptableVm vm1_3 = new PreemptableVm(7, 1, 25.5, 1.0, 0.1001, 1, 0);
+		PreemptableVm vm1_3 = new PreemptableVm(7, 1, 25.5, 1.0, 0.1001, 1, 0, 0.9);
 		preemptionPolicy.allocating(vm1_3);
 		
 		// checking number of vms for each priority
@@ -641,7 +640,7 @@ public class FCFSBasedPreemptionPolicyTest {
 		Assert.assertEquals(vm0_2, preemptionPolicy.nextVmForPreempting());
 
 		// allocating a new Vm with priority 0
-		PreemptableVm vm0_3 = new PreemptableVm(7, 1, 25.5, 1.0, 0.2, 0, 0);
+		PreemptableVm vm0_3 = new PreemptableVm(7, 1, 25.5, 1.0, 0.2, 0, 0, 1);
 		preemptionPolicy.allocating(vm0_3);
 		
 		// checking number of vms for each priority
@@ -654,7 +653,7 @@ public class FCFSBasedPreemptionPolicyTest {
 		Assert.assertEquals(vm0_3, preemptionPolicy.nextVmForPreempting());
 
 		// allocating a new vm with priority 0 and submitTime before the last one
-		PreemptableVm vm0_4 = new PreemptableVm(8, 1, 24.9, 1.0, 0.1, 0, 0);
+		PreemptableVm vm0_4 = new PreemptableVm(8, 1, 24.9, 1.0, 0.1, 0, 0, 1);
 		preemptionPolicy.allocating(vm0_4);
 		
 		// checking number of vms for each priority

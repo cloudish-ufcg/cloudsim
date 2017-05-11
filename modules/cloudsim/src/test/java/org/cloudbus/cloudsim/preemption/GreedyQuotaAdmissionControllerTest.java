@@ -1,13 +1,12 @@
 package org.cloudbus.cloudsim.preemption;
 
-import java.util.HashMap;
 import java.util.Map;
 
-import gnu.trove.map.hash.THashMap;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
+
+import gnu.trove.map.hash.THashMap;
 
 /**
  * Created by Alessandro Lia Fook Santos on 08/02/17.
@@ -166,7 +165,7 @@ public class GreedyQuotaAdmissionControllerTest {
         admittedRequests.put(BATCH, 0d);
         admittedRequests.put(FREE, 0d);
 
-        PreemptableVm vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 1);
         Assert.assertTrue(admController.accept(vm, admittedRequests));
 
         //checking values of quotaByPriority
@@ -182,7 +181,7 @@ public class GreedyQuotaAdmissionControllerTest {
         priority = 1;
         cpuReq = 111.111112111;
         // Quota for priority 1 is 100 / 0.9 = 111,111111111
-        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 0.9);
         Assert.assertFalse(admController.accept(vm, admittedRequests));
 
         //checking values of quotaByPriority
@@ -192,7 +191,7 @@ public class GreedyQuotaAdmissionControllerTest {
 
         cpuReq = 111.111111111;
         // Quota for priority 1 is 100 / 0.9 = 111,111111111
-        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 0.9);
         Assert.assertTrue(admController.accept(vm, admittedRequests));
 
         //checking values of quotaByPriority
@@ -209,7 +208,7 @@ public class GreedyQuotaAdmissionControllerTest {
         priority = 2;
         cpuReq = 200.0000001;
         // Quota for priority 2 is 100 / 0.5 = 200
-        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 0.5);
         Assert.assertFalse(admController.accept(vm, admittedRequests));
 
         //checking values of quotaByPriority
@@ -219,12 +218,12 @@ public class GreedyQuotaAdmissionControllerTest {
 
         cpuReq = 199.00000009;
         // Quota for priority 2 is 100 / 0.5 = 200
-        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 0.5);
         Assert.assertTrue(admController.accept(vm, admittedRequests));
 
         cpuReq = 200;
         // Quota for priority 2 is 100 / 0.5 = 200
-        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 0.5);
         Assert.assertTrue(admController.accept(vm, admittedRequests));
 
         //checking values of quotaByPriority
@@ -258,15 +257,15 @@ public class GreedyQuotaAdmissionControllerTest {
         Assert.assertEquals(60, admController.getPriorityToQuotas().get(FREE), ACCEPTABLE_DIFFERENCE);
 
         // quota is 100, requested is 50 and admitted is 50 too
-        PreemptableVm vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 1);
         Assert.assertTrue(admController.accept(vm, admittedRequests));
 
         cpuReq = 49.999999999;
-        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 1);
         Assert.assertTrue(admController.accept(vm, admittedRequests));
 
         cpuReq = 50.0000000001;
-        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 1);
         Assert.assertFalse(admController.accept(vm, admittedRequests));
 
 
@@ -274,15 +273,15 @@ public class GreedyQuotaAdmissionControllerTest {
 
         priority = 1;
         cpuReq = 35.555555556;
-        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 0.9);
         Assert.assertTrue(admController.accept(vm, admittedRequests));
 
         cpuReq = 35.555555555;
-        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 0.9);
         Assert.assertTrue(admController.accept(vm, admittedRequests));
 
         cpuReq = 35.555555557;
-        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 0.9);
         Assert.assertFalse(admController.accept(vm, admittedRequests));
 
 
@@ -290,19 +289,15 @@ public class GreedyQuotaAdmissionControllerTest {
 
         priority = 2;
         cpuReq = 50;
-        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 0.5);
         Assert.assertTrue(admController.accept(vm, admittedRequests));
 
         cpuReq = 49.999999999;
-        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 0.5);
         Assert.assertTrue(admController.accept(vm, admittedRequests));
 
         cpuReq = 50.0000000001;
-        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime);
+        vm = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, 0.5);
         Assert.assertFalse(admController.accept(vm, admittedRequests));
-
     }
-
-
-
 }

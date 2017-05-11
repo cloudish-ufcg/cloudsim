@@ -140,9 +140,10 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
         double memReq = 0;
         double submitTime = 0d;
         priority = 1;
+        double availabilityTarget = 0.9;
         double runtime = 10;
-        vm0 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
-        vm1 = new PreemptableVm(vmId++, userId, (cpuReq / 2), memReq, submitTime, priority, runtime);
+        vm0 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
+        vm1 = new PreemptableVm(vmId++, userId, (cpuReq / 2), memReq, submitTime, priority, runtime, availabilityTarget);
 
         preemptionPolicy1 = new VmAvailabilityBasedPreemptionPolicy(properties, simulationTimeUtil);
         preemptionPolicy2 = new VmAvailabilityBasedPreemptionPolicy(properties, simulationTimeUtil);
@@ -305,13 +306,14 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
         double submitTime = 0;
         int priority = 0;
         double runtime = 10;
+        double availabilityTarget = 1;
 
         Mockito.when(MockedVm.getPriority()).thenReturn(priority);
         Mockito.when(MockedVm.getMips()).thenReturn(cpuReq);
 
 
         cpuReq = 0.499999996;
-        PreemptableVm vm1 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        PreemptableVm vm1 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
         hostWithMockedPolicy1.vmCreate(vm1); // create the vm into the host to reduce his available mips
 
         Mockito.when(mockedPreemptionPolicy1.getAvailableMipsByPriorityAndAvailability(MockedVm.getPriority())).thenReturn(0.000000004);
@@ -391,6 +393,7 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
         Mockito.when(MockedVm.getPriority()).thenReturn(priority);
         Mockito.when(MockedVm.getMips()).thenReturn(cpuReq);
         Mockito.when(MockedVm.getCurrentAvailability(simulationTimeUtil.clock())).thenReturn(1.1);
+        Mockito.when(MockedVm.isAvailabilityAboveOfTarget(simulationTimeUtil.clock())).thenReturn(true);
 
         Mockito.when(mockedPreemptionPolicy1.getAvailableMipsByPriority(MockedVm.getPriority())).thenReturn(10.0);
         Mockito.when(mockedPreemptionPolicy1.isSuitableFor(MockedVm)).thenReturn(true);
@@ -470,14 +473,16 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
         double submitTime = 0d;
         int priority = 2;
         double runtime = 10;
+        double availabilityTarget = 0.5;
 
-        PreemptableVm vm0P2 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
-        PreemptableVm vm1P2 = new PreemptableVm(vmId++, userId, (cpuReq / 2), memReq, submitTime, priority, runtime);
+        PreemptableVm vm0P2 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
+        PreemptableVm vm1P2 = new PreemptableVm(vmId++, userId, (cpuReq / 2), memReq, submitTime, priority, runtime, availabilityTarget);
 
         priority = 0;
         submitTime = 2;
-        PreemptableVm vm0P0 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
-        PreemptableVm vm1P0 = new PreemptableVm(vmId++, userId, (cpuReq / 2), memReq, submitTime, priority, runtime);
+        availabilityTarget = 1;
+        PreemptableVm vm0P0 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
+        PreemptableVm vm1P0 = new PreemptableVm(vmId++, userId, (cpuReq / 2), memReq, submitTime, priority, runtime, availabilityTarget);
 
         Mockito.when(simulationTimeUtil.clock()).thenReturn(0d);
         allocationPolicyWithNoMock.preProcess();
@@ -576,9 +581,9 @@ public class WorstFitAvailabilityAwareVmAllocationPolicyTest {
         Assert.assertEquals(1, host3.getVmList().size());
 
         //test methods of the vm allocation policy
-
         priority = 1;
-        PreemptableVm vm0P1 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime);
+        availabilityTarget = 0.9;
+        PreemptableVm vm0P1 = new PreemptableVm(vmId++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
 
         selectedHost = allocationPolicyWithNoMock.selectHost(vm0P1);
         Assert.assertEquals(host1, selectedHost);

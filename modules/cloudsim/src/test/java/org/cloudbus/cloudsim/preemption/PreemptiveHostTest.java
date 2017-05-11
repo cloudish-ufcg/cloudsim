@@ -129,14 +129,14 @@ public class PreemptiveHostTest {
 		double cpuReq = 1.0;
 
 		//priority 0
-		PreemptableVm vm0 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 0, 0);
+		PreemptableVm vm0 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 0, 0, 1);
 		priorityToMipsInUse.put(0, cpuReq);
 		SortedSet<PreemptableVm> priority0Vms = new TreeSet<PreemptableVm>();
 		priority0Vms.add(vm0);
 		priorityToVms.put(0, priority0Vms);
 		
 		// priority 1
-		PreemptableVm vm1 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 1, 0);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 1, 0, 0.9);
 		priorityToMipsInUse.put(1, cpuReq);
 		SortedSet<PreemptableVm> priority1Vms = new TreeSet<PreemptableVm>();
 		priority1Vms.add(vm1);
@@ -210,7 +210,7 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(0, host1.getPreemptionPolicy().getPriorityToVms().get(1).size());
 		
 		// creating vm0 (priority 0)
-		PreemptableVm vm0 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 0, 0);
+		PreemptableVm vm0 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 0, 0, 1);
 		
 		Assert.assertTrue(host1.vmCreate(vm0));
 
@@ -226,7 +226,7 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(100 - cpuReq, host1.getAvailableMips(),ACCEPTABLE_DIFFERENCE);
 		
 		// creating vm1 (priority 1)
-		PreemptableVm vm1 = new PreemptableVm(2, 1, cpuReq, 1.0, 0, 1, 0);
+		PreemptableVm vm1 = new PreemptableVm(2, 1, cpuReq, 1.0, 0, 1, 0, 0.9);
 		
 		Assert.assertTrue(host1.vmCreate(vm1));
 
@@ -263,12 +263,12 @@ public class PreemptiveHostTest {
 		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
 		Host googleHost = new PreemptiveHost(id, peList1, schedulerMipsBased, new FCFSBasedPreemptionPolicy(properties));
 
-		Vm vm1 = new PreemptableVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime);
-		Vm vm2 = new PreemptableVm(id++, userId, 5 * cpuReq, memReq, subTime, priority - 1 , runTime);
-		Vm vm3 = new PreemptableVm(id++, userId, 2 * cpuReq, memReq, subTime, priority, runTime);
-		Vm vm4 = new PreemptableVm(id++, userId, 3 * cpuReq, memReq, subTime, priority, runTime);
-		Vm vm5 = new PreemptableVm(id++, userId, 4 * cpuReq, memReq, subTime, priority + 1, runTime);
-		Vm vm6 = new PreemptableVm(id++, userId, 6 * cpuReq, memReq, subTime, priority + 1, runTime);
+		Vm vm1 = new PreemptableVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime, 1);
+		Vm vm2 = new PreemptableVm(id++, userId, 5 * cpuReq, memReq, subTime, priority - 1 , runTime, 1);
+		Vm vm3 = new PreemptableVm(id++, userId, 2 * cpuReq, memReq, subTime, priority, runTime, 0.9);
+		Vm vm4 = new PreemptableVm(id++, userId, 3 * cpuReq, memReq, subTime, priority, runTime, 0.9);
+		Vm vm5 = new PreemptableVm(id++, userId, 4 * cpuReq, memReq, subTime, priority + 1, runTime, 0.5);
+		Vm vm6 = new PreemptableVm(id++, userId, 6 * cpuReq, memReq, subTime, priority + 1, runTime, 0.5);
 
 		Assert.assertEquals(5 * cpuReq, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
 
@@ -322,12 +322,12 @@ public class PreemptiveHostTest {
 		properties.setProperty(PreemptionPolicy.NUMBER_OF_PRIORITIES_PROP, "3");
 		Host googleHost = new PreemptiveHost(id, peList1, vmSchedulerMipsBased, new FCFSBasedPreemptionPolicy(properties));
 
-		Vm vm1 = new PreemptableVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime);
-		Vm vm2 = new PreemptableVm(id++, userId, 5 * cpuReq, memReq, subTime, priority - 1 , runTime);
-		Vm vm3 = new PreemptableVm(id++, userId, 2 * cpuReq, memReq, subTime, priority, runTime);
-		Vm vm4 = new PreemptableVm(id++, userId, 3 * cpuReq, memReq, subTime, priority, runTime);
-		Vm vm5 = new PreemptableVm(id++, userId, 4 * cpuReq, memReq, subTime, priority + 1, runTime);
-		Vm vm6 = new PreemptableVm(id++, userId, 6 * cpuReq, memReq, subTime, priority + 1, runTime);
+		Vm vm1 = new PreemptableVm(id++, userId, 1 * cpuReq, memReq, subTime, priority - 1, runTime, 1);
+		Vm vm2 = new PreemptableVm(id++, userId, 5 * cpuReq, memReq, subTime, priority - 1 , runTime, 1);
+		Vm vm3 = new PreemptableVm(id++, userId, 2 * cpuReq, memReq, subTime, priority, runTime, 0.9);
+		Vm vm4 = new PreemptableVm(id++, userId, 3 * cpuReq, memReq, subTime, priority, runTime, 0.9);
+		Vm vm5 = new PreemptableVm(id++, userId, 4 * cpuReq, memReq, subTime, priority + 1, runTime, 0.5);
+		Vm vm6 = new PreemptableVm(id++, userId, 6 * cpuReq, memReq, subTime, priority + 1, runTime, 0.5);
 
 		Assert.assertEquals(cpuCapacity, googleHost.getAvailableMips(), ACCETABLE_DIFFERENCE);
 
@@ -388,8 +388,8 @@ public class PreemptiveHostTest {
 
 		double cpuReq = 1.0;
 		
-		PreemptableVm vm0 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 0, 0);
-		PreemptableVm vm1 = new PreemptableVm(2, 1, cpuReq, 1.0, 0, 1, 0);
+		PreemptableVm vm0 = new PreemptableVm(1, 1, cpuReq, 1.0, 0, 0, 0, 1);
+		PreemptableVm vm1 = new PreemptableVm(2, 1, cpuReq, 1.0, 0, 1, 0, 0.9);
 
 		Assert.assertTrue(host1.vmCreate(vm0));
 		Assert.assertTrue(host1.vmCreate(vm1));
@@ -449,9 +449,9 @@ public class PreemptiveHostTest {
 
 		for (int id = 0; id < totalVms; id++) {
 			if (id % 2 == 0) {
-				host1.vmCreate(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 0, 0));
+				host1.vmCreate(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 0, 0, 1));
 			} else {
-				host1.vmCreate(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 1, 0));
+				host1.vmCreate(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 1, 0, 0.9));
 			}
 		}
 
@@ -469,19 +469,19 @@ public class PreemptiveHostTest {
 		
 		// checking if is suitable for priority 1
 		for (int requiredMips = 1; requiredMips <= freeCapacity; requiredMips++) {
-			Assert.assertTrue(host1.isSuitableForVm(new PreemptableVm(100, 1, requiredMips, 1.0, 0, 1, 0)));
+			Assert.assertTrue(host1.isSuitableForVm(new PreemptableVm(100, 1, requiredMips, 1.0, 0, 1, 0, 0.9)));
 		}
 
-		Assert.assertFalse(host1.isSuitableForVm(new PreemptableVm(100, 1, freeCapacity + 1, 1.0, 0, 1, 0)));
+		Assert.assertFalse(host1.isSuitableForVm(new PreemptableVm(100, 1, freeCapacity + 1, 1.0, 0, 1, 0, 0.9)));
 
 		// checking if is suitable for priority 0
 		for (int requiredMips = 1; requiredMips <= freeCapacity
 				+ (totalVms / 2); requiredMips++) {
-			Assert.assertTrue(host1.isSuitableForVm(new PreemptableVm(100, 1, requiredMips, 1.0, 0, 0, 0)));
+			Assert.assertTrue(host1.isSuitableForVm(new PreemptableVm(100, 1, requiredMips, 1.0, 0, 0, 0, 1)));
 		}
 
 		Assert.assertFalse(host1.isSuitableForVm(new PreemptableVm(100, 1,
-				freeCapacity + (totalVms / 2) + 1, 1.0, 0, 0, 0)));
+				freeCapacity + (totalVms / 2) + 1, 1.0, 0, 0, 0, 1)));
 	}
 	
 	@Test
@@ -515,7 +515,7 @@ public class PreemptiveHostTest {
 				peList1), new FCFSBasedPreemptionPolicy(properties));
 		
 		//priority 0
-		PreemptableVm vm0 = new PreemptableVm(0, 1, 50, 1.0, 0, 0, 0);
+		PreemptableVm vm0 = new PreemptableVm(0, 1, 50, 1.0, 0, 0, 0, 1);
 				
 		Assert.assertTrue(host1.vmCreate(vm0));
 		
@@ -524,7 +524,7 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(50.5, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 	
 		//priority 1
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 20, 1.0, 0, 1, 0);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 20, 1.0, 0, 1, 0, 0.9);
 
 		Assert.assertTrue(host1.vmCreate(vm1)); 
 		
@@ -533,7 +533,7 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(30.5, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 		
 		//priority 1
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 20, 1.0, 0, 1, 0);
+		PreemptableVm vm2 = new PreemptableVm(2, 1, 20, 1.0, 0, 1, 0, 0.9);
 
 		Assert.assertTrue(host1.vmCreate(vm2)); 
 		
@@ -548,7 +548,7 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(30.5, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
 		//priority 2
-		PreemptableVm vm3 = new PreemptableVm(3, 1, 20, 1.0, 0, 2, 0);
+		PreemptableVm vm3 = new PreemptableVm(3, 1, 20, 1.0, 0, 2, 0, 0.5);
 
 		Assert.assertTrue(host1.vmCreate(vm3));
 
@@ -557,7 +557,7 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(10.5, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
 		// creating vm4 with less than 1 mips, with priority 0
-		PreemptableVm vm4 = new PreemptableVm(4, 1, 0.01, 1.0, 0, 0, 0);
+		PreemptableVm vm4 = new PreemptableVm(4, 1, 0.01, 1.0, 0, 0, 0, 1);
 		Assert.assertTrue(host1.vmCreate(vm4));
 
 		Assert.assertEquals(50.49, host1.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
@@ -565,7 +565,7 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(10.49, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
 		// creating vm5 with less than 1 mips, with priority 1
-		PreemptableVm vm5 = new PreemptableVm(5, 1, 0.01, 1.0, 0, 1, 0);
+		PreemptableVm vm5 = new PreemptableVm(5, 1, 0.01, 1.0, 0, 1, 0, 0.9);
 		Assert.assertTrue(host1.vmCreate(vm5));
 
 		Assert.assertEquals(50.49, host1.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
@@ -573,7 +573,7 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(10.48, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
 		// creating vm6 with less than 1 mips, with priority 2
-		PreemptableVm vm6 = new PreemptableVm(6, 1, 0.01, 1.0, 0, 2, 0);
+		PreemptableVm vm6 = new PreemptableVm(6, 1, 0.01, 1.0, 0, 2, 0, 0.5);
 		Assert.assertTrue(host1.vmCreate(vm6));
 		Assert.assertEquals(50.49, host1.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(30.48, host1.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
@@ -586,14 +586,14 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(60.47, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
 		// creating vm7
-		PreemptableVm vm7 = new PreemptableVm(7, 1, 60.47, 1.0, 0, 0, 0);
+		PreemptableVm vm7 = new PreemptableVm(7, 1, 60.47, 1.0, 0, 0, 0, 1);
 		Assert.assertTrue(host1.vmCreate(vm7));
 		Assert.assertEquals(40.02, host1.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(20.01, host1.getAvailableMipsByPriority(1), ACCEPTABLE_DIFFERENCE);
 		Assert.assertEquals(0, host1.getAvailableMipsByPriority(2), ACCEPTABLE_DIFFERENCE);
 
 		// asserting that is not possible create vm8 because vmCreate method is not responsible by preempt Vms with low priority
-		PreemptableVm vm8 = new PreemptableVm(7, 1, 40.02, 1.0, 0, 0, 0);
+		PreemptableVm vm8 = new PreemptableVm(7, 1, 40.02, 1.0, 0, 0, 0, 1);
 		Assert.assertFalse(host1.vmCreate(vm8));
 	}
 
@@ -609,9 +609,9 @@ public class PreemptiveHostTest {
 
 		for (int id = 0; id < 20; id++) {
 			if (id % 2 == 0) {
-				priority0Vms.add(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 0, 0));
+				priority0Vms.add(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 0, 0, 1));
 			} else {
-				priority1Vms.add(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 1, 0));
+				priority1Vms.add(new PreemptableVm(id, 1, cpuReq, 1.0, 0, 1, 0, 0.9));
 			}
 		}
 
@@ -652,7 +652,7 @@ public class PreemptiveHostTest {
 			int id = 20 + i;
 			double cpuReq2 = 0.1;
 			Assert.assertEquals(90 - (cpuReq2 * i), host1.getAvailableMipsByPriority(priority), ACCEPTABLE_DIFFERENCE);
-			Vm gVm = new PreemptableVm(id, 1, cpuReq2, 1.0, 0, priority, 0);
+			Vm gVm = new PreemptableVm(id, 1, cpuReq2, 1.0, 0, priority, 0, 1);
 			host1.vmCreate(gVm);
 		}
 
@@ -663,7 +663,7 @@ public class PreemptiveHostTest {
 			double cpuReq2 = 0.1;
 			Assert.assertEquals(89, host1.getAvailableMipsByPriority(0), ACCEPTABLE_DIFFERENCE);
 			Assert.assertEquals(79 - (cpuReq2 * i), host1.getAvailableMipsByPriority(priority), ACCEPTABLE_DIFFERENCE);
-			Vm gVm = new PreemptableVm(id, 1, cpuReq2, 1.0, 0, priority, 0);
+			Vm gVm = new PreemptableVm(id, 1, cpuReq2, 1.0, 0, priority, 0, 0.9);
 			host1.vmCreate(gVm);
 		}
 	}
@@ -688,7 +688,7 @@ public class PreemptiveHostTest {
 				new VmSchedulerMipsBased(peList3), new FCFSBasedPreemptionPolicy(properties));
 
 		// vm1 with mips required = 1
-		PreemptableVm vm1 = new PreemptableVm(0, 1, 1, 1.0, 0, 0, 0);
+		PreemptableVm vm1 = new PreemptableVm(0, 1, 1, 1.0, 0, 0, 0, 1);
 
 		// asserting that vm1 can be allocated at host1 and host2
 		Assert.assertTrue(host1.vmCreate(vm1));
@@ -705,7 +705,7 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(host2.getAvailableMips(), 1 + 1.0E-9, NEW_ACCEPTABLE_DIFFERENCE);
 
 		// vm1 with mips required that can not be allocated at host1, but can be allocated at host2
-		vm1 = new PreemptableVm(0, 1, 1.000000001, 1.0, 0, 0, 0);
+		vm1 = new PreemptableVm(0, 1, 1.000000001, 1.0, 0, 0, 0, 1);
 		Assert.assertFalse(host1.vmCreate(vm1));
 		Assert.assertTrue(host2.vmCreate(vm1));
 
@@ -718,7 +718,7 @@ public class PreemptiveHostTest {
 		Assert.assertEquals(host2.getAvailableMips(), 1 + 1.0E-9, NEW_ACCEPTABLE_DIFFERENCE);
 
 		// vm1 with mips required bigger than host1 and host2 capacity
-		vm1 = new PreemptableVm(0, 1, 1.0000000016, 1.0, 0, 0, 0);
+		vm1 = new PreemptableVm(0, 1, 1.0000000016, 1.0, 0, 0, 0, 1);
 		Assert.assertFalse(host1.vmCreate(vm1));
 		Assert.assertFalse(host2.vmCreate(vm1));
 		Assert.assertEquals(host1.getAvailableMips(), 1, NEW_ACCEPTABLE_DIFFERENCE);
@@ -726,7 +726,7 @@ public class PreemptiveHostTest {
 
 
 		// vm1 with mips required bigger than host1 and host2 capacity
-		vm1 = new PreemptableVm(0, 1, 1.0000000011, 1.0, 0, 0, 0);
+		vm1 = new PreemptableVm(0, 1, 1.0000000011, 1.0, 0, 0, 0, 1);
 		Assert.assertFalse(host1.vmCreate(vm1));
 		Assert.assertFalse(host2.vmCreate(vm1));
 		Assert.assertEquals(host1.getAvailableMips(), 1, NEW_ACCEPTABLE_DIFFERENCE);
@@ -754,9 +754,9 @@ public class PreemptiveHostTest {
 				new VmSchedulerMipsBased(peList3), new FCFSBasedPreemptionPolicy(properties));
 
 		// setting vms
-		PreemptableVm vm1 = new PreemptableVm(1, 1, 1, 1.0, 0, 0, 0);
-		PreemptableVm vm2 = new PreemptableVm(2, 1, 0.999999999, 1.0, 0, 0, 0);
-		PreemptableVm vm3 = new PreemptableVm(3, 1, 0.000000001, 1.0, 0, 0, 0);
+		PreemptableVm vm1 = new PreemptableVm(1, 1, 1, 1.0, 0, 0, 0, 1);
+		PreemptableVm vm2 = new PreemptableVm(2, 1, 0.999999999, 1.0, 0, 0, 0, 1);
+		PreemptableVm vm3 = new PreemptableVm(3, 1, 0.000000001, 1.0, 0, 0, 0, 1);
 
 		// asserting that vm2 can be allocated at host1 and new capacity of host
 		Assert.assertTrue(host1.vmCreate(vm2));

@@ -1,14 +1,17 @@
 package org.cloudbus.cloudsim.preemption.datastore;
 
-import org.cloudbus.cloudsim.preemption.PreemptableVm;
-import org.cloudbus.cloudsim.preemption.PreemptiveHost;
-import org.junit.*;
-import org.mockito.Mockito;
-
 import java.io.File;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import org.cloudbus.cloudsim.preemption.PreemptableVm;
+import org.cloudbus.cloudsim.preemption.PreemptiveHost;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  * Created by Alessandro Lia Fook Santos and Joao Victor Mafra on 19/10/16.
@@ -60,10 +63,10 @@ public class PreemptableVmDataStoreTest {
         submitTime = 0;
         runtime = 1.25;
 
-        vm1 = new PreemptableVm(id++, USER_ID, cpuReq, memReq, submitTime, priority - 1, runtime);
-        vm2 = new PreemptableVm(id++, USER_ID, cpuReq, memReq, submitTime, priority - 1, runtime);
-        vm3 = new PreemptableVm(id++, USER_ID, cpuReq, memReq, submitTime, priority, runtime);
-        vm4 = new PreemptableVm(id++, USER_ID, cpuReq, memReq, submitTime, priority + 1, runtime);
+        vm1 = new PreemptableVm(id++, USER_ID, cpuReq, memReq, submitTime, priority - 1, runtime, 1);
+        vm2 = new PreemptableVm(id++, USER_ID, cpuReq, memReq, submitTime, priority - 1, runtime, 1);
+        vm3 = new PreemptableVm(id++, USER_ID, cpuReq, memReq, submitTime, priority, runtime, 0.9);
+        vm4 = new PreemptableVm(id++, USER_ID, cpuReq, memReq, submitTime, priority + 1, runtime, 0.5);
 
         //setting host for the vms
         vm1.setHost(host1);
@@ -277,7 +280,7 @@ public class PreemptableVmDataStoreTest {
 
         //adding 50 vms to the set of running
         for (int i = 0; i < 50; i++) {
-            vm1 = new PreemptableVm(vmId++, USER_ID, cpuReq, memReq, submitTime, priority - 1, runtime);
+            vm1 = new PreemptableVm(vmId++, USER_ID, cpuReq, memReq, submitTime, priority - 1, runtime, 1);
             vm1.setHost(host1);
             running.add(vm1);
         }
@@ -291,7 +294,7 @@ public class PreemptableVmDataStoreTest {
 
         //adding 50 vms to the set of waiting
         for (int i = 0; i < 50; i++) {
-            vm1 = new PreemptableVm(vmId++, USER_ID, cpuReq, memReq, submitTime, priority - 1, runtime);
+            vm1 = new PreemptableVm(vmId++, USER_ID, cpuReq, memReq, submitTime, priority - 1, runtime, 1);
             vm1.setHost(host1);
             waiting.add(vm1);
         }
