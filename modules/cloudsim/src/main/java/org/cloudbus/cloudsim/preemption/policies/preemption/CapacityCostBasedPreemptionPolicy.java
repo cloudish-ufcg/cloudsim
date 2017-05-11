@@ -17,7 +17,6 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
 
     private static final int PROD = 0;
     private static final int BATCH = 1;
-    private static final int FREE = 2;
 
     private static final int NOT_STARTED = -1;
 
@@ -29,6 +28,7 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
     public CapacityCostBasedPreemptionPolicy() {
         this.capacityCosts = new TreeSet<>(new CapacityCostComparatorByCapacity());
         this.costSkins = new TreeSet<>();
+        this.vms = new THashMap<>();
         this.lastUpdate = NOT_STARTED;
     }
 
@@ -71,11 +71,6 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
 
         getVms().put(vm.getId(), vm);
 
-        // TODO Do we need keep this structure updated?
-        double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority());
-        getPriorityToInUseMips().put(vm.getPriority(),
-                DecimalUtil.format(priorityCurrentUse + vm.getMips()));
-
         updateStructures();
     }
 
@@ -103,45 +98,42 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
 
         CapacityCost capacityCost;
         double cost = 0;
-        double availableMips = getAvailableMipsByPriority(FREE);
+        double availableMips = getHost().getAvailableMips();
 
-
-        // TODO check if we need this checking
-        //TODO What is the reason for this checking? If the host is empty, what will be its capacityCost?
-        if (checkLimits(minCPUReq, maxCPUReq, availableMips)) {
             capacityCost = new CapacityCost(availableMips, cost, getHost());
             getCapacityCosts().add(capacityCost);
-        }
 
         Iterator<CostSkin> iterator = ((TreeSet<CostSkin>) getCostSkins()).descendingIterator();
 
         while (iterator.hasNext()) {
 
-            CostSkin costSkin = (CostSkin) iterator.next();
+            CostSkin costSkin = iterator.next();
             PreemptableVm vm = costSkin.getVm();
 
             double vmMips = vm.getMips();
             availableMips += vmMips;
             cost += calculateCost(vm);
 
-            if (checkLimits(minCPUReq, maxCPUReq, availableMips)) {
-                capacityCost = new CapacityCost(availableMips, cost, getHost());
-                getCapacityCosts().add(capacityCost);
-            }
+            capacityCost = new CapacityCost(availableMips, cost, getHost());
+            getCapacityCosts().add(capacityCost);
+
+            if (!checkLimits(minCPUReq, maxCPUReq, availableMips)) break;
         }
     }
 
     private boolean checkLimits(double minCPUReq, double maxCPUReq, double availableMips) {
-    	// TODO I think we to have at least one CapacityCost equal or greater than maxCPUReq
         return availableMips >= minCPUReq && availableMips <= maxCPUReq;
     }
 
     private void updateCostSkins() {
 
-        getCostSkins().clear();
+        if (getVms().size() > 0) {
 
-        for (PreemptableVm vm : getVms().values()) {
-            addCostSkin(vm);
+            getCostSkins().clear();
+
+            for (PreemptableVm vm : getVms().values()) {
+                addCostSkin(vm);
+            }
         }
     }
 
@@ -153,11 +145,6 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
 
         getVms().remove(vm.getId());
         removeCostSkin(vm);
-
-        // TODO Do we need keep this structure updated?
-        double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority());
-        getPriorityToInUseMips().put(vm.getPriority(),
-                DecimalUtil.format(priorityCurrentUse - vm.getMips()));
 
         updateStructures();
     }

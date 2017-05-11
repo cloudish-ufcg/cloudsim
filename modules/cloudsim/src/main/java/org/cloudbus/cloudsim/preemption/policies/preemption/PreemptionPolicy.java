@@ -115,4 +115,12 @@ public abstract class PreemptionPolicy {
     public void setHost(PreemptiveHost host) {
         this.host = host;
     }
+
+    public SimulationTimeUtil getSimulationTimeUtil() {
+        return simulationTimeUtil;
+    }
+
+    public void setSimulationTimeUtil(SimulationTimeUtil simulationTimeUtil) {
+        this.simulationTimeUtil = simulationTimeUtil;
+    }
 }

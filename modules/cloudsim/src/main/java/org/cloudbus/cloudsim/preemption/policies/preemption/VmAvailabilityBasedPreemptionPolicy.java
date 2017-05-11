@@ -163,7 +163,7 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
         this.priorityToSLOTarget = priorityToSLOTarget;
     }
 
-    protected void setSimulationTimeUtil(SimulationTimeUtil simulationTimeUtil) {
+    public void setSimulationTimeUtil(SimulationTimeUtil simulationTimeUtil) {
         this.simulationTimeUtil = simulationTimeUtil;
     }
 
