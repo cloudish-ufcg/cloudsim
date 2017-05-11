@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import org.cloudbus.cloudsim.Host;
-import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
@@ -98,7 +97,7 @@ public class BestFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAll
         	
         	TreeSet<PreemptiveHost> hosts;
             
-            if (pVm.getCurrentAvailability(simulationTimeUtil.clock()) > getSLOTarget(pVm.getPriority())) {
+            if (pVm.isAvailabilityAboveOfTarget(simulationTimeUtil.clock())) {
                 hosts = (TreeSet<PreemptiveHost>) getPriorityToHostsFCFSAware().get(pVm.getPriority());
 
             } else {

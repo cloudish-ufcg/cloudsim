@@ -9,6 +9,7 @@ import org.cloudbus.cloudsim.preemption.SimulationTimeUtil;
 public class PriorityAndTTVBasedPreemptableVmComparator implements
 		Comparator<PreemptableVm> {
 
+	// TODO Do we really need this structure here?
 	private Map<Integer, Double>  sloTargets;
 	private SimulationTimeUtil simulationTimeUtil;
 	
@@ -39,19 +40,12 @@ public class PriorityAndTTVBasedPreemptableVmComparator implements
 		} else if (vm1.getPriority() > vm2.getPriority()) {
 			return 1;
 		} else {
-			double vm1TTV = vm1.getActualRuntime(simulationTimeUtil.clock())
-					- ((simulationTimeUtil.clock() - vm1.getSubmitTime()) * sloTargets
-							.get(vm1.getPriority()));
-			double vm2TTV = vm2.getActualRuntime(simulationTimeUtil.clock())
-					- ((simulationTimeUtil.clock() - vm2.getSubmitTime()) * sloTargets
-							.get(vm2.getPriority()));
-
-			int result = new Double(vm1TTV).compareTo(new Double(vm2TTV));
+			int result = new Double(vm1.getTTV(simulationTimeUtil.clock()))
+					.compareTo(new Double(vm2.getTTV(simulationTimeUtil.clock())));
 
 			if (result == 0) {
 				return new Integer(vm1.getId()).compareTo(new Integer(vm2
 						.getId()));
-
 			}
 
 			return result;

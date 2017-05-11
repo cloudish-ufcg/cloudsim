@@ -1,6 +1,5 @@
 package org.cloudbus.cloudsim.preemption.policies.preemption;
 
-import java.util.List;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;

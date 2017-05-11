@@ -1,6 +1,5 @@
 package org.cloudbus.cloudsim.preemption.policies.preemption;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
@@ -97,17 +96,13 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 
     @Override
     public double getAvailableMipsByPriorityAndAvailability(int priority) {
-
         double mipsToBeAvailable = getAvailableMipsByPriority(priority);
 
-        double sloTarget = getPriorityToSLOTarget().get(priority);
-
         for (Vm vm : priorityToRunningVms.get(priority).values()) {
-
             PreemptableVm pVM = (PreemptableVm) vm;
-            double currentAvailability = pVM.getCurrentAvailability(simulationTimeUtil.clock());
 
-            if (currentAvailability > sloTarget)
+            if (pVM.isAvailabilityAboveOfTarget(simulationTimeUtil.clock()))
+
                 mipsToBeAvailable += pVM.getMips();
 
         }

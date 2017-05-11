@@ -55,6 +55,7 @@ public class PreemptableVmDataStore extends DataStore {
 							+ "hostId INTEGER, "
 							+ "running INTEGER, "
 							+ "firstTimeAllocated REAL, "
+							+ "availabilityTarget REAL, "
 							+ "PRIMARY KEY (vmId)"
 							+ ")");
 		} catch (Exception e) {
@@ -72,7 +73,7 @@ public class PreemptableVmDataStore extends DataStore {
 	}
 
 	private static final String INSERT_DATACENTER_INFO_SQL = "INSERT INTO " + VMS_TABLE_NAME
-			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	
 	public boolean addWaitingVms(SortedSet<PreemptableVm> waitingVms) {
 		if (waitingVms == null) {
@@ -125,6 +126,7 @@ public class PreemptableVmDataStore extends DataStore {
 				insertMemberStatement.setInt(11, vm.getNumberOfBackfillingChoice());
 				insertMemberStatement.setInt(12, vm.getNumberOfMigrations());
 				insertMemberStatement.setDouble(15, vm.getFirstTimeAllocated());
+				insertMemberStatement.setDouble(16, vm.getAvailabilityTarget());
 
 				if (running) {
 					insertMemberStatement.setInt(13, vm.getHost().getId()); //vm is waiting and doesn't have host
@@ -194,7 +196,7 @@ public class PreemptableVmDataStore extends DataStore {
 				PreemptableVm vm = new PreemptableVm(rs.getInt("vmId"),
 						rs.getInt("userId"), rs.getDouble("cpuReq"),
 						rs.getDouble("memReq"), rs.getDouble("submitTime"),
-						rs.getInt("priority"), rs.getDouble("runtime"));
+						rs.getInt("priority"), rs.getDouble("runtime"), rs.getDouble("availabilityTarget"));
 				
 				vm.setActualRuntime(rs.getDouble("actualRuntime"));
 				vm.setLastHostId(rs.getInt("hostId"));
@@ -230,10 +232,9 @@ public class PreemptableVmDataStore extends DataStore {
 			ResultSet rs = statement.getResultSet();
 
 			while (rs.next()) {
-				PreemptableVm vm = new PreemptableVm(rs.getInt("vmId"),
-						rs.getInt("userId"), rs.getDouble("cpuReq"),
-						rs.getDouble("memReq"), rs.getDouble("submitTime"),
-						rs.getInt("priority"), rs.getDouble("runtime"));
+				PreemptableVm vm = new PreemptableVm(rs.getInt("vmId"), rs.getInt("userId"), rs.getDouble("cpuReq"),
+						rs.getDouble("memReq"), rs.getDouble("submitTime"), rs.getInt("priority"),
+						rs.getDouble("runtime"), rs.getDouble("availabilityTarget"));
 				
 				vm.setActualRuntime(rs.getDouble("actualRuntime"));
 				vm.setLastHostId(rs.getInt("hostId"));

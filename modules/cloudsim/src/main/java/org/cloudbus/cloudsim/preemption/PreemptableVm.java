@@ -14,6 +14,7 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	private double runtime;
 	private double startExec;
 	private double actualRuntime;
+	private double availabilityTarget;
 
 	private double firstTimeAllocated;
 
@@ -22,7 +23,7 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	private int numberOfMigrations;
 	private int lastHostId;
 	public PreemptableVm(int id, int userId, double cpuReq, double memReq,
-			double submitTime, int priority, double runtime) {
+			double submitTime, int priority, double runtime, double availabilityTarget) {
 		super(id, userId, cpuReq, 1, (int) memReq, 0, 0, "default",
 				new CloudletSchedulerTimeShared());
 
@@ -35,7 +36,9 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 		setNumberOfMigrations(0);
 		setLastHostId(INVALID_HOST);
 		setFirstTimeAllocated(-1.0);
+		setAvailabilityTarget(availabilityTarget);
 		actualRuntime = 0;
+		
 	}
 
 	@Override
@@ -145,6 +148,14 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 	public void setFirstTimeAllocated(double firstTimeAllocated) {
 		this.firstTimeAllocated = firstTimeAllocated;
 	}
+	
+	public double getAvailabilityTarget() {
+		return availabilityTarget;
+	}
+
+	public void setAvailabilityTarget(double availabilityTarget) {
+		this.availabilityTarget = availabilityTarget;
+	}
 
 	public void allocatingToHost(int hostId) {
 
@@ -194,7 +205,11 @@ public class PreemptableVm extends Vm implements Comparable<PreemptableVm> {
 				"}\n";
 	}
 	
-	public double getTTV() {
-		return 0;
+	public double getTTV(double currentTime) {
+		return getActualRuntime(currentTime) - ((currentTime - getSubmitTime()) * availabilityTarget);
+	}
+
+	public boolean isAvailabilityAboveOfTarget(double currentTime) {
+		return getCurrentAvailability(currentTime) > availabilityTarget;
 	}
 }

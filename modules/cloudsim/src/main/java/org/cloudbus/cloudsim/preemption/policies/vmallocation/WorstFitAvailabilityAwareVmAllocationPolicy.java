@@ -1,9 +1,10 @@
 package org.cloudbus.cloudsim.preemption.policies.vmallocation;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
 
 import org.cloudbus.cloudsim.Host;
-import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.PreemptiveHost;
@@ -109,7 +110,8 @@ public class WorstFitAvailabilityAwareVmAllocationPolicy extends PreemptableVmAl
             @TODO Decide if the vm has to be violating SLO in this time
             @TODO or in the next time to choose the way of select the host.
             */
-            if (pVm.getCurrentAvailability(simulationTimeUtil.clock()) > getSLOTarget(pVm.getPriority())) {
+//            if (pVm.getCurrentAvailability(simulationTimeUtil.clock()) > getSLOTarget(pVm.getPriority())) {
+            if (pVm.isAvailabilityAboveOfTarget(simulationTimeUtil.clock())) {
                 firstHost = getPriorityToHostsFCFSAware().get(pVm.getPriority()).peek();
 
             } else {

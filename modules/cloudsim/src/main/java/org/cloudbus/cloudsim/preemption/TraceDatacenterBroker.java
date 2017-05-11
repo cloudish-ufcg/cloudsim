@@ -9,19 +9,12 @@
 package org.cloudbus.cloudsim.preemption;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
-import java.util.TimerTask;
 import java.util.TreeSet;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import gnu.trove.map.hash.THashMap;
 
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
@@ -31,6 +24,9 @@ import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.preemption.datastore.InputTraceDataStore;
 import org.cloudbus.cloudsim.preemption.datastore.TaskDataStore;
+import org.cloudbus.cloudsim.preemption.util.Utils;
+
+import gnu.trove.map.hash.THashMap;
 
 /**
  * DatacentreBroker represents a broker acting on behalf of a user.
@@ -68,11 +64,10 @@ public class TraceDatacenterBroker extends SimEntity {
     private int intervalIndex;
     private int taskLoadingIntervalSize; // in minutes
     private int taskStoringIntervalSize; // in minutes
+    private Map<Integer, Double> sloTargets;
 
     private InputTraceDataStore inputTraceDataStore;
-
     private TaskDataStore taskDataStore;
-//    private ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
     public TraceDatacenterBroker(String name, Properties properties) throws Exception {
         super(name);
@@ -99,17 +94,9 @@ public class TraceDatacenterBroker extends SimEntity {
 
         inputTraceDataStore = new InputTraceDataStore(properties);
         taskDataStore = new TaskDataStore(properties);
+        sloTargets = Utils.getSLOAvailabilityTargets(properties);        
         
-        this.properties = properties;
-        
-		
-//		executor.scheduleAtFixedRate(new TimerTask() {
-//			@Override
-//			public void run() {
-//				storeFinishedTasks(false);
-//			}
-//		}, 1, 1, TimeUnit.MINUTES);
-        
+        this.properties = properties;                
     }
 
     @Override
@@ -345,8 +332,8 @@ public class TraceDatacenterBroker extends SimEntity {
 
     private void scheduleRequestsForVm(Task task) {
 
-        PreemptableVm vm = new PreemptableVm(task.getId(), getId(), task.getCpuReq(),
-                task.getMemReq(), task.getSubmitTime(), task.getPriority(), task.getRuntime());
+		PreemptableVm vm = new PreemptableVm(task.getId(), getId(), task.getCpuReq(), task.getMemReq(),
+				task.getSubmitTime(), task.getPriority(), task.getRuntime(), sloTargets.get(task.getPriority()));
 
         int datacenterId = getDatacenterId();
 

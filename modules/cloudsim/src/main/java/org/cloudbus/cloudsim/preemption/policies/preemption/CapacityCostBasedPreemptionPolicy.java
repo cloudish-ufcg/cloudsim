@@ -1,8 +1,9 @@
 package org.cloudbus.cloudsim.preemption.policies.preemption;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
-import gnu.trove.map.hash.THashMap;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.CapacityCost;
 import org.cloudbus.cloudsim.preemption.CostSkin;
@@ -10,8 +11,9 @@ import org.cloudbus.cloudsim.preemption.PreemptableVm;
 import org.cloudbus.cloudsim.preemption.comparator.capacitycost.CapacityCostComparatorByCapacity;
 import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
 
-public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
+import gnu.trove.map.hash.THashMap;
 
+public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
 
     private static final int PROD = 0;
     private static final int BATCH = 1;
@@ -69,6 +71,7 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
 
         getVms().put(vm.getId(), vm);
 
+        // TODO Do we need keep this structure updated?
         double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority());
         getPriorityToInUseMips().put(vm.getPriority(),
                 DecimalUtil.format(priorityCurrentUse + vm.getMips()));
@@ -103,12 +106,14 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
         double availableMips = getAvailableMipsByPriority(FREE);
 
 
+        // TODO check if we need this checking
+        //TODO What is the reason for this checking? If the host is empty, what will be its capacityCost?
         if (checkLimits(minCPUReq, maxCPUReq, availableMips)) {
             capacityCost = new CapacityCost(availableMips, cost, getHost());
             getCapacityCosts().add(capacityCost);
         }
 
-        Iterator iterator = ((TreeSet<CostSkin>) getCostSkins()).descendingIterator();
+        Iterator<CostSkin> iterator = ((TreeSet<CostSkin>) getCostSkins()).descendingIterator();
 
         while (iterator.hasNext()) {
 
@@ -127,6 +132,7 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
     }
 
     private boolean checkLimits(double minCPUReq, double maxCPUReq, double availableMips) {
+    	// TODO I think we to have at least one CapacityCost equal or greater than maxCPUReq
         return availableMips >= minCPUReq && availableMips <= maxCPUReq;
     }
 
@@ -141,7 +147,6 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
 
     @Override
     public void deallocating(PreemptableVm vm) {
-
         if (vm == null) {
             return;
         }
@@ -149,6 +154,7 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
         getVms().remove(vm.getId());
         removeCostSkin(vm);
 
+        // TODO Do we need keep this structure updated?
         double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority());
         getPriorityToInUseMips().put(vm.getPriority(),
                 DecimalUtil.format(priorityCurrentUse - vm.getMips()));
@@ -171,22 +177,18 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
         return new CostSkin(vm, cost);
     }
 
-    public static double calculateCost(PreemptableVm vm) {
-
+    private double calculateCost(PreemptableVm vm) {
         if (vm == null)
             return 0;
 
-        double cost = (1 / vm.getTTV());
+        double cost = (1 / vm.getTTV(simulationTimeUtil.clock()));
 
-        if (vm.getPriority() == PROD)
-            cost = Double.MAX_VALUE;
-
-        else if (vm.getPriority() == BATCH)
-            cost += 5;
-
-        else
-            cost += 1;
-
+        // There is a factor multiplier according to vm priority
+        if (vm.getPriority() == PROD) {
+        	cost = Double.MAX_VALUE;
+        } else if (vm.getPriority() == BATCH){
+        	cost = 5 * cost;
+        }
         return cost;
     }
 
