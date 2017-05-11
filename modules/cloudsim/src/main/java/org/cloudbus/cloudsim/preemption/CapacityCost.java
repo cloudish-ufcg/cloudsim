@@ -12,6 +12,12 @@ public class CapacityCost {
 		setHost(host);
 	}
 
+	public CapacityCost(PreemptableVm vm, PreemptiveHost host) {
+		setCapacity(vm.getMips());
+		setCost(0d);
+		setHost(host);
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;

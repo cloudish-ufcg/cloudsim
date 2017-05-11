@@ -1,10 +1,6 @@
 package org.cloudbus.cloudsim.preemption;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Log;
@@ -227,7 +223,7 @@ public class PreemptiveHost extends Host implements Comparable<Host> {
 		return preemptionPolicy.getAvailableMipsByVm(vm);
 	}
 
-	public List<CapacityCost> getCapacityCosts(double minCPUReq, double maxCPUReq) {
+	public SortedSet<CapacityCost> getCapacityCosts(double minCPUReq, double maxCPUReq) {
 		return preemptionPolicy.getCapacityCosts(minCPUReq, maxCPUReq);
 	}
 }

@@ -207,7 +207,7 @@ public class VmAvailabilityBasedPreemptionPolicy extends PreemptionPolicy {
 	}
 
 	@Override
-	public List<CapacityCost> getCapacityCosts(double minCPUReq, double maxCPUReq) {
+	public SortedSet<CapacityCost> getCapacityCosts(double minCPUReq, double maxCPUReq) {
 		throw new RuntimeException("This class does not support this method.");
 	}
 }

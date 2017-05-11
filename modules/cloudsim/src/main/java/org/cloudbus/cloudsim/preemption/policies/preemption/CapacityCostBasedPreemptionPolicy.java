@@ -7,6 +7,7 @@ import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.preemption.CapacityCost;
 import org.cloudbus.cloudsim.preemption.CostSkin;
 import org.cloudbus.cloudsim.preemption.PreemptableVm;
+import org.cloudbus.cloudsim.preemption.comparator.capacitycost.CapacityCostComparatorByCapacity;
 import org.cloudbus.cloudsim.preemption.util.DecimalUtil;
 
 public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
@@ -19,20 +20,23 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
     private static final int NOT_STARTED = -1;
 
     private double lastUpdate;
-    private List<CapacityCost> capacityCosts;
+    private TreeSet<CapacityCost> capacityCosts;
     private SortedSet<CostSkin> costSkins;
     private THashMap<Integer, PreemptableVm> vms;
 
     public CapacityCostBasedPreemptionPolicy() {
-        this.capacityCosts = new LinkedList<>();
+        this.capacityCosts = new TreeSet<>(new CapacityCostComparatorByCapacity());
         this.costSkins = new TreeSet<>();
         this.lastUpdate = NOT_STARTED;
     }
 
     @Override
     public boolean isSuitableFor(PreemptableVm vm) {
-        // TODO Auto-generated method stub
-        return false;
+
+        CapacityCost capacityCost = new CapacityCost(vm, getHost());
+        CapacityCost suitableCapacityCost = getCapacityCosts().ceiling(capacityCost);
+
+        return suitableCapacityCost.getCost() < calculateCost(vm);
     }
 
     @Override
@@ -42,15 +46,15 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
 
     @Override
     public SortedSet<PreemptableVm> sortVms(SortedSet<PreemptableVm> sortedVms) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new RuntimeException("This class does not support this method.");
     }
 
     @Override
-    public List<CapacityCost> getCapacityCosts(double minCPUReq, double maxCPUReq) {
+    public SortedSet<CapacityCost> getCapacityCosts(double minCPUReq, double maxCPUReq) {
 
         if (getLastUpdate() != simulationTimeUtil.clock()) {
             updateStructures(minCPUReq, maxCPUReq);
+            setLastUpdate(simulationTimeUtil.clock());
         }
 
         return getCapacityCosts();
@@ -84,8 +88,8 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
 
         if (size > 0) {
 
-            double minCPUReq = getCapacityCosts().get(0).getCapacity();
-            double maxCPUReq = getCapacityCosts().get(size - 1).getCapacity();
+            double minCPUReq = getCapacityCosts().first().getCapacity();
+            double maxCPUReq = getCapacityCosts().last().getCapacity();
             updateStructures(minCPUReq, maxCPUReq);
         }
     }
@@ -94,9 +98,15 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
 
         getCapacityCosts().clear();
 
+        CapacityCost capacityCost;
+        double cost = 0;
         double availableMips = getAvailableMipsByPriority(FREE);
 
-        getCapacityCosts().add(generateCapacityCost(availableMips, null));
+
+        if (checkLimits(minCPUReq, maxCPUReq, availableMips)) {
+            capacityCost = new CapacityCost(availableMips, cost, getHost());
+            getCapacityCosts().add(capacityCost);
+        }
 
         Iterator iterator = ((TreeSet<CostSkin>) getCostSkins()).descendingIterator();
 
@@ -107,15 +117,17 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
 
             double vmMips = vm.getMips();
             availableMips += vmMips;
+            cost += calculateCost(vm);
 
-            getCapacityCosts().add(generateCapacityCost(availableMips, vm));
+            if (checkLimits(minCPUReq, maxCPUReq, availableMips)) {
+                capacityCost = new CapacityCost(availableMips, cost, getHost());
+                getCapacityCosts().add(capacityCost);
+            }
         }
     }
 
-    private CapacityCost generateCapacityCost(double availableMips, PreemptableVm vm) {
-        CapacityCost capacityCost;
-        capacityCost = new CapacityCost(availableMips, calculateCost(vm), getHost());
-        return capacityCost;
+    private boolean checkLimits(double minCPUReq, double maxCPUReq, double availableMips) {
+        return availableMips >= minCPUReq && availableMips <= maxCPUReq;
     }
 
     private void updateCostSkins() {
@@ -123,9 +135,7 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
         getCostSkins().clear();
 
         for (PreemptableVm vm : getVms().values()) {
-
-            CostSkin costSkin = generateCostSkin(vm);
-            getCostSkins().add(costSkin);
+            addCostSkin(vm);
         }
     }
 
@@ -137,6 +147,7 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
         }
 
         getVms().remove(vm.getId());
+        removeCostSkin(vm);
 
         double priorityCurrentUse = getPriorityToInUseMips().get(vm.getPriority());
         getPriorityToInUseMips().put(vm.getPriority(),
@@ -160,7 +171,7 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
         return new CostSkin(vm, cost);
     }
 
-    private double calculateCost(PreemptableVm vm) {
+    public static double calculateCost(PreemptableVm vm) {
 
         if (vm == null)
             return 0;
@@ -187,11 +198,11 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
         this.lastUpdate = lastUpdate;
     }
 
-    public List<CapacityCost> getCapacityCosts() {
+    public TreeSet<CapacityCost> getCapacityCosts() {
         return capacityCosts;
     }
 
-    public void setCapacityCosts(List<CapacityCost> capacityCosts) {
+    public void setCapacityCosts(TreeSet<CapacityCost> capacityCosts) {
         this.capacityCosts = capacityCosts;
     }
 

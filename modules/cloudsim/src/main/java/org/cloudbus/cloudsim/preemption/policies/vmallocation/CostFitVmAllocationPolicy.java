@@ -50,7 +50,7 @@ public class CostFitVmAllocationPolicy extends PreemptableVmAllocationPolicy {
 
 		for (Host host : getHostList()) {
 			PreemptiveHost pHost = (PreemptiveHost) host;
-			List<CapacityCost> capacityCosts = pHost.getCapacityCosts(getMinCPUReq(), getMaxCPUReq());
+			SortedSet<CapacityCost> capacityCosts = pHost.getCapacityCosts(getMinCPUReq(), getMaxCPUReq());
 
 			getSortedCapacityCostsByCapacity().addAll(capacityCosts);
 		}
@@ -108,7 +108,7 @@ public class CostFitVmAllocationPolicy extends PreemptableVmAllocationPolicy {
 	public void addHostIntoStructure(PreemptiveHost host) {
 		getSortedHostsByAvailableCapacity().add(host);
 
-		List<CapacityCost> costsToAdd = host.getCapacityCosts(getMinCPUReq(), getMaxCPUReq());
+		SortedSet<CapacityCost> costsToAdd = host.getCapacityCosts(getMinCPUReq(), getMaxCPUReq());
 		getSortedCapacityCostsByCapacity().addAll(costsToAdd);
 	}
 
@@ -116,7 +116,7 @@ public class CostFitVmAllocationPolicy extends PreemptableVmAllocationPolicy {
 	public void removeHostFromStructure(PreemptiveHost host) {
 		getSortedHostsByAvailableCapacity().remove(host);
 
-		List<CapacityCost> costsToRemove = host.getCapacityCosts(getMinCPUReq(), getMaxCPUReq());
+		SortedSet<CapacityCost> costsToRemove = host.getCapacityCosts(getMinCPUReq(), getMaxCPUReq());
 		getSortedCapacityCostsByCapacity().removeAll(costsToRemove);
 	}
 

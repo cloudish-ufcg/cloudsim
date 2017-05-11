@@ -106,7 +106,7 @@ public abstract class PreemptionPolicy {
 
     public abstract double getAvailableMipsByPriorityAndAvailability(int priority);
 
-    public abstract List<CapacityCost> getCapacityCosts(double minCPUReq, double maxCPUReq);
+    public abstract SortedSet<CapacityCost> getCapacityCosts(double minCPUReq, double maxCPUReq);
 
     public PreemptiveHost getHost() {
         return host;
