@@ -164,6 +164,7 @@ public class CapacityCostBasedPreemptionPolicy extends PreemptionPolicy {
         return new CostSkin(vm, cost);
     }
 
+    //TODO think the way we deal with negative TTV
     private double calculateCost(PreemptableVm vm) {
         if (vm == null)
             return 0;

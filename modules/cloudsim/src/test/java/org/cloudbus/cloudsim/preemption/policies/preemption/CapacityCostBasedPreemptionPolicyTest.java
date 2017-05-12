@@ -64,7 +64,7 @@ public class CapacityCostBasedPreemptionPolicyTest {
         double runtime = 2;
         double availabilityTarget = 1;
 
-        PreemptableVm vm1 = new PreemptableVm(id, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
+        PreemptableVm vm1 = new PreemptableVm(id++, userId, cpuReq, memReq, submitTime, priority, runtime, availabilityTarget);
         preemptionPolicy.allocating(vm1);
 
         costs = preemptionPolicy.getCapacityCosts(0d, 0.5);
@@ -82,19 +82,21 @@ public class CapacityCostBasedPreemptionPolicyTest {
 
         preemptionPolicy.allocating(vm2);
         costs = preemptionPolicy.getCapacityCosts(0d, 0.5);
+        System.out.println(costs);
 
         Iterator<CapacityCost> iterator = costs.iterator();
         CapacityCost cost = iterator.next();
 
-        costs = preemptionPolicy.getCapacityCosts(0d, 0.5);
+        System.out.println(cost);
         Assert.assertEquals(3, costs.size());
 
         Assert.assertEquals(0.2, cost.getCapacity(), ACCEPTABLE_DIFFERENCE);
         Assert.assertEquals(0d, cost.getCost(), ACCEPTABLE_DIFFERENCE);
 
         cost = iterator.next();
+        System.out.println(cost);
         Assert.assertEquals(0.3, cost.getCapacity(), ACCEPTABLE_DIFFERENCE);
-        Assert.assertEquals(6, cost.getCost(), ACCEPTABLE_DIFFERENCE);
+        Assert.assertEquals(6d, cost.getCost(), ACCEPTABLE_DIFFERENCE);
 
         cost = iterator.next();
         Assert.assertEquals(0.4, cost.getCapacity(), ACCEPTABLE_DIFFERENCE);
